@@ -15,6 +15,10 @@ import '../presentation/screens/expenses/expenses_screen.dart';
 import '../presentation/screens/expenses/add_expense_screen.dart';
 import '../presentation/screens/profile/profile_screen.dart';
 import '../presentation/screens/profile/settings_screen.dart';
+import '../presentation/screens/onboarding/language_selection_screen.dart';
+import '../presentation/screens/onboarding/currency_selection_screen.dart';
+import '../presentation/screens/onboarding/destination_selection_screen.dart';
+import '../presentation/screens/onboarding/travel_dates_screen.dart';
 import '../presentation/widgets/common/main_scaffold.dart';
 
 class AppRoutes {
@@ -25,6 +29,14 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+
+  // Onboarding routes
+  static const String onboardingLanguages = '/onboarding/languages';
+  static const String onboardingCurrency = '/onboarding/currency';
+  static const String onboardingDestination = '/onboarding/destination';
+  static const String onboardingDates = '/onboarding/dates';
+
+  // Main app routes
   static const String home = '/home';
   static const String trips = '/trips';
   static const String tripDetail = '/trips/:id';
@@ -54,11 +66,17 @@ class AppRoutes {
             state.matchedLocation == forgotPassword ||
             state.matchedLocation == splash;
 
-        if (!isAuthenticated && !isOnAuthPage) {
+        final isOnOnboardingPage =
+            state.matchedLocation.startsWith('/onboarding');
+
+        // Allow unauthenticated access to onboarding pages (they're protected by auth screens)
+        if (!isAuthenticated && !isOnAuthPage && !isOnOnboardingPage) {
           return login;
         }
 
-        if (isAuthenticated && isOnAuthPage && state.matchedLocation != splash) {
+        if (isAuthenticated &&
+            isOnAuthPage &&
+            state.matchedLocation != splash) {
           return home;
         }
 
@@ -83,6 +101,24 @@ class AppRoutes {
         GoRoute(
           path: forgotPassword,
           builder: (context, state) => const ForgotPasswordScreen(),
+        ),
+
+        // Onboarding routes
+        GoRoute(
+          path: onboardingLanguages,
+          builder: (context, state) => const LanguageSelectionScreen(),
+        ),
+        GoRoute(
+          path: onboardingCurrency,
+          builder: (context, state) => const CurrencySelectionScreen(),
+        ),
+        GoRoute(
+          path: onboardingDestination,
+          builder: (context, state) => const DestinationSelectionScreen(),
+        ),
+        GoRoute(
+          path: onboardingDates,
+          builder: (context, state) => const TravelDatesScreen(),
         ),
 
         // Main app shell with bottom navigation

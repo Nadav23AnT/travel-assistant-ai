@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../../services/auth_service.dart';
+import '../../providers/auth_provider.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -21,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
   bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -43,16 +47,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-    // TODO: Implement actual Supabase registration
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      await ref.read(authNotifierProvider.notifier).signUpWithEmail(
+            _emailController.text.trim(),
+            _passwordController.text,
+            _nameController.text.trim(),
+          );
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      if (!mounted) return;
 
-    // Navigate to home on success
-    context.go(AppRoutes.home);
+      // After registration, go directly to onboarding
+      context.go(AppRoutes.onboardingLanguages);
+    } on AuthException catch (e) {
+      setState(() => _errorMessage = e.message);
+    } catch (e) {
+      setState(() => _errorMessage = 'An unexpected error occurred');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -61,7 +80,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: _isLoading ? null : () => context.pop(),
         ),
       ),
       body: SafeArea(
@@ -83,12 +102,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         color: AppTheme.textSecondary,
                       ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+
+                // Error message
+                if (_errorMessage != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red.shade700),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(color: Colors.red.shade700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 // Full name field
                 TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,
+                  enabled: !_isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Full Name',
                     prefixIcon: Icon(Icons.person_outlined),
@@ -106,6 +151,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  enabled: !_isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     prefixIcon: Icon(Icons.email_outlined),
@@ -126,6 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  enabled: !_isLoading,
                   decoration: InputDecoration(
                     labelText: 'Password',
                     prefixIcon: const Icon(Icons.lock_outlined),
@@ -156,6 +203,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
+                  enabled: !_isLoading,
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     prefixIcon: const Icon(Icons.lock_outlined),
@@ -188,15 +236,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     Checkbox(
                       value: _agreeToTerms,
-                      onChanged: (value) {
-                        setState(() => _agreeToTerms = value ?? false);
-                      },
+                      onChanged: _isLoading
+                          ? null
+                          : (value) {
+                              setState(() => _agreeToTerms = value ?? false);
+                            },
                     ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () {
-                          setState(() => _agreeToTerms = !_agreeToTerms);
-                        },
+                        onTap: _isLoading
+                            ? null
+                            : () {
+                                setState(() => _agreeToTerms = !_agreeToTerms);
+                              },
                         child: Text.rich(
                           TextSpan(
                             text: 'I agree to the ',
@@ -249,7 +301,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     const Text('Already have an account? '),
                     TextButton(
-                      onPressed: () => context.pop(),
+                      onPressed: _isLoading ? null : () => context.pop(),
                       child: const Text('Sign in'),
                     ),
                   ],

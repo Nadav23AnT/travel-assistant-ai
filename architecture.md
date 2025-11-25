@@ -1211,40 +1211,42 @@ Components:
 
 ## 9. MVP Roadmap
 
-### Phase 1: Foundation
+### Phase 1: Foundation - COMPLETED
 **Goal:** Core infrastructure and authentication
 
-- [ ] Flutter project setup with folder structure
-- [ ] Supabase project configuration
-- [ ] Database schema creation (all tables)
-- [ ] Authentication flow (email, social)
-- [ ] Basic navigation structure
-- [ ] Profile management
+- [x] Flutter project setup with folder structure
+- [x] Supabase project configuration
+- [x] Database schema creation (all tables)
+- [x] Authentication flow (email, social)
+- [x] Basic navigation structure
+- [x] Profile management
+- [x] Onboarding flow (languages, currency, destination, dates)
 
-### Phase 2: Trip Management
+### Phase 2: Trip Management - PARTIAL
 **Goal:** Full trip CRUD and itinerary
 
-- [ ] Trip list screen
-- [ ] Create/edit trip flow
-- [ ] Trip detail screen with tabs
+- [x] Trip list screen (basic)
+- [ ] Create/edit trip flow (form exists, not saving)
+- [ ] Trip detail screen with tabs (placeholder tabs)
 - [ ] Itinerary management
 - [ ] Google Places integration
 - [ ] Trip sharing and members
 
-### Phase 3: AI Integration
+### Phase 3: AI Integration - PARTIAL
 **Goal:** Conversational trip planning
 
-- [ ] AI provider service (OpenAI)
-- [ ] Edge function for AI proxy
-- [ ] Chat UI implementation
-- [ ] Context management
+- [x] AI provider service (OpenAI - gpt-4o-mini)
+- [x] Chat UI implementation
+- [x] Chat session management
+- [ ] Context management (trip/user context to AI)
 - [ ] Recommendation cards
 - [ ] Add to itinerary from chat
 
-### Phase 4: Expense Tracking
+### Phase 4: Expense Tracking - IN PROGRESS
 **Goal:** Financial management for trips
 
-- [ ] Expense list and filtering
+- [x] Rich Expenses Dashboard with charts
+- [x] Currency toggle (local/home currency)
 - [ ] Add/edit expense flow
 - [ ] Receipt photo capture
 - [ ] Expense splitting logic
@@ -1256,14 +1258,288 @@ Components:
 
 - [ ] Premium subscription flow
 - [ ] RevenueCat integration
-- [ ] Onboarding experience
+- [x] Onboarding experience
 - [ ] Error handling and edge cases
 - [ ] Performance optimization
 - [ ] App store submission
 
 ---
 
-## 10. Folder Structure
+## 10. Feature Implementation Plan
+
+### User Preferences
+- **Priority:** Expenses Dashboard first
+- **Journal AI Level:** Full AI Generation
+- **Charts:** Yes - Full Charts (pie + line)
+
+---
+
+### PHASE 1: Rich Expenses Dashboard - COMPLETED
+
+#### 1.1 Data Layer Enhancement
+
+**Created `lib/data/models/expense_stats.dart`:**
+```dart
+class ExpenseStats {
+  final double totalSpent;
+  final double dailyAverage;
+  final double estimatedTripTotal;
+  final String displayCurrency;
+  final int totalExpenseCount;
+  final int tripDays;
+  final int elapsedDays;
+  final int remainingDays;
+}
+
+class DailySpending {
+  final DateTime date;
+  final double amount;
+}
+
+class CategoryTotal {
+  final String category;
+  final double amount;
+  final double percentage;
+  final int count;
+}
+```
+
+**Enhanced `lib/data/repositories/expenses_repository.dart`:**
+- Added `getDailySpendingData(tripId)` - groups expenses by date for chart
+- Added `getExpensesByDateRange(tripId, startDate, endDate)`
+
+**Enhanced `lib/presentation/providers/expenses_provider.dart`:**
+- `showInHomeCurrencyProvider` - StateProvider<bool>
+- `selectedExpensesTripIdProvider` - Selected trip context
+- `ExpensesDashboardData` - Combined dashboard data class
+- `expensesDashboardProvider` - Main dashboard data provider
+- `expensesByCategoryProvider` - Category filter provider
+- `expensesDashboardRefreshProvider` - Refresh function
+
+#### 1.2 Widget Components
+
+**Created new widgets:**
+| File | Purpose |
+|------|---------|
+| `lib/presentation/widgets/charts/expense_pie_chart.dart` | Category breakdown pie chart |
+| `lib/presentation/widgets/charts/spending_line_chart.dart` | Spending over time line chart |
+| `lib/presentation/widgets/expenses/summary_stat_card.dart` | Animated stat display |
+| `lib/presentation/widgets/expenses/category_card.dart` | Tappable category with total |
+| `lib/presentation/widgets/expenses/expense_list_tile.dart` | Expense item display |
+| `lib/presentation/widgets/expenses/category_detail_sheet.dart` | Bottom sheet drill-down |
+
+#### 1.3 Expenses Screen Features
+- Currency toggle button (Local/Home) in AppBar
+- Summary stats section with 3 cards (Total, Daily Average, Estimated Total)
+- Trip info banner showing current trip
+- Category pie chart with interactive tap
+- 2x3 category card grid
+- Spending over time line chart
+- Pull-to-refresh
+- Loading and error states
+- Empty state with CTA
+
+---
+
+### PHASE 2: Smart Expense Tracking via Chat - PENDING
+
+#### 2.1 AI Expense Parsing
+
+**Enhance `lib/services/ai_service.dart`:**
+- Add function calling for expense extraction
+- Parse: amount, currency, category, description, date
+- Return structured JSON when expense detected
+
+**System prompt addition:**
+```
+When user mentions spending money, extract:
+- amount (number)
+- currency (3-letter code)
+- category (transport|accommodation|food|activities|shopping|other)
+- description (what was purchased)
+- date (default: today)
+
+Respond with confirmation and ask if they want to save it.
+```
+
+#### 2.2 Chat Expense Confirmation Flow
+
+**Modify `lib/presentation/screens/chat/chat_screen.dart`:**
+- Detect expense in AI response metadata
+- Show inline confirmation card:
+  ```
+  +-----------------------------+
+  | Save Expense?               |
+  | $50.00 - Dinner at Luigi's  |
+  | Category: Food              |
+  |                             |
+  |  [Edit]  [Save]  [Cancel]   |
+  +-----------------------------+
+  ```
+- On Save: call ExpensesRepository.createExpense()
+- Show success toast with link to Expenses page
+
+#### 2.3 Files to Create/Modify
+- `lib/services/ai_service.dart` - Add expense parsing
+- `lib/presentation/screens/chat/chat_screen.dart` - Add confirmation UI
+- `lib/presentation/widgets/chat/expense_confirmation_card.dart` - New widget
+- `lib/presentation/providers/chat_provider.dart` - Handle expense creation
+
+---
+
+### PHASE 3: Automatic Trip Journal (Full AI Generation) - PENDING
+
+#### 3.1 Database Schema
+
+**Create migration `supabase/migrations/YYYYMMDD_journal_schema.sql`:**
+```sql
+CREATE TABLE journal_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id),
+  entry_date DATE NOT NULL,
+  content TEXT NOT NULL,
+  ai_generated BOOLEAN DEFAULT true,
+  source_messages JSONB, -- chat message IDs used to generate
+  photos TEXT[], -- array of photo URLs
+  mood TEXT, -- optional: excited, relaxed, tired, adventurous
+  locations TEXT[], -- places mentioned
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(trip_id, entry_date)
+);
+```
+
+#### 3.2 Data Layer
+
+**Create:**
+- `lib/data/models/journal_model.dart` - JournalEntry model
+- `lib/data/repositories/journal_repository.dart` - CRUD operations
+- `lib/presentation/providers/journal_provider.dart` - State management
+
+#### 3.3 AI Journal Generation
+
+**Enhance `lib/services/ai_service.dart`:**
+- Add `generateJournalEntry(chatMessages, date)` method
+- System prompt: "Summarize the user's day as a travel journal entry. Write in first person, capture highlights, emotions, and memorable moments. Be vivid but concise (2-3 paragraphs)."
+
+**Daily Reminder Logic:**
+- In chat, if user has active trip and hasn't logged today
+- AI proactively asks: "How was your day? Tell me about your adventures so I can update your travel journal!"
+- After user responds, generate and save journal entry
+
+#### 3.4 Journal UI
+
+**Create `lib/presentation/screens/journal/journal_screen.dart`:**
+- Timeline view of journal entries
+- Each entry shows: date, content, photos thumbnail, mood indicator
+- Tap to expand/edit
+- FAB to manually add entry
+
+**Add to Trip Detail tabs:**
+- Replace placeholder with actual journal view for trip
+
+#### 3.5 PDF Export
+
+**Create `lib/services/pdf_export_service.dart`:**
+- Use `pdf` package to generate PDF
+- Include: trip title, dates, all journal entries, photos
+- Share via `share_plus` package
+
+**Add packages to pubspec.yaml:**
+```yaml
+pdf: ^3.10.0
+share_plus: ^7.2.0
+```
+
+#### 3.6 Files to Create
+- `supabase/migrations/YYYYMMDD_journal_schema.sql`
+- `lib/data/models/journal_model.dart`
+- `lib/data/repositories/journal_repository.dart`
+- `lib/presentation/providers/journal_provider.dart`
+- `lib/presentation/screens/journal/journal_screen.dart`
+- `lib/presentation/widgets/journal/journal_entry_card.dart`
+- `lib/services/pdf_export_service.dart`
+
+---
+
+### PHASE 4: Personalized Travel Recommendations - PENDING
+
+#### 4.1 Context-Aware AI
+
+**Enhance `lib/services/ai_service.dart`:**
+- Accept user context in sendMessage:
+  - Languages spoken
+  - Current destination
+  - Trip dates
+  - Budget
+  - Past preferences (from chat history)
+
+**Enhanced system prompt:**
+```
+You are TripBuddy. The user speaks: {languages}. They are in {destination}
+from {startDate} to {endDate} with a budget of {budget}.
+Personalize recommendations based on their preferences and location.
+```
+
+#### 4.2 Location-Based Tips
+
+**When user starts a new trip or changes location:**
+- AI proactively sends welcome message with:
+  - Local customs and etiquette
+  - Currency and tipping practices
+  - Safety tips
+  - Must-try local experiences
+
+---
+
+### PHASE 5: Polish & Remaining Features - PENDING
+
+#### 5.1 Complete Add Expense Screen
+- Full form with all fields
+- Category picker
+- Date picker
+- Receipt photo upload
+- Save to database
+
+#### 5.2 Trips List & Detail
+- Show all trips (not just active)
+- Complete Trip Detail tabs (Overview, Itinerary, Expenses, Members)
+- Create Trip functionality
+
+#### 5.3 Profile & Settings
+- Real stats from database
+- Settings screen with preferences
+- Edit profile functionality
+
+---
+
+## Critical Files Reference
+
+| File | Status | Notes |
+|------|--------|-------|
+| `lib/presentation/screens/expenses/expenses_screen.dart` | Complete | Full dashboard |
+| `lib/presentation/providers/expenses_provider.dart` | Complete | Dashboard providers |
+| `lib/services/ai_service.dart` | Needs Enhancement | Add expense parsing + journal |
+| `lib/presentation/screens/chat/chat_screen.dart` | Needs Enhancement | Add expense confirmation |
+| `lib/config/theme.dart` | Reference | Has categoryColors |
+| `lib/data/repositories/expenses_repository.dart` | Complete | Daily spending query |
+| `lib/services/currency_service.dart` | Complete | Exchange rates |
+
+---
+
+## Packages Available
+- fl_chart: ^0.68.0 (charts) - USING
+- shimmer: ^3.0.0 (loading states) - AVAILABLE
+- intl: ^0.20.2 (formatting) - USING
+
+## Packages to Add (Phase 3)
+- pdf: ^3.10.0 (journal export)
+- share_plus: ^7.2.0 (sharing)
+
+---
+
+## 11. Folder Structure
 
 ```
 lib/
@@ -1327,7 +1603,7 @@ lib/
 
 ---
 
-## 11. Environment Variables
+## 12. Environment Variables
 
 ```env
 # Supabase

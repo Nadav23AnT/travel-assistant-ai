@@ -47,6 +47,11 @@ dependencies:
   dio: ^5.7.0
   connectivity_plus: ^6.0.5
 
+  # Social Auth
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.1
+  crypto: ^3.0.3
+
   # Image handling
   image_picker: ^1.1.2
 
@@ -58,6 +63,7 @@ dependencies:
 
   # Date/Time
   table_calendar: ^3.1.2
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

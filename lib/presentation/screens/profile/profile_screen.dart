@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../providers/auth_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+    final userEmail = user?.email ?? 'Not signed in';
+    final userName = user?.userMetadata?['full_name'] as String? ??
+                     user?.email?.split('@').first ??
+                     'Traveler';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
@@ -26,7 +34,7 @@ class ProfileScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 24),
             // Profile header
-            _buildProfileHeader(context),
+            _buildProfileHeader(context, userName, userEmail),
             const SizedBox(height: 24),
 
             // Stats
@@ -75,7 +83,7 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: OutlinedButton.icon(
                 onPressed: () {
-                  _showSignOutDialog(context);
+                  _showSignOutDialog(context, ref);
                 },
                 icon: const Icon(Icons.logout, color: AppTheme.errorColor),
                 label: const Text(
@@ -103,26 +111,29 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context) {
+  Widget _buildProfileHeader(BuildContext context, String userName, String userEmail) {
     return Column(
       children: [
         CircleAvatar(
           radius: 48,
           backgroundColor: AppTheme.primaryLight,
-          child: const Icon(
-            Icons.person,
-            size: 48,
-            color: AppTheme.primaryColor,
+          child: Text(
+            userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
+            style: const TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.primaryColor,
+            ),
           ),
         ),
         const SizedBox(height: 16),
         Text(
-          'Traveler', // TODO: Replace with actual user name
+          userName,
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: 4),
         Text(
-          'user@example.com', // TODO: Replace with actual email
+          userEmail,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppTheme.textSecondary,
               ),
@@ -248,22 +259,49 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showSignOutDialog(BuildContext context) {
+  void _showSignOutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Sign Out'),
         content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement actual sign out
-              context.go(AppRoutes.login);
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+
+              // Show loading indicator
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+
+              try {
+                // Actually sign out using the auth notifier
+                await ref.read(authNotifierProvider.notifier).signOut();
+
+                if (context.mounted) {
+                  Navigator.of(context).pop(); // Close loading
+                  context.go(AppRoutes.login);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.of(context).pop(); // Close loading
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to sign out: $e'),
+                      backgroundColor: AppTheme.errorColor,
+                    ),
+                  );
+                }
+              }
             },
             child: const Text(
               'Sign Out',

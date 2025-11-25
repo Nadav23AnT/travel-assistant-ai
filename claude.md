@@ -541,3 +541,21 @@ For each feature to be considered complete:
 - Implement pagination for large datasets
 - Cache frequently accessed data
 - Optimize database queries with proper indexing
+
+---
+
+## 📝 Documentation Maintenance
+
+### Architecture Updates
+**IMPORTANT:** After every successful feature implementation or significant change:
+
+1. **Update `architecture.md`** with:
+   - Mark completed phases/features as done
+   - Update the "Current Status" section
+   - Add any new implementation details
+   - Document new files created or modified
+   - Update the roadmap with next steps
+
+2. **Commit the documentation** along with code changes
+
+This ensures the architecture document always reflects the current state of the project and provides accurate guidance for future development.

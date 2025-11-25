@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/theme.dart';
+import '../../../services/auth_service.dart';
+import '../../providers/auth_provider.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _isLoading = false;
   bool _emailSent = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -25,16 +30,32 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
-    // TODO: Implement actual Supabase password reset
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (!mounted) return;
     setState(() {
-      _isLoading = false;
-      _emailSent = true;
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    try {
+      await ref
+          .read(authNotifierProvider.notifier)
+          .resetPassword(_emailController.text.trim());
+
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _emailSent = true;
+      });
+    } on AuthException catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.message;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to send reset email';
+      });
+    }
   }
 
   @override
@@ -43,7 +64,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: _isLoading ? null : () => context.pop(),
         ),
       ),
       body: SafeArea(
@@ -81,12 +102,38 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+
+          // Error message
+          if (_errorMessage != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(color: Colors.red.shade700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // Email field
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
+            enabled: !_isLoading,
             decoration: const InputDecoration(
               labelText: 'Email',
               prefixIcon: Icon(Icons.email_outlined),
@@ -154,7 +201,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 16),
         TextButton(
           onPressed: () {
-            setState(() => _emailSent = false);
+            setState(() {
+              _emailSent = false;
+              _errorMessage = null;
+            });
           },
           child: const Text('Didn\'t receive the email? Try again'),
         ),

@@ -1,14 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../../data/models/trip_model.dart';
+import '../../../services/auth_service.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/currency_provider.dart';
+import '../../providers/trips_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Load user's home currency from profile on first build
+    ref.watch(loadUserHomeCurrencyProvider);
+
+    // Load exchange rates for the user's home currency
+    final homeCurrency = ref.watch(userHomeCurrencyProvider);
+    final exchangeRatesState = ref.watch(exchangeRatesProvider);
+    if (exchangeRatesState.rates.isEmpty && !exchangeRatesState.isLoading) {
+      // Schedule the fetch after the build phase
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(exchangeRatesProvider.notifier).fetchRates(homeCurrency);
+      });
+    }
+
+    final activeTripAsync = ref.watch(activeTripProvider);
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -17,11 +39,17 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Welcome header
-              _buildWelcomeHeader(context),
+              _buildWelcomeHeader(context, ref),
               const SizedBox(height: 24),
 
-              // Active trip card (placeholder)
-              _buildActiveTripCard(context),
+              // Active trip card
+              activeTripAsync.when(
+                loading: () => const _TripCardLoading(),
+                error: (error, stack) => _buildNoActiveTripCard(context),
+                data: (trip) => trip != null
+                    ? _buildActiveTripCard(context, trip)
+                    : _buildNoActiveTripCard(context),
+              ),
               const SizedBox(height: 24),
 
               // Quick actions
@@ -41,39 +69,302 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWelcomeHeader(BuildContext context) {
+  Widget _buildWelcomeHeader(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+    final userName = user?.userMetadata?['full_name'] as String? ??
+                     user?.email?.split('@').first ??
+                     'Traveler';
+
+    final hour = DateTime.now().hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = 'Good morning,';
+    } else if (hour < 17) {
+      greeting = 'Good afternoon,';
+    } else {
+      greeting = 'Good evening,';
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                greeting,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+              ),
+              Text(
+                '$userName!',
+                style: Theme.of(context).textTheme.displaySmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        Row(
           children: [
-            Text(
-              'Good morning,',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
+            // Reset button for testing
+            IconButton(
+              onPressed: () => _showResetDialog(context, ref),
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Reset data (for testing)',
+              color: AppTheme.textSecondary,
             ),
-            Text(
-              'Traveler!', // TODO: Replace with actual user name
-              style: Theme.of(context).textTheme.displaySmall,
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: AppTheme.primaryLight,
+              child: Text(
+                userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
             ),
           ],
-        ),
-        CircleAvatar(
-          radius: 24,
-          backgroundColor: AppTheme.primaryLight,
-          child: const Icon(
-            Icons.person,
-            color: AppTheme.primaryColor,
-          ),
         ),
       ],
     );
   }
 
-  Widget _buildActiveTripCard(BuildContext context) {
-    // Placeholder for no active trip
+  void _showResetDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset User Data'),
+        content: const Text(
+          'This will delete all your trips and reset the onboarding status. '
+          'You will be redirected to start the onboarding process again.\n\n'
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _resetUserData(context, ref);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+            ),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _resetUserData(BuildContext context, WidgetRef ref) async {
+    // Store navigator and router before async gap
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final router = GoRouter.of(context);
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Reset user data
+      final authService = ref.read(authServiceProvider);
+      await authService.resetUserData();
+
+      // Close loading dialog using stored navigator
+      navigator.pop();
+
+      // Navigate to onboarding using stored router
+      router.go(AppRoutes.onboardingLanguages);
+    } on AuthException catch (e) {
+      // Close loading dialog
+      navigator.pop();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to reset: ${e.message}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } catch (e) {
+      // Handle any other errors
+      navigator.pop();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildActiveTripCard(BuildContext context, TripModel trip) {
+    final dateFormat = DateFormat('MMM d');
+    final dateRange = trip.startDate != null && trip.endDate != null
+        ? '${dateFormat.format(trip.startDate!)} - ${dateFormat.format(trip.endDate!)}'
+        : 'Dates not set';
+
+    final daysInfo = _getTripDaysInfo(trip);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/trips/${trip.id}'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Trip header with gradient
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryColor,
+                    AppTheme.primaryColor.withAlpha(200),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(51),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          trip.status.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      const Icon(
+                        Icons.flight_takeoff,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    trip.title,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        trip.destination,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Trip details
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Dates
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dates',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          dateRange,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Days info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          daysInfo.label,
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          daysInfo.value,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: daysInfo.color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoActiveTripCard(BuildContext context) {
     return Card(
       child: InkWell(
         onTap: () => context.push(AppRoutes.createTrip),
@@ -110,6 +401,52 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  _TripDaysInfo _getTripDaysInfo(TripModel trip) {
+    if (trip.startDate == null || trip.endDate == null) {
+      return _TripDaysInfo(
+        label: 'Duration',
+        value: 'Not set',
+        color: AppTheme.textSecondary,
+      );
+    }
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDate = DateTime(
+      trip.startDate!.year,
+      trip.startDate!.month,
+      trip.startDate!.day,
+    );
+    final endDate = DateTime(
+      trip.endDate!.year,
+      trip.endDate!.month,
+      trip.endDate!.day,
+    );
+
+    if (today.isBefore(startDate)) {
+      final daysUntil = startDate.difference(today).inDays;
+      return _TripDaysInfo(
+        label: 'Starts in',
+        value: '$daysUntil ${daysUntil == 1 ? 'day' : 'days'}',
+        color: AppTheme.primaryColor,
+      );
+    } else if (today.isAfter(endDate)) {
+      return _TripDaysInfo(
+        label: 'Status',
+        value: 'Completed',
+        color: AppTheme.successColor,
+      );
+    } else {
+      final dayNumber = today.difference(startDate).inDays + 1;
+      final totalDays = endDate.difference(startDate).inDays + 1;
+      return _TripDaysInfo(
+        label: 'Current',
+        value: 'Day $dayNumber of $totalDays',
+        color: AppTheme.accentColor,
+      );
+    }
   }
 
   Widget _buildQuickActions(BuildContext context) {
@@ -242,6 +579,34 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TripDaysInfo {
+  final String label;
+  final String value;
+  final Color color;
+
+  _TripDaysInfo({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+}
+
+class _TripCardLoading extends StatelessWidget {
+  const _TripCardLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
     );
   }
 }

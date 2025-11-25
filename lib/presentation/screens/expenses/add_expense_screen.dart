@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/constants.dart';
 import '../../../config/theme.dart';
+import '../../providers/currency_provider.dart';
+import '../../providers/expenses_provider.dart';
+import '../../providers/trips_provider.dart';
 
-class AddExpenseScreen extends StatefulWidget {
+class AddExpenseScreen extends ConsumerStatefulWidget {
   final String? tripId;
 
   const AddExpenseScreen({
@@ -13,20 +17,35 @@ class AddExpenseScreen extends StatefulWidget {
   });
 
   @override
-  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
+  ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
 
-class _AddExpenseScreenState extends State<AddExpenseScreen> {
+class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _notesController = TextEditingController();
 
+  String? _selectedTripId;
   String _currency = AppConstants.defaultCurrency;
   String _category = 'food';
   DateTime _date = DateTime.now();
   bool _isSplit = false;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTripId = widget.tripId;
+
+    // Load user's home currency after frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final homeCurrency = ref.read(userHomeCurrencyProvider);
+      if (homeCurrency.isNotEmpty) {
+        setState(() => _currency = homeCurrency);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -52,22 +71,79 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Ensure trip is selected
+    if (_selectedTripId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a trip'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
-    // TODO: Implement actual expense creation with Supabase
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final amount = double.parse(_amountController.text);
+      final description = _descriptionController.text.trim();
+      final notes = _notesController.text.trim();
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      // Use the expense operation provider to create expense
+      final expense = await ref.read(expenseOperationProvider.notifier).createExpense(
+        tripId: _selectedTripId!,
+        amount: amount,
+        currency: _currency,
+        category: _category,
+        description: description,
+        expenseDate: _date,
+        isSplit: _isSplit,
+        notes: notes.isNotEmpty ? notes : null,
+      );
 
-    context.pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Expense added successfully!')),
-    );
+      if (!mounted) return;
+
+      if (expense != null) {
+        // Refresh the expenses dashboard
+        await ref.read(expensesDashboardRefreshProvider)();
+
+        context.pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Expense added successfully!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      } else {
+        // Check for error in state
+        final error = ref.read(expenseOperationProvider).error;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error ?? 'Failed to add expense'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch for user trips to allow selection
+    final tripsAsync = ref.watch(userTripsProvider);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -95,6 +171,59 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Trip selector (if no tripId provided)
+              if (widget.tripId == null) ...[
+                tripsAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (e, _) => Text('Error loading trips: $e'),
+                  data: (trips) {
+                    if (trips.isEmpty) {
+                      return Card(
+                        color: AppTheme.errorColor.withAlpha(26),
+                        child: const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'No trips found. Create a trip first to add expenses.',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                    }
+
+                    // Auto-select first trip if none selected
+                    if (_selectedTripId == null && trips.isNotEmpty) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        setState(() => _selectedTripId = trips.first.id);
+                      });
+                    }
+
+                    return DropdownButtonFormField<String>(
+                      value: _selectedTripId,
+                      decoration: const InputDecoration(
+                        labelText: 'Trip *',
+                        prefixIcon: Icon(Icons.flight_takeoff),
+                      ),
+                      items: trips.map((trip) => DropdownMenuItem(
+                        value: trip.id,
+                        child: Text(trip.title),
+                      )).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedTripId = value);
+                        }
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a trip';
+                        }
+                        return null;
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Amount
               Row(
                 children: [
@@ -216,6 +345,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               OutlinedButton.icon(
                 onPressed: () {
                   // TODO: Implement image picker for receipt
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Receipt photo coming soon!')),
+                  );
                 },
                 icon: const Icon(Icons.camera_alt_outlined),
                 label: const Text('Add Receipt Photo'),

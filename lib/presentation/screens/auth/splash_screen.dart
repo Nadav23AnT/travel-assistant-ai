@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/constants.dart';
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../providers/auth_provider.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -20,14 +22,39 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    // Simulate loading time
-    await Future.delayed(const Duration(seconds: 2));
+    // Short delay for splash display
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     if (!mounted) return;
 
-    // TODO: Check actual auth state from Supabase
-    // For now, navigate to login
-    context.go(AppRoutes.login);
+    // Check if user is authenticated
+    final authService = ref.read(authServiceProvider);
+    final isAuthenticated = authService.isAuthenticated;
+
+    if (!isAuthenticated) {
+      // Not authenticated, go to login
+      context.go(AppRoutes.login);
+      return;
+    }
+
+    // User is authenticated, check if onboarding is needed
+    try {
+      final needsOnboarding = await authService.needsOnboarding();
+
+      if (!mounted) return;
+
+      if (needsOnboarding) {
+        // Needs onboarding, go to language selection
+        context.go(AppRoutes.onboardingLanguages);
+      } else {
+        // Onboarding complete, go to home
+        context.go(AppRoutes.home);
+      }
+    } catch (e) {
+      // On error, go to home anyway
+      if (!mounted) return;
+      context.go(AppRoutes.home);
+    }
   }
 
   @override
