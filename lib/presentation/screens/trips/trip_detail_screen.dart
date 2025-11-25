@@ -6,10 +6,13 @@ import 'package:intl/intl.dart';
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
 import '../../../data/models/expense_model.dart';
+import '../../../data/models/journal_model.dart';
 import '../../../data/models/trip_model.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
+import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
+import '../journal/journal_screen.dart';
 
 class TripDetailScreen extends ConsumerWidget {
   final String tripId;
@@ -23,6 +26,7 @@ class TripDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tripAsync = ref.watch(tripByIdProvider(tripId));
     final expensesAsync = ref.watch(tripExpensesProvider(tripId));
+    final journalAsync = ref.watch(tripJournalEntriesProvider(tripId));
     final homeCurrency = ref.watch(userHomeCurrencyProvider);
 
     return tripAsync.when(
@@ -41,7 +45,7 @@ class TripDetailScreen extends ConsumerWidget {
             body: const Center(child: Text('Trip not found')),
           );
         }
-        return _buildTripDetail(context, ref, trip, expensesAsync, homeCurrency);
+        return _buildTripDetail(context, ref, trip, expensesAsync, journalAsync, homeCurrency);
       },
     );
   }
@@ -51,6 +55,7 @@ class TripDetailScreen extends ConsumerWidget {
     WidgetRef ref,
     TripModel trip,
     AsyncValue<List<ExpenseModel>> expensesAsync,
+    AsyncValue<List<JournalModel>> journalAsync,
     String homeCurrency,
   ) {
     return Scaffold(
@@ -58,6 +63,7 @@ class TripDetailScreen extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(tripByIdProvider(tripId));
           ref.invalidate(tripExpensesProvider(tripId));
+          ref.invalidate(tripJournalEntriesProvider(tripId));
         },
         child: CustomScrollView(
           slivers: [
@@ -81,6 +87,10 @@ class TripDetailScreen extends ConsumerWidget {
 
                     // Expense Summary Card
                     _buildExpenseSummary(context, ref, trip, expensesAsync, homeCurrency),
+                    const SizedBox(height: 20),
+
+                    // Trip Journal Section
+                    _buildJournalSection(context, trip, journalAsync),
                     const SizedBox(height: 20),
 
                     // Trip Info Card
@@ -542,6 +552,140 @@ class TripDetailScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildJournalSection(
+    BuildContext context,
+    TripModel trip,
+    AsyncValue<List<JournalModel>> journalAsync,
+  ) {
+    return Card(
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => JournalScreen(tripId: tripId),
+          ),
+        ),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.auto_stories,
+                        color: AppTheme.accentColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Trip Journal',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: AppTheme.textSecondary,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              journalAsync.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                error: (_, __) => const Text('Error loading journal'),
+                data: (entries) {
+                  if (entries.isEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentColor.withAlpha(26),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.edit_note,
+                            color: AppTheme.accentColor,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Start Your Travel Journal',
+                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Document your ${trip.destination} adventure! Create entries manually or let AI generate them.',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // Show preview of recent entries
+                  return Column(
+                    children: [
+                      // Stats row
+                      Row(
+                        children: [
+                          _JournalStatBadge(
+                            icon: Icons.edit_note,
+                            value: '${entries.length}',
+                            label: 'entries',
+                          ),
+                          const SizedBox(width: 16),
+                          if (entries.any((e) => e.aiGenerated))
+                            _JournalStatBadge(
+                              icon: Icons.auto_awesome,
+                              value: '${entries.where((e) => e.aiGenerated).length}',
+                              label: 'AI generated',
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Latest entry preview
+                      _JournalEntryPreview(
+                        entry: entries.last,
+                        dayNumber: entries.last.getDayNumber(
+                          trip.startDate ?? entries.last.entryDate,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAITipsSection(BuildContext context, TripModel trip) {
     return Card(
       child: Padding(
@@ -935,5 +1079,123 @@ class _ExpenseListItem extends StatelessWidget {
       default:
         return Icons.receipt_long;
     }
+  }
+}
+
+class _JournalStatBadge extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _JournalStatBadge({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: AppTheme.accentColor),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _JournalEntryPreview extends StatelessWidget {
+  final JournalModel entry;
+  final int dayNumber;
+
+  const _JournalEntryPreview({
+    required this.entry,
+    required this.dayNumber,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFormat = DateFormat('MMM d');
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Day $dayNumber',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                dateFormat.format(entry.entryDate),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+              ),
+              const Spacer(),
+              if (entry.mood != null)
+                Text(entry.mood!.emoji, style: const TextStyle(fontSize: 16)),
+              if (entry.aiGenerated) ...[
+                const SizedBox(width: 4),
+                Icon(Icons.auto_awesome, size: 12, color: AppTheme.accentColor),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (entry.title != null && entry.title!.isNotEmpty) ...[
+            Text(
+              entry.title!,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+          ],
+          Text(
+            entry.content,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
   }
 }

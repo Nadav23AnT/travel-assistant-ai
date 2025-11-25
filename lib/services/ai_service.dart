@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/env.dart';
+import '../data/models/journal_model.dart';
 
 class AIException implements Exception {
   final String message;
@@ -458,5 +459,155 @@ Remember to be conversational and helpful!
 
     // No expense data found
     return AIResponse(message: content.trim());
+  }
+
+  /// System prompt for journal entry generation
+  String get journalGenerationPrompt => '''
+You are a creative travel journal writer. Your task is to transform the user's travel chat messages and activities into a beautiful, personal journal entry that captures the essence of their day.
+
+Based on the provided chat history and context, create a journal entry with:
+1. A short, evocative title (max 6 words) that captures the day's theme
+2. A personal, narrative-style journal entry (150-300 words) written in first person
+3. The overall mood of the day
+4. Key highlights from the day (2-4 bullet points)
+5. Locations mentioned or visited
+
+Writing style guidelines:
+- Write in first person ("I", "we", "my")
+- Be warm, personal, and reflective
+- Include sensory details (sights, sounds, tastes) when possible
+- Capture emotions and memorable moments
+- Keep a positive, appreciative tone
+- Make it feel like a genuine travel memory
+
+Available moods: excited, relaxed, tired, adventurous, inspired, grateful, reflective
+
+You MUST respond in this exact JSON format:
+{
+  "title": "string (short evocative title)",
+  "content": "string (the journal entry text)",
+  "mood": "string (one of the available moods)",
+  "highlights": ["string array of 2-4 key highlights"],
+  "locations": ["string array of places mentioned"]
+}
+
+Do not include any text outside the JSON object.
+''';
+
+  /// Generate a journal entry from chat messages and day activities
+  Future<GeneratedJournalContent> generateJournalEntry({
+    required List<ChatMessage> chatMessages,
+    required DateTime date,
+    String? tripDestination,
+    List<ParsedExpense>? expenses,
+    String? model,
+  }) async {
+    if (_apiKey.isEmpty) {
+      throw AIException('OpenAI API key not configured');
+    }
+
+    try {
+      // Build context from chat messages
+      final chatContext = chatMessages.isNotEmpty
+          ? chatMessages.map((m) => '${m.role}: ${m.content}').join('\n')
+          : 'No chat messages for this day.';
+
+      // Build expense context
+      String expenseContext = '';
+      if (expenses != null && expenses.isNotEmpty) {
+        final expenseLines = expenses.map((e) =>
+            '- ${e.description}: ${e.formattedAmount} (${e.categoryDisplayName})');
+        expenseContext = '\n\nExpenses recorded:\n${expenseLines.join('\n')}';
+      }
+
+      // Format the date
+      final weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      final months = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+      final dateStr = '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}, ${date.year}';
+
+      // Build the user prompt
+      final userPrompt = '''
+Date: $dateStr
+${tripDestination != null ? 'Destination: $tripDestination\n' : ''}
+Today's conversations and activities:
+$chatContext
+$expenseContext
+
+Please create a journal entry for this day.
+''';
+
+      final messages = <Map<String, dynamic>>[
+        ChatMessage.system(journalGenerationPrompt).toJson(),
+        ChatMessage.user(userPrompt).toJson(),
+      ];
+
+      final response = await _dio.post(
+        '/chat/completions',
+        data: {
+          'model': model ?? _defaultModel,
+          'messages': messages,
+          'temperature': 0.8,
+          'max_tokens': 1024,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final choices = data['choices'] as List;
+        if (choices.isNotEmpty) {
+          final content = choices[0]['message']['content'] as String;
+          return _parseJournalResponse(content);
+        }
+        throw AIException('No response from AI');
+      } else {
+        throw AIException(
+          'API request failed',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      debugPrint('AI Service Error: ${e.message}');
+      if (e.response?.statusCode == 401) {
+        throw AIException('Invalid API key');
+      } else if (e.response?.statusCode == 429) {
+        throw AIException('Rate limit exceeded. Please try again later.');
+      }
+      throw AIException(e.message ?? 'Network error');
+    } catch (e) {
+      if (e is AIException) rethrow;
+      throw AIException('Failed to generate journal entry: $e');
+    }
+  }
+
+  /// Parse the journal generation response
+  GeneratedJournalContent _parseJournalResponse(String content) {
+    try {
+      // Clean the response - remove markdown code blocks if present
+      String cleanContent = content.trim();
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.substring(7);
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.substring(3);
+      }
+      if (cleanContent.endsWith('```')) {
+        cleanContent = cleanContent.substring(0, cleanContent.length - 3);
+      }
+      cleanContent = cleanContent.trim();
+
+      final json = jsonDecode(cleanContent) as Map<String, dynamic>;
+      return GeneratedJournalContent.fromJson(json);
+    } catch (e) {
+      debugPrint('Failed to parse journal response: $e');
+      debugPrint('Raw content: $content');
+      // Return a default entry if parsing fails
+      return GeneratedJournalContent(
+        title: "Today's Adventures",
+        content: content.length > 500 ? content.substring(0, 500) : content,
+        mood: JournalMood.reflective,
+        highlights: [],
+        locations: [],
+      );
+    }
   }
 }

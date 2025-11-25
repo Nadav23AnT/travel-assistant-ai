@@ -1387,79 +1387,83 @@ Respond with confirmation and ask if they want to save it.
 
 ---
 
-### PHASE 3: Automatic Trip Journal (Full AI Generation) - PENDING
+### PHASE 3: Automatic Trip Journal (Full AI Generation) - COMPLETED
 
-#### 3.1 Database Schema
+#### 3.1 Database Schema - DONE
 
-**Create migration `supabase/migrations/YYYYMMDD_journal_schema.sql`:**
+**Created migration `supabase/migrations/20251125_journal_schema.sql`:**
 ```sql
 CREATE TABLE journal_entries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
   user_id UUID REFERENCES profiles(id),
   entry_date DATE NOT NULL,
+  title TEXT,
   content TEXT NOT NULL,
   ai_generated BOOLEAN DEFAULT true,
-  source_messages JSONB, -- chat message IDs used to generate
-  photos TEXT[], -- array of photo URLs
-  mood TEXT, -- optional: excited, relaxed, tired, adventurous
-  locations TEXT[], -- places mentioned
+  source_data JSONB DEFAULT '{}', -- chat message IDs, expense IDs used to generate
+  photos TEXT[] DEFAULT '{}', -- array of photo URLs
+  mood TEXT CHECK (mood IN ('excited', 'relaxed', 'tired', 'adventurous', 'inspired', 'grateful', 'reflective')),
+  locations TEXT[] DEFAULT '{}', -- places mentioned/visited
+  weather TEXT,
+  highlights TEXT[] DEFAULT '{}', -- key highlights
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(trip_id, entry_date)
+  UNIQUE(trip_id, entry_date, user_id)
 );
 ```
 
-#### 3.2 Data Layer
+#### 3.2 Data Layer - DONE
 
-**Create:**
-- `lib/data/models/journal_model.dart` - JournalEntry model
-- `lib/data/repositories/journal_repository.dart` - CRUD operations
-- `lib/presentation/providers/journal_provider.dart` - State management
+**Created:**
+- `lib/data/models/journal_model.dart` - JournalEntry model with JournalMood enum
+- `lib/data/repositories/journal_repository.dart` - Full CRUD operations including upsert
+- `lib/presentation/providers/journal_provider.dart` - Complete state management with:
+  - `tripJournalEntriesProvider` - Fetch entries for a trip
+  - `journalOperationProvider` - StateNotifier for create/update/delete
+  - `shouldShowJournalPromptProvider` - Check if prompt should be shown
+  - `journalRefreshProvider` - Refresh function
 
-#### 3.3 AI Journal Generation
+#### 3.3 AI Journal Generation - DONE
 
-**Enhance `lib/services/ai_service.dart`:**
-- Add `generateJournalEntry(chatMessages, date)` method
-- System prompt: "Summarize the user's day as a travel journal entry. Write in first person, capture highlights, emotions, and memorable moments. Be vivid but concise (2-3 paragraphs)."
+**Enhanced `lib/services/ai_service.dart`:**
+- Added `generateJournalEntry(chatMessages, date, tripDestination, expenses)` method
+- Added `journalGenerationPrompt` with structured JSON output
+- Added `_parseJournalResponse()` to extract title, content, mood, highlights, locations
+- Returns `GeneratedJournalContent` object
 
-**Daily Reminder Logic:**
-- In chat, if user has active trip and hasn't logged today
-- AI proactively asks: "How was your day? Tell me about your adventures so I can update your travel journal!"
-- After user responds, generate and save journal entry
+#### 3.4 Journal UI - DONE
 
-#### 3.4 Journal UI
+**Created `lib/presentation/screens/journal/journal_screen.dart`:**
+- List view of journal entries
+- JournalEntryCard with day number, date, mood emoji, AI badge, highlights, locations
+- Empty state with CTA
+- Pull-to-refresh
 
-**Create `lib/presentation/screens/journal/journal_screen.dart`:**
-- Timeline view of journal entries
-- Each entry shows: date, content, photos thumbnail, mood indicator
-- Tap to expand/edit
-- FAB to manually add entry
+**Created `lib/presentation/screens/journal/journal_entry_screen.dart`:**
+- View mode for reading entries
+- Edit mode for creating/updating entries
+- AI generation button to auto-generate entry from chat/expenses
+- Mood selector with FilterChips
+- Delete confirmation dialog
 
-**Add to Trip Detail tabs:**
-- Replace placeholder with actual journal view for trip
+**Added Journal section to Trip Detail Screen:**
+- Journal card with entry count and AI generation stats
+- Latest entry preview
+- Navigation to full Journal screen
 
-#### 3.5 PDF Export
+#### 3.5 PDF Export - PENDING
+- Will be added in Phase 5 polish
 
-**Create `lib/services/pdf_export_service.dart`:**
-- Use `pdf` package to generate PDF
-- Include: trip title, dates, all journal entries, photos
-- Share via `share_plus` package
-
-**Add packages to pubspec.yaml:**
-```yaml
-pdf: ^3.10.0
-share_plus: ^7.2.0
-```
-
-#### 3.6 Files to Create
-- `supabase/migrations/YYYYMMDD_journal_schema.sql`
+#### 3.6 Files Created
+- `supabase/migrations/20251125_journal_schema.sql`
 - `lib/data/models/journal_model.dart`
 - `lib/data/repositories/journal_repository.dart`
 - `lib/presentation/providers/journal_provider.dart`
 - `lib/presentation/screens/journal/journal_screen.dart`
-- `lib/presentation/widgets/journal/journal_entry_card.dart`
-- `lib/services/pdf_export_service.dart`
+- `lib/presentation/screens/journal/journal_entry_screen.dart`
+- Updated `lib/services/ai_service.dart` with journal generation
+- Updated `lib/presentation/screens/trips/trip_detail_screen.dart` with Journal section
 
 ---
 
@@ -1520,11 +1524,17 @@ Personalize recommendations based on their preferences and location.
 |------|--------|-------|
 | `lib/presentation/screens/expenses/expenses_screen.dart` | Complete | Full dashboard |
 | `lib/presentation/providers/expenses_provider.dart` | Complete | Dashboard providers |
-| `lib/services/ai_service.dart` | Needs Enhancement | Add expense parsing + journal |
-| `lib/presentation/screens/chat/chat_screen.dart` | Needs Enhancement | Add expense confirmation |
-| `lib/config/theme.dart` | Reference | Has categoryColors |
+| `lib/services/ai_service.dart` | Complete | Expense parsing + journal generation |
+| `lib/presentation/screens/chat/chat_screen.dart` | Complete | Expense confirmation via chat |
+| `lib/config/theme.dart` | Reference | Has categoryColors, dividerColor |
 | `lib/data/repositories/expenses_repository.dart` | Complete | Daily spending query |
 | `lib/services/currency_service.dart` | Complete | Exchange rates |
+| `lib/data/models/journal_model.dart` | Complete | Journal model with JournalMood enum |
+| `lib/data/repositories/journal_repository.dart` | Complete | Full CRUD for journal entries |
+| `lib/presentation/providers/journal_provider.dart` | Complete | State management for journals |
+| `lib/presentation/screens/journal/journal_screen.dart` | Complete | Journal list screen |
+| `lib/presentation/screens/journal/journal_entry_screen.dart` | Complete | View/edit journal entries |
+| `lib/presentation/screens/trips/trip_detail_screen.dart` | Complete | Trip detail with journal section |
 
 ---
 
@@ -1625,6 +1635,27 @@ REVENUECAT_API_KEY=...
 ---
 
 ## Changelog
+
+### v1.3.0 (November 25, 2025)
+- **Phase 3 Complete**: Automatic Trip Journal with AI Generation
+  - Created journal_entries database migration with mood, locations, highlights
+  - Implemented JournalModel with JournalMood enum
+  - Created JournalRepository with full CRUD + upsert
+  - Built journal_provider with state management
+  - Added AI journal generation to AIService
+  - Created JournalScreen with entry cards
+  - Created JournalEntryScreen with view/edit modes
+  - Added Journal section to Trip Detail Screen
+
+### v1.2.0 (November 25, 2025)
+- Bug fixes: expenses not saving, settings currency sync
+- Fixed Riverpod provider initialization error
+- Added documentation maintenance instructions to claude.md
+
+### v1.1.0 (November 2025)
+- Phase 1 Complete: Rich Expenses Dashboard
+- Phase 2 Complete: Smart Expense Tracking via Chat
+- Trip Detail Screen enhancements
 
 ### v1.0.0 (Initial)
 - Initial architecture specification

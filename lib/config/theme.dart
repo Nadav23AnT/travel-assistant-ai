@@ -16,6 +16,7 @@ class AppTheme {
   static const Color backgroundColor = Color(0xFFF5F5F5);
   static const Color surfaceColor = Colors.white;
   static const Color cardColor = Colors.white;
+  static const Color dividerColor = Color(0xFFE0E0E0);
 
   // Text colors
   static const Color textPrimary = Color(0xFF212121);

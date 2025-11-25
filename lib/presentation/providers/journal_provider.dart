@@ -1,0 +1,412 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../data/models/journal_model.dart';
+import '../../data/repositories/journal_repository.dart';
+import 'trips_provider.dart';
+
+// ============================================
+// REPOSITORY PROVIDER
+// ============================================
+
+/// Journal Repository provider
+final journalRepositoryProvider = Provider<JournalRepository>((ref) {
+  return JournalRepository();
+});
+
+// ============================================
+// DATA PROVIDERS
+// ============================================
+
+/// Provider to fetch all journal entries for a specific trip
+final tripJournalEntriesProvider =
+    FutureProvider.family<List<JournalModel>, String>((ref, tripId) async {
+  final repository = ref.watch(journalRepositoryProvider);
+  return repository.getTripJournalEntries(tripId);
+});
+
+/// Provider to fetch all journal entries for current user
+final userJournalEntriesProvider =
+    FutureProvider<List<JournalModel>>((ref) async {
+  final repository = ref.watch(journalRepositoryProvider);
+  return repository.getUserJournalEntries();
+});
+
+/// Provider to fetch a specific journal entry by ID
+final journalEntryByIdProvider =
+    FutureProvider.family<JournalModel?, String>((ref, entryId) async {
+  final repository = ref.watch(journalRepositoryProvider);
+  return repository.getJournalEntry(entryId);
+});
+
+/// Provider to check if there's an entry for today
+final hasEntryForTodayProvider =
+    FutureProvider.family<bool, String>((ref, tripId) async {
+  final repository = ref.watch(journalRepositoryProvider);
+  return repository.hasEntryForToday(tripId);
+});
+
+/// Provider to get recent journal entries
+final recentJournalEntriesProvider =
+    FutureProvider.family<List<JournalModel>, int>((ref, limit) async {
+  final repository = ref.watch(journalRepositoryProvider);
+  return repository.getRecentJournalEntries(limit: limit);
+});
+
+// ============================================
+// STATE NOTIFIER FOR JOURNAL OPERATIONS
+// ============================================
+
+/// State for journal operations
+class JournalOperationState {
+  final bool isLoading;
+  final bool isGenerating;
+  final String? error;
+  final JournalModel? lastCreatedEntry;
+
+  const JournalOperationState({
+    this.isLoading = false,
+    this.isGenerating = false,
+    this.error,
+    this.lastCreatedEntry,
+  });
+
+  JournalOperationState copyWith({
+    bool? isLoading,
+    bool? isGenerating,
+    String? error,
+    JournalModel? lastCreatedEntry,
+    bool clearError = false,
+  }) {
+    return JournalOperationState(
+      isLoading: isLoading ?? this.isLoading,
+      isGenerating: isGenerating ?? this.isGenerating,
+      error: clearError ? null : (error ?? this.error),
+      lastCreatedEntry: lastCreatedEntry ?? this.lastCreatedEntry,
+    );
+  }
+}
+
+/// Notifier for journal operations (create, update, delete, generate)
+class JournalOperationNotifier extends StateNotifier<JournalOperationState> {
+  final JournalRepository _repository;
+  final Ref _ref;
+
+  JournalOperationNotifier(this._repository, this._ref)
+      : super(const JournalOperationState());
+
+  /// Create a new journal entry manually
+  Future<JournalModel?> createEntry({
+    required String tripId,
+    required DateTime entryDate,
+    required String content,
+    String? title,
+    JournalMood? mood,
+    List<String>? photos,
+    List<String>? locations,
+    List<String>? highlights,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final entry = await _repository.createJournalEntry(
+        tripId: tripId,
+        entryDate: entryDate,
+        content: content,
+        title: title,
+        aiGenerated: false,
+        mood: mood,
+        photos: photos,
+        locations: locations,
+        highlights: highlights,
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        lastCreatedEntry: entry,
+      );
+
+      // Refresh providers
+      _ref.invalidate(tripJournalEntriesProvider(tripId));
+      _ref.invalidate(userJournalEntriesProvider);
+
+      return entry;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return null;
+    }
+  }
+
+  /// Create or update a journal entry for a specific date
+  Future<JournalModel?> saveEntry({
+    required String tripId,
+    required DateTime entryDate,
+    required String content,
+    String? title,
+    bool aiGenerated = false,
+    JournalMood? mood,
+    List<String>? photos,
+    List<String>? locations,
+    List<String>? highlights,
+    Map<String, dynamic>? sourceData,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final entry = await _repository.upsertJournalEntry(
+        tripId: tripId,
+        entryDate: entryDate,
+        content: content,
+        title: title,
+        aiGenerated: aiGenerated,
+        mood: mood,
+        photos: photos,
+        locations: locations,
+        highlights: highlights,
+        sourceData: sourceData,
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        lastCreatedEntry: entry,
+      );
+
+      // Refresh providers
+      _ref.invalidate(tripJournalEntriesProvider(tripId));
+      _ref.invalidate(userJournalEntriesProvider);
+
+      return entry;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return null;
+    }
+  }
+
+  /// Generate and save an AI journal entry
+  Future<JournalModel?> generateAndSaveEntry({
+    required String tripId,
+    required DateTime entryDate,
+    required GeneratedJournalContent generatedContent,
+    Map<String, dynamic>? sourceData,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final entry = await _repository.upsertJournalEntry(
+        tripId: tripId,
+        entryDate: entryDate,
+        content: generatedContent.content,
+        title: generatedContent.title,
+        aiGenerated: true,
+        mood: generatedContent.mood,
+        locations: generatedContent.locations,
+        highlights: generatedContent.highlights,
+        sourceData: sourceData,
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        lastCreatedEntry: entry,
+      );
+
+      // Refresh providers
+      _ref.invalidate(tripJournalEntriesProvider(tripId));
+      _ref.invalidate(userJournalEntriesProvider);
+      _ref.invalidate(hasEntryForTodayProvider(tripId));
+
+      return entry;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return null;
+    }
+  }
+
+  /// Update an existing entry
+  Future<JournalModel?> updateEntry(
+    String entryId,
+    String tripId, {
+    String? content,
+    String? title,
+    JournalMood? mood,
+    List<String>? photos,
+    List<String>? locations,
+    List<String>? highlights,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final updates = <String, dynamic>{};
+      if (content != null) updates['content'] = content;
+      if (title != null) updates['title'] = title;
+      if (mood != null) updates['mood'] = mood.name;
+      if (photos != null) updates['photos'] = photos;
+      if (locations != null) updates['locations'] = locations;
+      if (highlights != null) updates['highlights'] = highlights;
+      updates['ai_generated'] = false; // Mark as manually edited
+
+      final entry = await _repository.updateJournalEntry(entryId, updates);
+
+      state = state.copyWith(isLoading: false);
+
+      // Refresh providers
+      _ref.invalidate(tripJournalEntriesProvider(tripId));
+      _ref.invalidate(journalEntryByIdProvider(entryId));
+
+      return entry;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return null;
+    }
+  }
+
+  /// Delete an entry
+  Future<bool> deleteEntry(String entryId, String tripId) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      await _repository.deleteJournalEntry(entryId);
+      state = state.copyWith(isLoading: false);
+
+      // Refresh providers
+      _ref.invalidate(tripJournalEntriesProvider(tripId));
+      _ref.invalidate(userJournalEntriesProvider);
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return false;
+    }
+  }
+
+  /// Add a photo to an entry
+  Future<JournalModel?> addPhoto(
+    String entryId,
+    String tripId,
+    String photoUrl,
+  ) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final entry = await _repository.addPhoto(entryId, photoUrl);
+      state = state.copyWith(isLoading: false);
+
+      // Refresh providers
+      _ref.invalidate(journalEntryByIdProvider(entryId));
+      _ref.invalidate(tripJournalEntriesProvider(tripId));
+
+      return entry;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return null;
+    }
+  }
+
+  /// Clear error state
+  void clearError() {
+    state = state.copyWith(clearError: true);
+  }
+
+  /// Set generating state (when AI is working)
+  void setGenerating(bool generating) {
+    state = state.copyWith(isGenerating: generating);
+  }
+}
+
+/// Provider for journal operations
+final journalOperationProvider =
+    StateNotifierProvider<JournalOperationNotifier, JournalOperationState>(
+        (ref) {
+  final repository = ref.watch(journalRepositoryProvider);
+  return JournalOperationNotifier(repository, ref);
+});
+
+// ============================================
+// COMPUTED PROVIDERS
+// ============================================
+
+/// Provider to get journal entries grouped by date for a trip
+final tripJournalByDateProvider =
+    Provider.family<Map<DateTime, JournalModel>, String>((ref, tripId) {
+  final entriesAsync = ref.watch(tripJournalEntriesProvider(tripId));
+
+  return entriesAsync.when(
+    data: (entries) {
+      final map = <DateTime, JournalModel>{};
+      for (final entry in entries) {
+        final dateKey = DateTime(
+          entry.entryDate.year,
+          entry.entryDate.month,
+          entry.entryDate.day,
+        );
+        map[dateKey] = entry;
+      }
+      return map;
+    },
+    loading: () => {},
+    error: (_, __) => {},
+  );
+});
+
+/// Provider to get journal entry count for a trip
+final tripJournalCountProvider =
+    Provider.family<int, String>((ref, tripId) {
+  final entriesAsync = ref.watch(tripJournalEntriesProvider(tripId));
+  return entriesAsync.when(
+    data: (entries) => entries.length,
+    loading: () => 0,
+    error: (_, __) => 0,
+  );
+});
+
+/// Provider to check if journal prompt should be shown
+/// (user is on active trip and hasn't logged today)
+final shouldShowJournalPromptProvider = Provider<bool>((ref) {
+  final activeTrip = ref.watch(activeTripProvider);
+
+  return activeTrip.when(
+    data: (trip) {
+      if (trip == null || !trip.isActive) return false;
+
+      final hasEntry = ref.watch(hasEntryForTodayProvider(trip.id));
+      return hasEntry.when(
+        data: (has) => !has,
+        loading: () => false,
+        error: (_, __) => false,
+      );
+    },
+    loading: () => false,
+    error: (_, __) => false,
+  );
+});
+
+// ============================================
+// REFRESH PROVIDER
+// ============================================
+
+/// Refresh all journal data for a trip
+final journalRefreshProvider =
+    Provider.family<void Function(), String>((ref, tripId) {
+  return () {
+    ref.invalidate(tripJournalEntriesProvider(tripId));
+    ref.invalidate(hasEntryForTodayProvider(tripId));
+    ref.invalidate(tripJournalByDateProvider(tripId));
+    ref.invalidate(tripJournalCountProvider(tripId));
+  };
+});
