@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.dart_tool/
+.packages
+
+# Flutter/Dart
+build/
+*.iml
+*.log
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env*.local
+*.env
+
+# Supabase
+supabase/.temp/
+
+# OS
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+
+# Git worktrees
+.trees/
+
+# Coverage
+coverage/
+*.lcov
+
+# Build artifacts
+*.apk
+*.aab
+*.ipa
+*.app
+
+# Local settings (keep structure, ignore local overrides)
+.claude/settings.local.json
