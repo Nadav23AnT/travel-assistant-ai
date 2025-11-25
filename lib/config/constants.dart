@@ -5,16 +5,6 @@ class AppConstants {
   static const String appName = 'TripBuddy';
   static const String appVersion = '1.0.0';
 
-  // Supabase - will be loaded from environment
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: '',
-  );
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: '',
-  );
-
   // AI Providers
   static const String defaultAiProvider = 'openai';
   static const String defaultAiModel = 'gpt-4';
