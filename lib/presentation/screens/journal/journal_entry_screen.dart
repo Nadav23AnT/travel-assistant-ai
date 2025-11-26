@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../config/theme.dart';
 import '../../../data/models/journal_model.dart';
 import '../../../data/models/trip_model.dart';
-import '../../../services/ai_service.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
 
@@ -487,15 +486,32 @@ class _JournalEntryScreenState extends ConsumerState<JournalEntryScreen> {
     setState(() => _isGenerating = true);
 
     try {
-      final aiService = AIService();
+      // Fetch day context (chat messages and expenses for this date)
+      final dayContext = await ref.read(
+        journalDayContextProvider((tripId: widget.tripId, date: widget.entryDate)).future,
+      );
 
-      // For now, generate with placeholder data
-      // In a real implementation, you'd fetch chat messages and expenses for this date
+      // Check if there's any data to generate from
+      if (!dayContext.hasData) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('No chat messages or expenses found for this day. Start a conversation or log some expenses first!'),
+              backgroundColor: AppTheme.warningColor,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Generate journal entry using day context
+      final aiService = ref.read(aiServiceForJournalProvider);
       final generatedContent = await aiService.generateJournalEntry(
-        chatMessages: [], // TODO: Fetch actual chat messages for this date
+        chatMessages: dayContext.chatMessagesForAI,
         date: widget.entryDate,
-        tripDestination: trip.destination,
-        expenses: [], // TODO: Fetch actual expenses for this date
+        tripDestination: dayContext.tripDestination ?? trip.destination,
+        expenses: dayContext.expensesForAI,
       );
 
       if (mounted) {
@@ -506,6 +522,16 @@ class _JournalEntryScreenState extends ConsumerState<JournalEntryScreen> {
           _highlights = List.from(generatedContent.highlights);
           _locations = List.from(generatedContent.locations);
         });
+
+        // Show success message with context info
+        final msgCount = dayContext.chatMessages.length;
+        final expCount = dayContext.expenses.length;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Generated from $msgCount messages and $expCount expenses'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

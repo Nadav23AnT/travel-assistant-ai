@@ -38,40 +38,53 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final dashboardAsync = ref.watch(expensesDashboardProvider);
-    final showInHomeCurrency = ref.watch(showInHomeCurrencyProvider);
+    final displayMode = ref.watch(currencyDisplayModeProvider);
     final homeCurrency = ref.watch(userHomeCurrencyProvider);
+    final localCurrency = ref.watch(tripLocalCurrencyProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Expenses'),
         actions: [
-          // Currency toggle
+          // Currency toggle with 3 options: Home, USD, Local
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: SegmentedButton<bool>(
+            child: SegmentedButton<CurrencyDisplayMode>(
               style: SegmentedButton.styleFrom(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
               ),
               segments: [
                 ButtonSegment(
-                  value: false,
-                  label: Text(
-                    'Local',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
-                ButtonSegment(
-                  value: true,
+                  value: CurrencyDisplayMode.home,
                   label: Text(
                     homeCurrency,
-                    style: TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 11),
                   ),
+                  tooltip: 'Home Currency',
+                ),
+                const ButtonSegment(
+                  value: CurrencyDisplayMode.usd,
+                  label: Text(
+                    'USD',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                  tooltip: 'US Dollar',
+                ),
+                ButtonSegment(
+                  value: CurrencyDisplayMode.local,
+                  label: Text(
+                    localCurrency ?? 'Local',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  tooltip: localCurrency != null
+                      ? DestinationCurrencyMapper.getCurrencyDisplayName(localCurrency)
+                      : 'Local Currency',
                 ),
               ],
-              selected: {showInHomeCurrency},
+              selected: {displayMode},
               onSelectionChanged: (selected) {
-                ref.read(showInHomeCurrencyProvider.notifier).state =
+                ref.read(currencyDisplayModeProvider.notifier).state =
                     selected.first;
               },
             ),

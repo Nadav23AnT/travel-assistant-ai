@@ -207,6 +207,77 @@ class ChatRepository {
     }
   }
 
+  /// Get chat messages for a specific trip and date
+  /// This fetches all messages from chat sessions associated with the trip
+  /// that were created on the specified date
+  Future<List<ChatMessageModel>> getTripMessagesByDate(
+    String tripId,
+    DateTime date,
+  ) async {
+    try {
+      // First get all sessions for this trip
+      final sessions = await _supabase
+          .from('chat_sessions')
+          .select('id')
+          .eq('trip_id', tripId);
+
+      if ((sessions as List).isEmpty) {
+        return [];
+      }
+
+      final sessionIds = sessions.map((s) => s['id'] as String).toList();
+
+      // Get messages from these sessions created on the specific date
+      final startOfDay = DateTime(date.year, date.month, date.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+
+      final response = await _supabase
+          .from('chat_messages')
+          .select()
+          .inFilter('session_id', sessionIds)
+          .gte('created_at', startOfDay.toIso8601String())
+          .lt('created_at', endOfDay.toIso8601String())
+          .order('created_at', ascending: true);
+
+      return (response as List)
+          .map((json) => ChatMessageModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching trip messages by date: $e');
+      return [];
+    }
+  }
+
+  /// Get all chat messages for a trip (for journal generation context)
+  Future<List<ChatMessageModel>> getTripMessages(String tripId) async {
+    try {
+      // First get all sessions for this trip
+      final sessions = await _supabase
+          .from('chat_sessions')
+          .select('id')
+          .eq('trip_id', tripId);
+
+      if ((sessions as List).isEmpty) {
+        return [];
+      }
+
+      final sessionIds = sessions.map((s) => s['id'] as String).toList();
+
+      final response = await _supabase
+          .from('chat_messages')
+          .select()
+          .inFilter('session_id', sessionIds)
+          .order('created_at', ascending: true);
+
+      return (response as List)
+          .map((json) => ChatMessageModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching trip messages: $e');
+      return [];
+    }
+  }
+
   // ============================================
   // UTILITIES
   // ============================================

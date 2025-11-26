@@ -244,8 +244,33 @@ final expenseOperationProvider =
 // DASHBOARD PROVIDERS
 // ============================================
 
-/// Toggle for showing amounts in home currency vs local currency
-final showInHomeCurrencyProvider = StateProvider<bool>((ref) => true);
+/// Currency display mode for expenses dashboard
+/// - home: User's home currency from profile
+/// - usd: Always USD
+/// - local: Local currency based on trip destination
+final currencyDisplayModeProvider = StateProvider<CurrencyDisplayMode>((ref) => CurrencyDisplayMode.home);
+
+/// Legacy provider for backwards compatibility
+/// @deprecated Use currencyDisplayModeProvider instead
+final showInHomeCurrencyProvider = Provider<bool>((ref) {
+  return ref.watch(currencyDisplayModeProvider) == CurrencyDisplayMode.home;
+});
+
+/// Provider to get the local currency for the current trip
+final tripLocalCurrencyProvider = Provider<String?>((ref) {
+  final tripId = ref.watch(effectiveTripIdProvider);
+  if (tripId == null) return null;
+
+  final tripAsync = ref.watch(tripByIdProvider(tripId));
+  return tripAsync.when(
+    data: (trip) {
+      if (trip == null) return null;
+      return DestinationCurrencyMapper.getCurrencyForDestination(trip.destination);
+    },
+    loading: () => null,
+    error: (_, __) => null,
+  );
+});
 
 /// User-selected trip for expenses dashboard (null = use default)
 final selectedExpensesTripIdProvider = StateProvider<String?>((ref) => null);
@@ -284,8 +309,9 @@ class ExpensesDashboardData {
 final expensesDashboardProvider =
     FutureProvider<ExpensesDashboardData>((ref) async {
   final tripId = ref.watch(effectiveTripIdProvider);
-  final showInHome = ref.watch(showInHomeCurrencyProvider);
+  final displayMode = ref.watch(currencyDisplayModeProvider);
   final homeCurrency = ref.watch(userHomeCurrencyProvider);
+  final localCurrency = ref.watch(tripLocalCurrencyProvider);
   // Watch exchange rates so we rebuild when they change (rates loaded via home_screen)
   ref.watch(exchangeRatesProvider);
   final repository = ref.watch(expensesRepositoryProvider);
@@ -304,18 +330,33 @@ final expensesDashboardProvider =
     expenses = await repository.getUserExpenses();
   }
 
-  // Determine display currency
-  final displayCurrency = showInHome ? homeCurrency : _getPrimaryCurrency(expenses);
+  // Determine display currency based on mode
+  String displayCurrency;
+  bool shouldConvert = true;
+
+  switch (displayMode) {
+    case CurrencyDisplayMode.home:
+      displayCurrency = homeCurrency;
+      break;
+    case CurrencyDisplayMode.usd:
+      displayCurrency = 'USD';
+      break;
+    case CurrencyDisplayMode.local:
+      // Use local currency if available, otherwise fall back to most common expense currency
+      displayCurrency = localCurrency ?? _getPrimaryCurrency(expenses);
+      shouldConvert = localCurrency != null;
+      break;
+  }
 
   // Currency conversion function
   double convertAmount(double amount, String fromCurrency) {
-    if (!showInHome || fromCurrency == homeCurrency) {
+    if (!shouldConvert || fromCurrency == displayCurrency) {
       return amount;
     }
     return ref.read(exchangeRatesProvider.notifier).convert(
           amount,
           fromCurrency,
-          homeCurrency,
+          displayCurrency,
         );
   }
 

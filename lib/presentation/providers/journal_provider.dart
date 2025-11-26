@@ -1,7 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models/chat_models.dart';
+import '../../data/models/expense_model.dart';
 import '../../data/models/journal_model.dart';
+import '../../data/repositories/chat_repository.dart';
+import '../../data/repositories/expenses_repository.dart';
 import '../../data/repositories/journal_repository.dart';
+import '../../services/ai_service.dart';
 import 'trips_provider.dart';
 
 // ============================================
@@ -410,3 +415,113 @@ final journalRefreshProvider =
     ref.invalidate(tripJournalCountProvider(tripId));
   };
 });
+
+// ============================================
+// AUTO-GENERATION PROVIDERS
+// ============================================
+
+/// Provider for chat repository
+final chatRepositoryProvider = Provider<ChatRepository>((ref) {
+  return ChatRepository();
+});
+
+/// Provider for expenses repository
+final expensesRepositoryForJournalProvider = Provider<ExpensesRepository>((ref) {
+  return ExpensesRepository();
+});
+
+/// Provider for AI service
+final aiServiceForJournalProvider = Provider<AIService>((ref) {
+  return AIService();
+});
+
+/// Data class to hold day context for journal generation
+class JournalDayContext {
+  final List<ChatMessageModel> chatMessages;
+  final List<ExpenseModel> expenses;
+  final DateTime date;
+  final String? tripDestination;
+
+  const JournalDayContext({
+    required this.chatMessages,
+    required this.expenses,
+    required this.date,
+    this.tripDestination,
+  });
+
+  bool get hasData => chatMessages.isNotEmpty || expenses.isNotEmpty;
+
+  /// Get chat messages as AI service format
+  List<ChatMessage> get chatMessagesForAI {
+    return chatMessages.map((m) => ChatMessage(
+      role: m.role,
+      content: m.content,
+    )).toList();
+  }
+
+  /// Get expenses as parsed expenses for AI service
+  List<ParsedExpense> get expensesForAI {
+    return expenses.map((e) => ParsedExpense(
+      amount: e.amount,
+      currency: e.currency,
+      category: e.category,
+      description: e.description,
+      date: e.expenseDate ?? DateTime.now(),
+    )).toList();
+  }
+}
+
+/// Provider to fetch day context (chat + expenses) for journal generation
+final journalDayContextProvider = FutureProvider.family<JournalDayContext, ({String tripId, DateTime date})>(
+  (ref, params) async {
+    final chatRepo = ref.watch(chatRepositoryProvider);
+    final expensesRepo = ref.watch(expensesRepositoryForJournalProvider);
+
+    // Get trip for destination
+    final tripAsync = ref.watch(tripByIdProvider(params.tripId));
+    String? destination;
+    tripAsync.whenData((trip) {
+      destination = trip?.destination;
+    });
+
+    // Fetch chat messages and expenses for the date in parallel
+    final results = await Future.wait([
+      chatRepo.getTripMessagesByDate(params.tripId, params.date),
+      expensesRepo.getExpensesByDate(params.tripId, params.date),
+    ]);
+
+    return JournalDayContext(
+      chatMessages: results[0] as List<ChatMessageModel>,
+      expenses: results[1] as List<ExpenseModel>,
+      date: params.date,
+      tripDestination: destination,
+    );
+  },
+);
+
+/// Provider to auto-generate a journal entry from day data
+/// Returns the generated content, caller should save it
+final autoGenerateJournalProvider = FutureProvider.family<GeneratedJournalContent?, ({String tripId, DateTime date})>(
+  (ref, params) async {
+    final dayContext = await ref.watch(journalDayContextProvider(params).future);
+
+    if (!dayContext.hasData) {
+      return null;
+    }
+
+    final aiService = ref.watch(aiServiceForJournalProvider);
+
+    try {
+      final generatedContent = await aiService.generateJournalEntry(
+        chatMessages: dayContext.chatMessagesForAI,
+        date: dayContext.date,
+        tripDestination: dayContext.tripDestination,
+        expenses: dayContext.expensesForAI,
+      );
+
+      return generatedContent;
+    } catch (e) {
+      return null;
+    }
+  },
+);

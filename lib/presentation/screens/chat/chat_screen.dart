@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../config/theme.dart';
 import '../../../data/models/chat_models.dart';
 import '../../providers/chat_provider.dart';
+import '../../providers/journal_provider.dart';
+import '../../providers/trips_provider.dart';
 import '../../widgets/chat/expense_confirmation_card.dart';
+import '../../widgets/chat/journal_reminder_card.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String sessionId;
@@ -22,6 +25,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  bool _journalReminderDismissed = false;
 
   @override
   void initState() {
@@ -153,6 +157,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final pendingExpense = chatState.pendingExpense;
     final isCreatingExpense = chatState.isCreatingExpense;
 
+    // Watch for active trip and journal status for reminder
+    final activeTripAsync = ref.watch(activeTripProvider);
+    final shouldShowJournalReminder = !_journalReminderDismissed &&
+        ref.watch(shouldShowJournalPromptProvider);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -190,6 +199,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // Journal reminder banner (if applicable)
+                if (shouldShowJournalReminder)
+                  activeTripAsync.when(
+                    data: (trip) => trip != null
+                        ? JournalReminderCard(
+                            trip: trip,
+                            onDismiss: () => setState(() {
+                              _journalReminderDismissed = true;
+                            }),
+                          )
+                        : const SizedBox.shrink(),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+
                 // Chat messages
                 Expanded(
                   child: messages.isEmpty && !isSending

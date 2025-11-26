@@ -5,6 +5,234 @@ import '../../services/auth_service.dart';
 import '../../services/currency_service.dart';
 
 // ============================================
+// CURRENCY DISPLAY MODE
+// ============================================
+
+/// Enum for currency display options in expenses screen
+enum CurrencyDisplayMode {
+  home,  // User's home currency from profile
+  usd,   // Always USD
+  local, // Local currency based on trip destination
+}
+
+// ============================================
+// DESTINATION TO CURRENCY MAPPING
+// ============================================
+
+/// Maps common travel destinations to their local currency codes
+/// This is used to determine the "local" currency based on trip destination
+class DestinationCurrencyMapper {
+  static const Map<String, String> _countryToCurrency = {
+    // Asia
+    'thailand': 'THB',
+    'thai': 'THB',
+    'bangkok': 'THB',
+    'phuket': 'THB',
+    'chiang mai': 'THB',
+    'japan': 'JPY',
+    'tokyo': 'JPY',
+    'osaka': 'JPY',
+    'kyoto': 'JPY',
+    'china': 'CNY',
+    'beijing': 'CNY',
+    'shanghai': 'CNY',
+    'hong kong': 'HKD',
+    'singapore': 'SGD',
+    'malaysia': 'MYR',
+    'kuala lumpur': 'MYR',
+    'indonesia': 'IDR',
+    'bali': 'IDR',
+    'jakarta': 'IDR',
+    'vietnam': 'VND',
+    'hanoi': 'VND',
+    'ho chi minh': 'VND',
+    'philippines': 'PHP',
+    'manila': 'PHP',
+    'south korea': 'KRW',
+    'korea': 'KRW',
+    'seoul': 'KRW',
+    'india': 'INR',
+    'mumbai': 'INR',
+    'delhi': 'INR',
+    'taiwan': 'TWD',
+    'taipei': 'TWD',
+
+    // Europe
+    'france': 'EUR',
+    'paris': 'EUR',
+    'germany': 'EUR',
+    'berlin': 'EUR',
+    'munich': 'EUR',
+    'italy': 'EUR',
+    'rome': 'EUR',
+    'milan': 'EUR',
+    'venice': 'EUR',
+    'florence': 'EUR',
+    'spain': 'EUR',
+    'madrid': 'EUR',
+    'barcelona': 'EUR',
+    'portugal': 'EUR',
+    'lisbon': 'EUR',
+    'netherlands': 'EUR',
+    'amsterdam': 'EUR',
+    'belgium': 'EUR',
+    'brussels': 'EUR',
+    'austria': 'EUR',
+    'vienna': 'EUR',
+    'greece': 'EUR',
+    'athens': 'EUR',
+    'ireland': 'EUR',
+    'dublin': 'EUR',
+    'finland': 'EUR',
+    'helsinki': 'EUR',
+    'uk': 'GBP',
+    'united kingdom': 'GBP',
+    'england': 'GBP',
+    'london': 'GBP',
+    'scotland': 'GBP',
+    'edinburgh': 'GBP',
+    'switzerland': 'CHF',
+    'zurich': 'CHF',
+    'geneva': 'CHF',
+    'sweden': 'SEK',
+    'stockholm': 'SEK',
+    'norway': 'NOK',
+    'oslo': 'NOK',
+    'denmark': 'DKK',
+    'copenhagen': 'DKK',
+    'poland': 'PLN',
+    'warsaw': 'PLN',
+    'krakow': 'PLN',
+    'czech': 'CZK',
+    'prague': 'CZK',
+    'hungary': 'HUF',
+    'budapest': 'HUF',
+    'turkey': 'TRY',
+    'istanbul': 'TRY',
+    'russia': 'RUB',
+    'moscow': 'RUB',
+
+    // Americas
+    'usa': 'USD',
+    'united states': 'USD',
+    'new york': 'USD',
+    'los angeles': 'USD',
+    'san francisco': 'USD',
+    'miami': 'USD',
+    'las vegas': 'USD',
+    'hawaii': 'USD',
+    'canada': 'CAD',
+    'toronto': 'CAD',
+    'vancouver': 'CAD',
+    'montreal': 'CAD',
+    'mexico': 'MXN',
+    'cancun': 'MXN',
+    'mexico city': 'MXN',
+    'brazil': 'BRL',
+    'rio': 'BRL',
+    'sao paulo': 'BRL',
+    'argentina': 'ARS',
+    'buenos aires': 'ARS',
+    'colombia': 'COP',
+    'bogota': 'COP',
+    'peru': 'PEN',
+    'lima': 'PEN',
+    'chile': 'CLP',
+    'santiago': 'CLP',
+
+    // Middle East
+    'israel': 'ILS',
+    'tel aviv': 'ILS',
+    'jerusalem': 'ILS',
+    'uae': 'AED',
+    'dubai': 'AED',
+    'abu dhabi': 'AED',
+    'saudi arabia': 'SAR',
+    'qatar': 'QAR',
+    'doha': 'QAR',
+
+    // Oceania
+    'australia': 'AUD',
+    'sydney': 'AUD',
+    'melbourne': 'AUD',
+    'new zealand': 'NZD',
+    'auckland': 'NZD',
+
+    // Africa
+    'south africa': 'ZAR',
+    'cape town': 'ZAR',
+    'johannesburg': 'ZAR',
+    'egypt': 'EGP',
+    'cairo': 'EGP',
+    'morocco': 'MAD',
+    'marrakech': 'MAD',
+    'kenya': 'KES',
+    'nairobi': 'KES',
+  };
+
+  /// Get currency code for a destination string
+  /// Returns null if no match found
+  static String? getCurrencyForDestination(String? destination) {
+    if (destination == null || destination.isEmpty) return null;
+
+    final lowercaseDestination = destination.toLowerCase().trim();
+
+    // Direct match
+    if (_countryToCurrency.containsKey(lowercaseDestination)) {
+      return _countryToCurrency[lowercaseDestination];
+    }
+
+    // Partial match - check if destination contains any known key
+    for (final entry in _countryToCurrency.entries) {
+      if (lowercaseDestination.contains(entry.key) ||
+          entry.key.contains(lowercaseDestination)) {
+        return entry.value;
+      }
+    }
+
+    return null;
+  }
+
+  /// Get currency name for display
+  static String getCurrencyDisplayName(String currencyCode) {
+    const names = {
+      'USD': 'US Dollar',
+      'EUR': 'Euro',
+      'GBP': 'British Pound',
+      'JPY': 'Japanese Yen',
+      'THB': 'Thai Baht',
+      'CNY': 'Chinese Yuan',
+      'AUD': 'Australian Dollar',
+      'CAD': 'Canadian Dollar',
+      'CHF': 'Swiss Franc',
+      'INR': 'Indian Rupee',
+      'SGD': 'Singapore Dollar',
+      'MXN': 'Mexican Peso',
+      'BRL': 'Brazilian Real',
+      'ILS': 'Israeli Shekel',
+      'AED': 'UAE Dirham',
+      'KRW': 'Korean Won',
+      'HKD': 'Hong Kong Dollar',
+      'NZD': 'New Zealand Dollar',
+      'SEK': 'Swedish Krona',
+      'NOK': 'Norwegian Krone',
+      'DKK': 'Danish Krone',
+      'PLN': 'Polish Zloty',
+      'CZK': 'Czech Koruna',
+      'HUF': 'Hungarian Forint',
+      'TRY': 'Turkish Lira',
+      'ZAR': 'South African Rand',
+      'MYR': 'Malaysian Ringgit',
+      'IDR': 'Indonesian Rupiah',
+      'PHP': 'Philippine Peso',
+      'VND': 'Vietnamese Dong',
+      'TWD': 'Taiwan Dollar',
+    };
+    return names[currencyCode] ?? currencyCode;
+  }
+}
+
+// ============================================
 // SERVICE PROVIDER
 // ============================================
 

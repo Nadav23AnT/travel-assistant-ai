@@ -211,6 +211,29 @@ class ExpensesRepository {
     }
   }
 
+  /// Get expenses for a specific date (for journal generation)
+  Future<List<ExpenseModel>> getExpensesByDate(
+    String tripId,
+    DateTime date,
+  ) async {
+    try {
+      final dateStr = date.toIso8601String().split('T').first;
+      final response = await _supabase
+          .from('expenses')
+          .select()
+          .eq('trip_id', tripId)
+          .eq('expense_date', dateStr)
+          .order('created_at', ascending: true);
+
+      return (response as List)
+          .map((json) => ExpenseModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching expenses by date: $e');
+      return [];
+    }
+  }
+
   // ============================================
   // WRITE OPERATIONS
   // ============================================
