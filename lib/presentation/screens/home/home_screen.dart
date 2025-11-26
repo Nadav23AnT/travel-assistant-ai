@@ -5,13 +5,16 @@ import 'package:intl/intl.dart';
 
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../../data/models/chat_models.dart';
 import '../../../data/models/expense_model.dart';
 import '../../../data/models/trip_model.dart';
 import '../../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/chat_provider.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
 import '../../providers/trips_provider.dart';
+import '../../widgets/home/day_tip_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -58,8 +61,12 @@ class HomeScreen extends ConsumerWidget {
               _buildQuickActions(context),
               const SizedBox(height: 24),
 
-              // Today's itinerary
-              _buildTodayItinerary(context),
+              // Day Tip (AI-powered destination tips)
+              const DayTipCard(),
+              const SizedBox(height: 24),
+
+              // Recent Chats
+              _buildRecentChats(context, ref),
               const SizedBox(height: 24),
 
               // Recent expenses
@@ -523,7 +530,9 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTodayItinerary(BuildContext context) {
+  Widget _buildRecentChats(BuildContext context, WidgetRef ref) {
+    final recentChatsAsync = ref.watch(recentChatsProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -531,40 +540,152 @@ class HomeScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Today's Itinerary",
+              'Recent Chats',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             TextButton(
-              onPressed: () => context.go(AppRoutes.trips),
+              onPressed: () => context.go(AppRoutes.chat),
               child: const Text('View All'),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.event_note_outlined,
-                    size: 32,
-                    color: AppTheme.textSecondary,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'No activities planned for today',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
-                  ),
-                ],
+        recentChatsAsync.when(
+          loading: () => const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ),
+          error: (error, stack) => Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 32,
+                      color: AppTheme.errorColor,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Failed to load chats',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
+          data: (chats) {
+            if (chats.isEmpty) {
+              return Card(
+                child: InkWell(
+                  onTap: () => context.go(AppRoutes.chat),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 32,
+                            color: AppTheme.textSecondary,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Start a conversation with TripBuddy!',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: AppTheme.textSecondary,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton.icon(
+                            onPressed: () => context.go(AppRoutes.chat),
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('New Chat'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return Card(
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: chats.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  return _buildChatItem(context, chats[index]);
+                },
+              ),
+            );
+          },
         ),
       ],
+    );
+  }
+
+  Widget _buildChatItem(BuildContext context, ChatSession chat) {
+    final dateFormat = DateFormat('MMM d');
+    final timeFormat = DateFormat('h:mm a');
+    final now = DateTime.now();
+    final chatDate = chat.updatedAt;
+
+    // Format time: "Today 2:30 PM" or "Dec 15"
+    String timeText;
+    if (chatDate.year == now.year &&
+        chatDate.month == now.month &&
+        chatDate.day == now.day) {
+      timeText = 'Today ${timeFormat.format(chatDate)}';
+    } else if (chatDate.year == now.year &&
+               chatDate.month == now.month &&
+               chatDate.day == now.day - 1) {
+      timeText = 'Yesterday';
+    } else {
+      timeText = dateFormat.format(chatDate);
+    }
+
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppTheme.primaryLight,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.chat_bubble,
+          color: AppTheme.primaryColor,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        chat.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      subtitle: Text(
+        timeText,
+        style: TextStyle(
+          color: AppTheme.textSecondary,
+          fontSize: 12,
+        ),
+      ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: AppTheme.textSecondary,
+      ),
+      onTap: () => context.push('/chat/${chat.id}'),
     );
   }
 

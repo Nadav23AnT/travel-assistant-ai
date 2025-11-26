@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/env.dart';
+import '../data/models/day_tip_model.dart';
 import '../data/models/journal_model.dart';
 import '../data/models/travel_context.dart';
 
@@ -991,4 +992,383 @@ Include place data at the end for Google Maps integration:
       throw AIException('Failed to get recommendations: $e');
     }
   }
+
+  /// System prompt for generating daily destination tips - LOCAL EXPERT
+  String _buildDayTipPrompt(String destination, String category) {
+    final categoryDescriptions = {
+      'money': '''ATMs and currency exchange:
+- Compare different ATM networks and their fees
+- Explain which banks/ATMs to USE and which to AVOID (and why)
+- Tips on exchange rates, hidden fees, dynamic currency conversion traps
+- Card acceptance realities, cash-only situations
+- Tipping norms and amounts''',
+      'medical': '''Healthcare and pharmacies:
+- How to find pharmacies (chain names, 24h options)
+- Common medications and their local names/availability
+- What requires prescription vs over-the-counter
+- Hospital/clinic options for tourists (quality varies!)
+- Health precautions specific to the region''',
+      'connectivity': '''SIM cards and internet:
+- Compare ALL major carriers (coverage, speed, price)
+- Where to buy (official stores vs convenience stores - pros/cons)
+- What to AVOID (tourist trap SIM deals, overpriced airport options)
+- Typical data packages and realistic prices
+- eSIM options if available
+- WiFi availability and free hotspot locations''',
+      'customs': '''Cultural etiquette:
+- Greetings and physical contact norms
+- Dress codes for different situations (temples, restaurants, business)
+- Topics to avoid in conversation
+- Gift-giving etiquette
+- Religious and cultural sensitivities
+- Common misunderstandings tourists make''',
+      'safety': '''Safety awareness:
+- Neighborhoods/areas to avoid (especially at night)
+- Common petty crimes and how to prevent them
+- Safe transportation options vs risky ones
+- Police and emergency contacts
+- What NOT to do that tourists commonly do wrong''',
+      'transport': '''Getting around:
+- Compare transport options (metro, bus, taxi, rideshare, motorbike)
+- Which apps to download and use
+- Typical prices so you don\'t get overcharged
+- Tricks drivers use on tourists and how to avoid them
+- Best value options for different situations''',
+      'food': '''Food and dining:
+- Must-try local dishes and where to find authentic versions
+- Street food safety - what to look for, what to avoid
+- Price ranges so you know if you\'re being overcharged
+- Local dining customs and etiquette
+- Vegetarian/allergy considerations
+- Food scams to watch out for''',
+      'scams': '''Tourist scams to avoid:
+- Specific scams common in this destination
+- How scammers approach tourists
+- Red flags to watch for
+- How to respond/escape if targeted
+- Areas where scams are most common''',
+      'language': '''Language tips:
+- Essential phrases that actually help
+- Common misunderstandings
+- How to communicate when there\'s a language barrier
+- Translation app tips
+- Polite vs rude - words/gestures to avoid''',
+      'weather': '''Weather and clothing:
+- What to actually wear (not just temperature but humidity, rain, sun)
+- Indoor vs outdoor temperature differences (AC!)
+- Seasonal considerations
+- Items tourists forget but really need
+- Weather-related health tips''',
+      'shopping': '''Shopping smart:
+- Where locals shop vs tourist traps
+- Fair prices for common items
+- Quality indicators - real vs fake
+- Return policies and consumer rights
+- Best areas for specific items''',
+      'nightlife': '''Nightlife safety:
+- Safe areas for going out
+- Drink safety (spiking, fake alcohol)
+- Cover charges and hidden fees
+- Getting home safely at night
+- What to avoid''',
+      'emergency': '''Emergency preparedness:
+- Emergency numbers (police, ambulance, fire)
+- Nearest embassy/consulate info
+- What to do if passport is lost/stolen
+- Hospital emergency procedures
+- Insurance and payment for emergencies''',
+      'water': '''Water and hygiene:
+- Tap water safety (drinking, brushing teeth, ice)
+- Bottled water - authentic vs refilled bottles
+- Food hygiene indicators
+- Hand sanitizer and hygiene tips
+- Stomach issues - prevention and treatment''',
+      'photography': '''Photography etiquette:
+- Where photography is prohibited or frowned upon
+- Asking permission - when and how
+- Sensitive subjects to avoid photographing
+- Drone regulations
+- Best times/spots for photos''',
+      'bargaining': '''Bargaining and negotiation:
+- When bargaining is expected vs offensive
+- Starting price strategies
+- Walking away technique
+- Fair prices for common tourist items
+- Fixed price vs negotiable situations''',
+      'general': 'practical daily tips for visitors',
+    };
+
+    final categoryFocus = categoryDescriptions[category] ?? categoryDescriptions['general']!;
+
+    return '''
+You are a SEASONED TRAVELER and LOCAL EXPERT who has lived in $destination for many years. You\'ve seen every tourist mistake, know every trick, and genuinely want to help travelers have a safe, authentic, and budget-smart experience.
+
+Generate ONE practical daily tip for a traveler visiting $destination.
+
+CATEGORY: $category
+
+FOCUS AREAS FOR THIS CATEGORY:
+$categoryFocus
+
+CRITICAL REQUIREMENTS:
+1. Present OPTIONS - don\'t just recommend one thing, compare alternatives
+2. Explain what to AVOID and WHY - this is often more valuable than recommendations
+3. Be SPECIFIC to $destination - generic advice is useless
+4. Include realistic PRICES in local currency when relevant
+5. Be PRACTICAL - something they can actually use
+6. Keep it CONCISE - 3-4 sentences maximum, but packed with value
+7. Include a SHORT catchy title (max 6 words)
+
+EXAMPLES OF EXCELLENT TIPS:
+
+Money: "ATM Fees: Know Before You Go"
+"In Bangkok, Kasikorn (green) and Bangkok Bank (blue) ATMs charge 220 THB per withdrawal, while Aeon ATMs (in malls) are FREE for international cards. AVOID orange CIMB ATMs - they charge 250 THB AND have poor exchange rates. Always decline \'conversion to home currency\' - it\'s a 3-5% hidden fee."
+
+Connectivity: "Skip the Airport SIM Booth"
+"Airport SIM shops charge 2-3x more. Instead, any 7-Eleven sells AIS, TRUE, and DTAC SIMs for 299-399 THB with 15-30GB data. TRUE has best city coverage, AIS best for rural areas. Bring passport - required for registration. Pro tip: eSIMs via Airalo app work great and you can set up before landing."
+
+Scams: "The Friendly Local Warning"
+"If someone approaches saying \'the temple/palace is closed today\' - it\'s ALWAYS a scam to redirect you to a gem shop or tailor. Verify closures yourself. Similarly, tuk-tuk drivers offering \'20 baht tours\' will take you to commission shops. If it sounds too cheap, you\'re the product."
+
+Water: "Ice Cube Intelligence"
+"Tubular/hollow ice cubes (made in factories) are safe - they\'re made from purified water. Avoid irregular crushed ice at street stalls. Bottled water: check the seal isn\'t broken and the cap has a safety ring. Brands like Singha, Crystal, Nestle are reliable; avoid unknown brands with suspiciously low prices."
+
+Respond in this exact JSON format:
+{
+  "title": "short catchy title",
+  "content": "the practical tip with specific details, options, and what to avoid",
+  "category": "$category"
+}
+
+Do not include any text outside the JSON object.
+''';
+  }
+
+  /// Generate a daily practical tip for a destination
+  Future<GeneratedTipContent> generateDayTip({
+    required String destination,
+    required String category,
+    String? model,
+  }) async {
+    if (_apiKey.isEmpty) {
+      throw AIException('OpenAI API key not configured');
+    }
+
+    try {
+      final systemPrompt = _buildDayTipPrompt(destination, category);
+
+      final response = await _dio.post(
+        '/chat/completions',
+        data: {
+          'model': model ?? _defaultModel,
+          'messages': [
+            ChatMessage.system(systemPrompt).toJson(),
+            ChatMessage.user('Generate a $category tip for $destination.').toJson(),
+          ],
+          'temperature': 0.9,
+          'max_tokens': 300,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final choices = data['choices'] as List;
+        if (choices.isNotEmpty) {
+          final content = choices[0]['message']['content'] as String;
+          return _parseDayTipResponse(content, category);
+        }
+        throw AIException('No response from AI');
+      } else {
+        throw AIException(
+          'API request failed',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      debugPrint('AI Service Error generating day tip: ${e.message}');
+      // Return a default tip on error
+      return GeneratedTipContent(
+        title: 'Travel Tip',
+        content: 'Check local guides for the best recommendations in $destination!',
+        category: category,
+      );
+    } catch (e) {
+      debugPrint('Error generating day tip: $e');
+      return GeneratedTipContent(
+        title: 'Travel Tip',
+        content: 'Explore $destination like a local - ask hotel staff for insider tips!',
+        category: category,
+      );
+    }
+  }
+
+  /// Parse the day tip response
+  GeneratedTipContent _parseDayTipResponse(String content, String fallbackCategory) {
+    try {
+      // Clean the response - remove markdown code blocks if present
+      String cleanContent = content.trim();
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.substring(7);
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.substring(3);
+      }
+      if (cleanContent.endsWith('```')) {
+        cleanContent = cleanContent.substring(0, cleanContent.length - 3);
+      }
+      cleanContent = cleanContent.trim();
+
+      final json = jsonDecode(cleanContent) as Map<String, dynamic>;
+      return GeneratedTipContent.fromJson(json);
+    } catch (e) {
+      debugPrint('Failed to parse day tip response: $e');
+      debugPrint('Raw content: $content');
+      // Return the content as-is if parsing fails
+      return GeneratedTipContent(
+        title: 'Daily Tip',
+        content: content.length > 300 ? content.substring(0, 300) : content,
+        category: fallbackCategory,
+      );
+    }
+  }
+
+  /// Generate an AI budget estimate for a trip
+  Future<BudgetEstimate> generateBudgetEstimate({
+    required String destination,
+    required int tripDays,
+    required String currency,
+    String? model,
+  }) async {
+    if (_apiKey.isEmpty) {
+      throw AIException('OpenAI API key not configured');
+    }
+
+    try {
+      final systemPrompt = '''
+You are a travel budget expert with extensive knowledge of travel costs worldwide.
+
+Generate a realistic daily budget estimate for a traveler visiting $destination for $tripDays days.
+
+Consider ACTUAL current costs (2024-2025 prices) for:
+- Accommodation: mid-range hotels/Airbnb (not hostels, not luxury)
+- Food: mix of local restaurants and street food (3 meals/day)
+- Local transport: public transit, occasional taxi/Uber
+- Activities: 1-2 tourist attractions per day, entrance fees
+- Miscellaneous: SIM card, water, snacks, tips
+
+DO NOT include:
+- International flights
+- Travel insurance
+- Shopping/souvenirs (varies too much)
+
+Provide the budget in $currency.
+
+IMPORTANT: Be realistic and specific to $destination. Costs vary dramatically by country:
+- Southeast Asia: \$30-60/day
+- Western Europe: \$100-180/day
+- Japan: \$80-150/day
+- USA major cities: \$120-200/day
+- Eastern Europe: \$50-90/day
+
+Respond ONLY in this exact JSON format:
+{
+  "daily_budget": 85,
+  "total_budget": 850,
+  "breakdown": {
+    "accommodation": 45,
+    "food": 25,
+    "transport": 8,
+    "activities": 15,
+    "misc": 7
+  },
+  "tips": "Brief 1-sentence money-saving tip specific to this destination"
+}
+''';
+
+      final response = await _dio.post(
+        '/chat/completions',
+        data: {
+          'model': model ?? _defaultModel,
+          'messages': [
+            ChatMessage.system(systemPrompt).toJson(),
+            ChatMessage.user('Generate a $tripDays-day budget for $destination in $currency.').toJson(),
+          ],
+          'temperature': 0.3,
+          'max_tokens': 300,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final choices = data['choices'] as List;
+        if (choices.isNotEmpty) {
+          final content = choices[0]['message']['content'] as String;
+          return _parseBudgetResponse(content, tripDays, currency);
+        }
+        throw AIException('No response from AI');
+      } else {
+        throw AIException(
+          'API request failed',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      debugPrint('AI Service Error generating budget: ${e.message}');
+      rethrow;
+    } catch (e) {
+      debugPrint('Error generating budget: $e');
+      rethrow;
+    }
+  }
+
+  /// Parse the budget response
+  BudgetEstimate _parseBudgetResponse(String content, int tripDays, String currency) {
+    try {
+      // Clean the response
+      String cleanContent = content.trim();
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.substring(7);
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.substring(3);
+      }
+      if (cleanContent.endsWith('```')) {
+        cleanContent = cleanContent.substring(0, cleanContent.length - 3);
+      }
+      cleanContent = cleanContent.trim();
+
+      final json = jsonDecode(cleanContent) as Map<String, dynamic>;
+      return BudgetEstimate(
+        dailyBudget: (json['daily_budget'] as num).toDouble(),
+        totalBudget: (json['total_budget'] as num).toDouble(),
+        breakdown: Map<String, double>.from(
+          (json['breakdown'] as Map).map((k, v) => MapEntry(k.toString(), (v as num).toDouble())),
+        ),
+        tips: json['tips'] as String? ?? '',
+        currency: currency,
+        tripDays: tripDays,
+      );
+    } catch (e) {
+      debugPrint('Failed to parse budget response: $e');
+      debugPrint('Raw content: $content');
+      rethrow;
+    }
+  }
+}
+
+/// Budget estimate model
+class BudgetEstimate {
+  final double dailyBudget;
+  final double totalBudget;
+  final Map<String, double> breakdown;
+  final String tips;
+  final String currency;
+  final int tripDays;
+
+  const BudgetEstimate({
+    required this.dailyBudget,
+    required this.totalBudget,
+    required this.breakdown,
+    required this.tips,
+    required this.currency,
+    required this.tripDays,
+  });
 }

@@ -4,7 +4,49 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../../utils/country_currency_helper.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/expenses_provider.dart';
+import '../../providers/trips_provider.dart';
+
+/// Provider for profile statistics
+final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
+  final trips = await ref.watch(userTripsProvider.future);
+  final expenses = await ref.watch(userExpensesProvider.future);
+
+  // Calculate unique countries visited
+  final visitedCountries = <String>{};
+  for (final trip in trips) {
+    final country = CountryCurrencyHelper.extractCountryFromDestination(trip.destination);
+    if (country.isNotEmpty) {
+      visitedCountries.add(country);
+    }
+  }
+
+  // Calculate total spent across all expenses
+  final totalSpent = expenses.fold<double>(0, (sum, e) => sum + e.amount);
+
+  return ProfileStats(
+    tripCount: trips.length,
+    expenseCount: expenses.length,
+    countriesCount: visitedCountries.length,
+    totalSpent: totalSpent,
+  );
+});
+
+class ProfileStats {
+  final int tripCount;
+  final int expenseCount;
+  final int countriesCount;
+  final double totalSpent;
+
+  const ProfileStats({
+    required this.tripCount,
+    required this.expenseCount,
+    required this.countriesCount,
+    required this.totalSpent,
+  });
+}
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -38,7 +80,7 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Stats
-            _buildStats(context),
+            _buildStats(context, ref),
             const SizedBox(height: 24),
 
             // Subscription card
@@ -142,46 +184,73 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStats(BuildContext context) {
+  Widget _buildStats(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(profileStatsProvider);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: _StatItem(
-                  label: 'Trips',
-                  value: '0',
-                  icon: Icons.luggage_outlined,
+          child: statsAsync.when(
+            loading: () => const SizedBox(
+              height: 80,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => Row(
+              children: [
+                Expanded(
+                  child: _StatItem(
+                    label: 'Trips',
+                    value: '-',
+                    icon: Icons.luggage_outlined,
+                  ),
                 ),
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: AppTheme.textHint,
-              ),
-              Expanded(
-                child: _StatItem(
-                  label: 'Expenses',
-                  value: '0',
-                  icon: Icons.receipt_long_outlined,
+                Container(width: 1, height: 40, color: AppTheme.textHint),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Expenses',
+                    value: '-',
+                    icon: Icons.receipt_long_outlined,
+                  ),
                 ),
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: AppTheme.textHint,
-              ),
-              Expanded(
-                child: _StatItem(
-                  label: 'Countries',
-                  value: '0',
-                  icon: Icons.public_outlined,
+                Container(width: 1, height: 40, color: AppTheme.textHint),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Countries',
+                    value: '-',
+                    icon: Icons.public_outlined,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+            data: (stats) => Row(
+              children: [
+                Expanded(
+                  child: _StatItem(
+                    label: 'Trips',
+                    value: '${stats.tripCount}',
+                    icon: Icons.luggage_outlined,
+                  ),
+                ),
+                Container(width: 1, height: 40, color: AppTheme.textHint),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Expenses',
+                    value: '${stats.expenseCount}',
+                    icon: Icons.receipt_long_outlined,
+                  ),
+                ),
+                Container(width: 1, height: 40, color: AppTheme.textHint),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Countries',
+                    value: '${stats.countriesCount}',
+                    icon: Icons.public_outlined,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

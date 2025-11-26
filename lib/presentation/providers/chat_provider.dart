@@ -446,3 +446,13 @@ final hasPendingPlacesProvider = Provider<bool>((ref) {
   final places = ref.watch(pendingPlacesProvider);
   return places.isNotEmpty;
 });
+
+/// Provider for recent chat sessions (for dashboard)
+final recentChatsProvider = FutureProvider<List<ChatSession>>((ref) async {
+  final repository = ref.watch(chatRepositoryProvider);
+  final sessions = await repository.getUserSessions();
+  // Return last 5 sessions, sorted by most recent
+  final sorted = List<ChatSession>.from(sessions)
+    ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  return sorted.take(5).toList();
+});
