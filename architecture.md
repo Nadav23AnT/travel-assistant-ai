@@ -1222,40 +1222,56 @@ Components:
 - [x] Profile management
 - [x] Onboarding flow (languages, currency, destination, dates)
 
-### Phase 2: Trip Management - PARTIAL
+### Phase 2: Trip Management - COMPLETED
 **Goal:** Full trip CRUD and itinerary
 
-- [x] Trip list screen (basic)
-- [ ] Create/edit trip flow (form exists, not saving)
-- [ ] Trip detail screen with tabs (placeholder tabs)
-- [ ] Itinerary management
+- [x] Trip list screen
+- [x] Create/edit trip flow (fully functional)
+- [x] Trip detail screen with tabs
+- [x] Smart Budget Suggestions on create trip
+- [ ] Itinerary management (day-by-day activities)
 - [ ] Google Places integration
 - [ ] Trip sharing and members
 
-### Phase 3: AI Integration - PARTIAL
+### Phase 3: AI Integration - COMPLETED
 **Goal:** Conversational trip planning
 
 - [x] AI provider service (OpenAI - gpt-4o-mini)
 - [x] Chat UI implementation
 - [x] Chat session management
-- [ ] Context management (trip/user context to AI)
-- [ ] Recommendation cards
+- [x] Context management (trip/user context to AI)
+- [x] Place Recommendation cards
+- [x] AI-generated chat titles
+- [x] Daily Travel Tips with AI generation
 - [ ] Add to itinerary from chat
 
-### Phase 4: Expense Tracking - IN PROGRESS
+### Phase 4: Expense Tracking - COMPLETED
 **Goal:** Financial management for trips
 
-- [x] Rich Expenses Dashboard with charts
+- [x] Rich Expenses Dashboard with charts (pie + line)
 - [x] Currency toggle (local/home currency)
-- [ ] Add/edit expense flow
+- [x] Add/edit expense flow
+- [x] Expense confirmation via chat
+- [x] Category breakdown and stats
 - [ ] Receipt photo capture
 - [ ] Expense splitting logic
 - [ ] Balance calculations
 - [ ] Settlement tracking
 
-### Phase 5: Polish & Launch
+### Phase 5: Journal - COMPLETED
+**Goal:** AI-powered trip journaling
+
+- [x] Journal entries database schema
+- [x] Journal list and detail screens
+- [x] AI-generated journal entries
+- [x] Mood tracking
+- [x] Highlights and locations extraction
+- [ ] PDF export
+
+### Phase 6: Polish & Launch - PENDING
 **Goal:** Production readiness
 
+- [ ] Settings screen with preferences
 - [ ] Premium subscription flow
 - [ ] RevenueCat integration
 - [x] Onboarding experience
@@ -1341,49 +1357,20 @@ class CategoryTotal {
 
 ---
 
-### PHASE 2: Smart Expense Tracking via Chat - PENDING
+### PHASE 2: Smart Expense Tracking via Chat - COMPLETED
 
-#### 2.1 AI Expense Parsing
+#### 2.1 AI Expense Parsing - DONE
+- Added expense extraction to `lib/services/ai_service.dart`
+- Parses: amount, currency, category, description, date
+- Returns structured JSON when expense detected
 
-**Enhance `lib/services/ai_service.dart`:**
-- Add function calling for expense extraction
-- Parse: amount, currency, category, description, date
-- Return structured JSON when expense detected
+#### 2.2 Chat Expense Confirmation Flow - DONE
+- Created `lib/presentation/widgets/chat/expense_confirmation_card.dart`
+- Inline confirmation card with Edit/Save/Cancel
+- Integrates with ExpensesRepository
 
-**System prompt addition:**
-```
-When user mentions spending money, extract:
-- amount (number)
-- currency (3-letter code)
-- category (transport|accommodation|food|activities|shopping|other)
-- description (what was purchased)
-- date (default: today)
-
-Respond with confirmation and ask if they want to save it.
-```
-
-#### 2.2 Chat Expense Confirmation Flow
-
-**Modify `lib/presentation/screens/chat/chat_screen.dart`:**
-- Detect expense in AI response metadata
-- Show inline confirmation card:
-  ```
-  +-----------------------------+
-  | Save Expense?               |
-  | $50.00 - Dinner at Luigi's  |
-  | Category: Food              |
-  |                             |
-  |  [Edit]  [Save]  [Cancel]   |
-  +-----------------------------+
-  ```
-- On Save: call ExpensesRepository.createExpense()
-- Show success toast with link to Expenses page
-
-#### 2.3 Files to Create/Modify
-- `lib/services/ai_service.dart` - Add expense parsing
-- `lib/presentation/screens/chat/chat_screen.dart` - Add confirmation UI
-- `lib/presentation/widgets/chat/expense_confirmation_card.dart` - New widget
-- `lib/presentation/providers/chat_provider.dart` - Handle expense creation
+#### 2.3 Files Created
+- `lib/presentation/widgets/chat/expense_confirmation_card.dart` - Expense confirmation widget
 
 ---
 
@@ -1522,19 +1509,53 @@ Personalize recommendations based on their preferences and location.
 
 | File | Status | Notes |
 |------|--------|-------|
-| `lib/presentation/screens/expenses/expenses_screen.dart` | Complete | Full dashboard |
-| `lib/presentation/providers/expenses_provider.dart` | Complete | Dashboard providers |
-| `lib/services/ai_service.dart` | Complete | Expense parsing + journal generation |
-| `lib/presentation/screens/chat/chat_screen.dart` | Complete | Expense confirmation via chat |
-| `lib/config/theme.dart` | Reference | Has categoryColors, dividerColor |
-| `lib/data/repositories/expenses_repository.dart` | Complete | Daily spending query |
-| `lib/services/currency_service.dart` | Complete | Exchange rates |
-| `lib/data/models/journal_model.dart` | Complete | Journal model with JournalMood enum |
-| `lib/data/repositories/journal_repository.dart` | Complete | Full CRUD for journal entries |
-| `lib/presentation/providers/journal_provider.dart` | Complete | State management for journals |
+| **Screens** | | |
+| `lib/presentation/screens/expenses/expenses_screen.dart` | Complete | Full dashboard with charts |
+| `lib/presentation/screens/expenses/add_expense_screen.dart` | Complete | Add/edit expense form |
+| `lib/presentation/screens/chat/chat_screen.dart` | Complete | AI chat with expense confirmation |
 | `lib/presentation/screens/journal/journal_screen.dart` | Complete | Journal list screen |
 | `lib/presentation/screens/journal/journal_entry_screen.dart` | Complete | View/edit journal entries |
-| `lib/presentation/screens/trips/trip_detail_screen.dart` | Complete | Trip detail with journal section |
+| `lib/presentation/screens/trips/trip_detail_screen.dart` | Complete | Trip detail with all tabs |
+| `lib/presentation/screens/trips/create_trip_screen.dart` | Complete | Create trip with smart budget |
+| `lib/presentation/screens/trips/trips_screen.dart` | Complete | Trip list |
+| `lib/presentation/screens/home/home_screen.dart` | Complete | Dashboard with daily tips |
+| `lib/presentation/screens/profile/profile_screen.dart` | Complete | User profile |
+| **Providers** | | |
+| `lib/presentation/providers/expenses_provider.dart` | Complete | Dashboard providers |
+| `lib/presentation/providers/journal_provider.dart` | Complete | Journal state management |
+| `lib/presentation/providers/chat_provider.dart` | Complete | Chat state with expense handling |
+| `lib/presentation/providers/trips_provider.dart` | Complete | Trip state management |
+| `lib/presentation/providers/currency_provider.dart` | Complete | Currency conversion |
+| `lib/presentation/providers/day_tip_provider.dart` | Complete | Daily tips state |
+| **Services** | | |
+| `lib/services/ai_service.dart` | Complete | AI generation (chat, journal, tips, budget) |
+| `lib/services/currency_service.dart` | Complete | Exchange rates |
+| `lib/services/budget_estimation_service.dart` | Complete | Smart budget suggestions |
+| `lib/services/auth_service.dart` | Complete | Authentication |
+| **Repositories** | | |
+| `lib/data/repositories/expenses_repository.dart` | Complete | Full CRUD + stats |
+| `lib/data/repositories/journal_repository.dart` | Complete | Full CRUD for journals |
+| `lib/data/repositories/trips_repository.dart` | Complete | Full CRUD for trips |
+| `lib/data/repositories/chat_repository.dart` | Complete | Chat session management |
+| **Models** | | |
+| `lib/data/models/expense_model.dart` | Complete | Expense data model |
+| `lib/data/models/expense_stats.dart` | Complete | Stats for dashboard |
+| `lib/data/models/journal_model.dart` | Complete | Journal with mood enum |
+| `lib/data/models/trip_model.dart` | Complete | Trip data model |
+| `lib/data/models/day_tip_model.dart` | Complete | Daily tip model |
+| `lib/data/models/travel_context.dart` | Complete | AI context model |
+| **Widgets** | | |
+| `lib/presentation/widgets/chat/expense_confirmation_card.dart` | Complete | Expense save from chat |
+| `lib/presentation/widgets/chat/place_recommendation_card.dart` | Complete | AI place recommendations |
+| `lib/presentation/widgets/chat/journal_reminder_card.dart` | Complete | Journal prompt in chat |
+| `lib/presentation/widgets/home/day_tip_card.dart` | Complete | Daily travel tip display |
+| `lib/presentation/widgets/trip/smart_budget_suggestions_card.dart` | Complete | Budget suggestions |
+| `lib/presentation/widgets/charts/expense_pie_chart.dart` | Complete | Category breakdown |
+| `lib/presentation/widgets/charts/spending_line_chart.dart` | Complete | Spending over time |
+| **Config** | | |
+| `lib/config/theme.dart` | Reference | Colors, categoryColors |
+| `lib/config/routes.dart` | Complete | App routing |
+| `lib/config/constants.dart` | Complete | App constants |
 
 ---
 
@@ -1636,6 +1657,24 @@ REVENUECAT_API_KEY=...
 
 ## Changelog
 
+### v1.4.0 (November 26, 2025)
+- **New Features:**
+  - Smart Budget Suggestions on Create Trip screen
+    - Created BudgetEstimationService with 60+ country data
+    - SmartBudgetSuggestionsCard with active/inactive states
+    - Automatic currency conversion for 35+ currencies
+  - Daily Travel Tips on Home screen
+    - Created DayTipModel and DayTipProvider
+    - DayTipCard widget with category-based styling
+    - AI-generated tips via AIService
+  - Country flags and centralized currency handling
+  - AI-generated chat titles
+- **Architecture Update:**
+  - Updated MVP Roadmap to reflect actual completion status
+  - Reorganized phases (added Phase 5: Journal, Phase 6: Polish)
+  - Updated Critical Files Reference table
+  - Cleaned up outdated PENDING sections
+
 ### v1.3.0 (November 25, 2025)
 - **Phase 3 Complete**: Automatic Trip Journal with AI Generation
   - Created journal_entries database migration with mood, locations, highlights
@@ -1662,3 +1701,25 @@ REVENUECAT_API_KEY=...
 - Database schema design
 - UI wireframes
 - MVP roadmap
+
+---
+
+## Remaining Features (Future Sprints)
+
+### Sprint Priority 1: Settings & Profile
+- [ ] Settings screen with AI preferences, notifications, account management
+- [ ] User settings sync with `user_settings` table
+- [ ] Profile stats from database
+
+### Sprint Priority 2: Group Features
+- [ ] Itinerary management (day-by-day activities)
+- [ ] Trip sharing and members
+- [ ] Expense splitting
+- [ ] Balance calculations and settlement
+
+### Sprint Priority 3: Polish
+- [ ] Receipt photo capture
+- [ ] PDF export for journals
+- [ ] Premium subscription flow (RevenueCat)
+- [ ] Error handling improvements
+- [ ] Performance optimization
