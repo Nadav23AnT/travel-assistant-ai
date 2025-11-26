@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../config/env.dart';
 import '../data/models/journal_model.dart';
+import '../data/models/travel_context.dart';
 
 class AIException implements Exception {
   final String message;
@@ -141,15 +142,20 @@ class ParsedExpense {
   }
 }
 
-/// Response from AI that may include expense data
+/// Response from AI that may include expense data and place recommendations
 class AIResponse {
   final String message;
   final ParsedExpense? expense;
+  final List<PlaceRecommendation> places;
 
   const AIResponse({
     required this.message,
     this.expense,
+    this.places = const [],
   });
+
+  /// Check if response contains place recommendations
+  bool get hasPlaces => places.isNotEmpty;
 }
 
 class AIService {
@@ -170,9 +176,36 @@ class AIService {
   }
 
   /// System prompt for the travel assistant - Travel Chat Companion
-  String get systemPrompt => '''
-You are TripBuddy, a warm, friendly, and proactive AI travel companion. You help travelers document their trip, share experiences, manage expenses, plan activities, and create a meaningful daily travel journal.
+  String buildSystemPrompt({TravelContext? context}) {
+    final contextSection = context != null ? '''
 
+📍 CURRENT TRIP CONTEXT:
+${context.toContextString()}
+''' : '';
+
+    final locationGuidance = context?.destination != null ? '''
+
+🗺️ LOCATION RECOMMENDATIONS:
+When suggesting places in ${context!.destination}:
+1. ALWAYS provide the full name and general location/neighborhood
+2. Include a brief description of why you recommend it
+3. Mention price range if relevant (\$, \$\$, \$\$\$, \$\$\$\$)
+4. Suggest best time to visit (morning, afternoon, evening)
+5. For restaurants/cafes: mention signature dishes or must-try items
+6. For attractions: suggest how much time to allocate
+
+When user asks "where should I..." or "what's a good place for...":
+- Ask clarifying questions if needed (budget, cuisine type, mood, time of day)
+- Provide 2-3 specific recommendations with details
+- After giving recommendations, ask which interests them or what they're in the mood for
+
+FORMAT for place recommendations:
+"[Place Name] - [Brief description]. [Why it's great]. Best visited [time]. [Price range if applicable]."
+''' : '';
+
+    return '''
+You are TripBuddy, a warm, friendly, and proactive AI travel companion. You help travelers document their trip, share experiences, manage expenses, plan activities, and create a meaningful daily travel journal.
+$contextSection
 🎯 YOUR CORE PERSONALITY:
 - Warm, helpful, and conversational - NEVER robotic
 - You guide the user naturally through their travel day
@@ -185,7 +218,8 @@ You are TripBuddy, a warm, friendly, and proactive AI travel companion. You help
 2. When user mentions spending → Help categorize, then smoothly ask about the experience ("What was that like?")
 3. When user shares feelings → Be empathetic and encourage them to share more
 4. After ANY expense mention → Always follow up with a travel question ("And how was the food?" or "What did you see there?")
-
+5. When user asks for recommendations → First understand their needs (time of day, mood, budget), then suggest specific places
+$locationGuidance
 📒 TRAVEL JOURNAL FOCUS:
 Your PRIMARY goal is helping users capture their travel memories:
 - Ask about what they saw, felt, tasted, experienced
@@ -217,6 +251,10 @@ When expenses come up:
 
 Remember: Help travelers feel guided, organized, and supported - not just tracked. Every conversation should feel like chatting with a helpful friend who genuinely cares about their adventure!
 ''';
+  }
+
+  /// Legacy system prompt getter (for backwards compatibility)
+  String get systemPrompt => buildSystemPrompt();
 
   /// Send a message and get a response from OpenAI
   Future<String> sendMessage({
@@ -357,16 +395,44 @@ Remember: Help travelers feel guided, organized, and supported - not just tracke
   /// Check if OpenAI is configured
   bool get isConfigured => _apiKey.isNotEmpty;
 
-  /// System prompt for expense detection - Travel Companion with expense tracking
-  String get expenseDetectionPrompt => '''
-You are TripBuddy, a warm and friendly AI travel companion who helps document travel experiences AND track expenses.
+  /// Build expense detection prompt with context
+  String buildExpenseDetectionPrompt({TravelContext? context}) {
+    final contextSection = context != null ? '''
 
+📍 CURRENT TRIP CONTEXT:
+${context.toContextString()}
+''' : '';
+
+    final destination = context?.destination;
+    final locationSection = destination != null ? '''
+
+🗺️ PLACE RECOMMENDATIONS FOR $destination:
+When user asks for recommendations or where to go:
+1. Ask clarifying questions first (what are you in the mood for? budget? time of day?)
+2. Suggest 2-3 specific places with details
+3. For each place, include: Name, neighborhood/area, why it's good, price range, best time
+4. After recommending, include place data in JSON block for Google Maps links
+
+PLACE DATA FORMAT (include at END of message when recommending places):
+###PLACES_DATA###
+[
+  {"name": "Place Name", "category": "restaurant", "address": "Neighborhood, $destination", "description": "Brief description", "price_level": "\$\$", "best_time_to_visit": "evening"},
+  {"name": "Another Place", "category": "attraction", "address": "Area, $destination", "description": "Why visit", "estimated_duration": "2 hours"}
+]
+###END_PLACES_DATA###
+
+Categories for places: restaurant, cafe, bar, attraction, museum, temple, market, park, beach, shopping, nightlife, activity
+''' : '';
+
+    return '''
+You are TripBuddy, a warm and friendly AI travel companion who helps document travel experiences AND track expenses.
+$contextSection
 🎯 YOUR PRIMARY FOCUS: EXPERIENCES FIRST!
 - When user shares ANYTHING, show genuine interest in their experience
 - Ask follow-up questions about what they saw, felt, tasted
 - Help them capture travel memories, not just transactions
 - NEVER make conversations feel like expense tracking
-
+$locationSection
 💱 EXPENSE HANDLING (Secondary):
 When a user mentions spending money:
 1. Acknowledge it briefly and warmly
@@ -383,7 +449,7 @@ Categories: transport, accommodation, food, activities, shopping, other
 
 If expense detected, include at END of your message:
 ###EXPENSE_DATA###
-{"amount": 25.50, "currency": "USD", "category": "food", "description": "Lunch at cafe", "date": "2024-01-15"}
+{"amount": 25.50, "currency": "USD", "category": "food", "description": "Lunch at cafe", "date": "${DateTime.now().toIso8601String().split('T').first}"}
 ###END_EXPENSE_DATA###
 
 Currency detection:
@@ -409,11 +475,16 @@ Ask things like:
 
 If no expense in message, respond as a curious travel buddy interested in their adventure!
 ''';
+  }
 
-  /// Send a message with expense detection
+  /// Legacy getter for backwards compatibility
+  String get expenseDetectionPrompt => buildExpenseDetectionPrompt();
+
+  /// Send a message with expense detection and place recommendations
   Future<AIResponse> sendMessageWithExpenseDetection({
     required String message,
     List<ChatMessage>? history,
+    TravelContext? context,
     String? model,
   }) async {
     if (_apiKey.isEmpty) {
@@ -421,8 +492,9 @@ If no expense in message, respond as a curious travel buddy interested in their 
     }
 
     try {
+      final systemPrompt = buildExpenseDetectionPrompt(context: context);
       final messages = <Map<String, dynamic>>[
-        ChatMessage.system(expenseDetectionPrompt).toJson(),
+        ChatMessage.system(systemPrompt).toJson(),
       ];
 
       if (history != null && history.isNotEmpty) {
@@ -437,7 +509,7 @@ If no expense in message, respond as a curious travel buddy interested in their 
           'model': model ?? _defaultModel,
           'messages': messages,
           'temperature': 0.7,
-          'max_tokens': 1024,
+          'max_tokens': 1500, // Increased for place recommendations
         },
       );
 
@@ -471,38 +543,82 @@ If no expense in message, respond as a curious travel buddy interested in their 
     }
   }
 
-  /// Parse AI response to extract expense data if present
+  /// Parse AI response to extract expense data and place recommendations if present
   AIResponse _parseAIResponse(String content) {
-    const startMarker = '###EXPENSE_DATA###';
-    const endMarker = '###END_EXPENSE_DATA###';
+    String messagePart = content;
+    ParsedExpense? expense;
+    List<PlaceRecommendation> places = [];
 
-    final startIndex = content.indexOf(startMarker);
-    final endIndex = content.indexOf(endMarker);
+    // Extract expense data
+    const expenseStartMarker = '###EXPENSE_DATA###';
+    const expenseEndMarker = '###END_EXPENSE_DATA###';
 
-    if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
-      // Extract the message part (before the expense data)
-      final messagePart = content.substring(0, startIndex).trim();
+    final expenseStartIndex = messagePart.indexOf(expenseStartMarker);
+    final expenseEndIndex = messagePart.indexOf(expenseEndMarker);
 
-      // Extract the JSON part
-      final jsonStart = startIndex + startMarker.length;
-      final jsonString = content.substring(jsonStart, endIndex).trim();
+    if (expenseStartIndex != -1 && expenseEndIndex != -1 && expenseEndIndex > expenseStartIndex) {
+      final beforeExpense = messagePart.substring(0, expenseStartIndex);
+      final afterExpense = messagePart.substring(expenseEndIndex + expenseEndMarker.length);
+      messagePart = (beforeExpense + afterExpense).trim();
+
+      final jsonStart = expenseStartIndex + expenseStartMarker.length;
+      final jsonString = content.substring(jsonStart, expenseEndIndex).trim();
 
       try {
         final expenseJson = jsonDecode(jsonString) as Map<String, dynamic>;
-        final expense = ParsedExpense.fromJson(expenseJson);
-        return AIResponse(
-          message: messagePart.isNotEmpty ? messagePart : 'Got it! I\'ve recorded your expense.',
-          expense: expense,
-        );
+        expense = ParsedExpense.fromJson(expenseJson);
       } catch (e) {
         debugPrint('Failed to parse expense JSON: $e');
-        // Return just the message without expense
-        return AIResponse(message: messagePart.isNotEmpty ? messagePart : content);
       }
     }
 
-    // No expense data found
-    return AIResponse(message: content.trim());
+    // Extract place recommendations
+    const placesStartMarker = '###PLACES_DATA###';
+    const placesEndMarker = '###END_PLACES_DATA###';
+
+    final placesStartIndex = messagePart.indexOf(placesStartMarker);
+    final placesEndIndex = messagePart.indexOf(placesEndMarker);
+
+    if (placesStartIndex != -1 && placesEndIndex != -1 && placesEndIndex > placesStartIndex) {
+      final beforePlaces = messagePart.substring(0, placesStartIndex);
+      final afterPlaces = messagePart.substring(placesEndIndex + placesEndMarker.length);
+      messagePart = (beforePlaces + afterPlaces).trim();
+
+      // Extract from original content to get correct JSON substring
+      final placesJsonString = content.substring(
+        content.indexOf(placesStartMarker) + placesStartMarker.length,
+        content.indexOf(placesEndMarker)
+      ).trim();
+
+      try {
+        final placesJson = jsonDecode(placesJsonString) as List;
+        places = placesJson
+            .map((p) => PlaceRecommendation.fromJson(p as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        debugPrint('Failed to parse places JSON: $e');
+      }
+    }
+
+    // Clean up any remaining markers from message
+    messagePart = messagePart
+        .replaceAll(expenseStartMarker, '')
+        .replaceAll(expenseEndMarker, '')
+        .replaceAll(placesStartMarker, '')
+        .replaceAll(placesEndMarker, '')
+        .trim();
+
+    if (messagePart.isEmpty) {
+      messagePart = expense != null
+          ? 'Got it! I\'ve recorded your expense.'
+          : 'Here are my recommendations!';
+    }
+
+    return AIResponse(
+      message: messagePart,
+      expense: expense,
+      places: places,
+    );
   }
 
   /// System prompt for journal entry generation - EXPERIENCE FOCUSED
@@ -737,6 +853,142 @@ Respond with ONLY the title, nothing else.
         highlights: [],
         locations: [],
       );
+    }
+  }
+
+  /// Generate a welcome message for a new trip with local tips
+  Future<String> generateTripWelcome({
+    required TravelContext context,
+    String? model,
+  }) async {
+    if (_apiKey.isEmpty) {
+      throw AIException('OpenAI API key not configured');
+    }
+
+    if (context.destination == null) {
+      return "Welcome to TripBuddy! I'm here to help you plan and document your travels. What would you like to explore?";
+    }
+
+    try {
+      final prompt = '''
+Generate a warm, helpful welcome message for someone traveling to ${context.destination}.
+
+Trip details:
+${context.toContextString()}
+
+Include in your response:
+1. A warm greeting mentioning their destination
+2. 2-3 practical local tips (currency, tipping, customs)
+3. 1-2 safety tips if relevant
+4. 1-2 must-try local experiences or foods
+5. Offer to help with recommendations
+
+Keep the tone friendly and conversational like a knowledgeable friend.
+Use 1-2 emojis max.
+Keep it concise (under 200 words).
+
+Do NOT include any JSON blocks or markers.
+''';
+
+      final response = await _dio.post(
+        '/chat/completions',
+        data: {
+          'model': model ?? _defaultModel,
+          'messages': [ChatMessage.user(prompt).toJson()],
+          'temperature': 0.8,
+          'max_tokens': 500,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final choices = data['choices'] as List;
+        if (choices.isNotEmpty) {
+          return (choices[0]['message']['content'] as String).trim();
+        }
+        throw AIException('No response from AI');
+      } else {
+        throw AIException(
+          'API request failed',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      debugPrint('AI Service Error generating welcome: ${e.message}');
+      // Return a basic welcome on error
+      return "Welcome to ${context.destination}! I'm TripBuddy, your travel companion. I'm here to help you discover amazing places, document your experiences, and track expenses. What would you like to explore first?";
+    } catch (e) {
+      debugPrint('Error generating welcome: $e');
+      return "Welcome to ${context.destination}! I'm TripBuddy, your travel companion. I'm here to help you discover amazing places, document your experiences, and track expenses. What would you like to explore first?";
+    }
+  }
+
+  /// Generate location-specific recommendations
+  Future<AIResponse> getRecommendations({
+    required String query,
+    required TravelContext context,
+    String? model,
+  }) async {
+    if (_apiKey.isEmpty) {
+      throw AIException('OpenAI API key not configured');
+    }
+
+    final destination = context.destination ?? 'your destination';
+
+    try {
+      final prompt = '''
+The user is in $destination and asks: "$query"
+
+${context.toContextString()}
+
+Provide 3-5 specific recommendations. For each:
+1. Name of the place
+2. What makes it special
+3. Price range (\$, \$\$, \$\$\$, or \$\$\$\$)
+4. Best time to visit
+5. Pro tip or must-try item
+
+Be specific with real places. After your recommendations, ask a follow-up question to understand their preferences better.
+
+Include place data at the end for Google Maps integration:
+###PLACES_DATA###
+[{"name": "Place Name", "category": "type", "address": "Location, $destination", "description": "Why visit", "price_level": "\$\$", "best_time_to_visit": "evening"}]
+###END_PLACES_DATA###
+''';
+
+      final response = await _dio.post(
+        '/chat/completions',
+        data: {
+          'model': model ?? _defaultModel,
+          'messages': [
+            ChatMessage.system(buildSystemPrompt(context: context)).toJson(),
+            ChatMessage.user(prompt).toJson(),
+          ],
+          'temperature': 0.8,
+          'max_tokens': 1500,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final choices = data['choices'] as List;
+        if (choices.isNotEmpty) {
+          final content = choices[0]['message']['content'] as String;
+          return _parseAIResponse(content);
+        }
+        throw AIException('No response from AI');
+      } else {
+        throw AIException(
+          'API request failed',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      debugPrint('AI Service Error: ${e.message}');
+      throw AIException(e.message ?? 'Network error');
+    } catch (e) {
+      if (e is AIException) rethrow;
+      throw AIException('Failed to get recommendations: $e');
     }
   }
 }

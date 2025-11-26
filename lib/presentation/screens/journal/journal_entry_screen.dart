@@ -510,7 +510,7 @@ class _JournalEntryScreenState extends ConsumerState<JournalEntryScreen> {
       final generatedContent = await aiService.generateJournalEntry(
         chatMessages: dayContext.chatMessagesForAI,
         date: widget.entryDate,
-        tripDestination: dayContext.tripDestination ?? trip.destination,
+        tripDestination: dayContext.tripDestination ?? trip.displayDestination,
         expenses: dayContext.expensesForAI,
       );
 

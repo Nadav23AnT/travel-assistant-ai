@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/constants.dart';
 import '../../../config/theme.dart';
+import '../../../utils/country_currency_helper.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
 import '../../providers/trips_provider.dart';
@@ -38,11 +39,32 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     super.initState();
     _selectedTripId = widget.tripId;
 
-    // Load user's home currency after frame
+    // Set currency based on selected trip after frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateCurrencyForTrip(_selectedTripId);
+    });
+  }
+
+  /// Update currency based on the selected trip's destination country
+  void _updateCurrencyForTrip(String? tripId) {
+    if (tripId == null) {
+      // Default to user's home currency if no trip
       final homeCurrency = ref.read(userHomeCurrencyProvider);
-      if (homeCurrency.isNotEmpty) {
+      if (homeCurrency.isNotEmpty && mounted) {
         setState(() => _currency = homeCurrency);
+      }
+      return;
+    }
+
+    // Get the trip and set currency based on destination
+    final tripsAsync = ref.read(userTripsProvider);
+    tripsAsync.whenData((trips) {
+      final trip = trips.where((t) => t.id == tripId).firstOrNull;
+      if (trip != null && mounted) {
+        // Compute currency from destination (more reliable than stored budget_currency)
+        // This handles trips created before the currency auto-detection was added
+        final computedCurrency = CountryCurrencyHelper.getCurrencyForDestination(trip.destination);
+        setState(() => _currency = computedCurrency);
       }
     });
   }
@@ -190,10 +212,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       );
                     }
 
-                    // Auto-select first trip if none selected
+                    // Auto-select first trip if none selected and update currency
                     if (_selectedTripId == null && trips.isNotEmpty) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        setState(() => _selectedTripId = trips.first.id);
+                        if (mounted) {
+                          setState(() => _selectedTripId = trips.first.id);
+                          _updateCurrencyForTrip(trips.first.id);
+                        }
                       });
                     }
 
@@ -205,11 +230,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       ),
                       items: trips.map((trip) => DropdownMenuItem(
                         value: trip.id,
-                        child: Text(trip.title),
+                        child: Text('${trip.displayTitle} (${trip.displayDestination})'),
                       )).toList(),
                       onChanged: (value) {
                         if (value != null) {
                           setState(() => _selectedTripId = value);
+                          // Update currency when trip changes
+                          _updateCurrencyForTrip(value);
                         }
                       },
                       validator: (value) {
@@ -224,7 +251,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 const SizedBox(height: 16),
               ],
 
-              // Amount
+              // Amount with dynamic currency symbol
               Row(
                 children: [
                   Expanded(
@@ -234,10 +261,23 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       style: Theme.of(context).textTheme.headlineMedium,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Amount *',
                         hintText: '0.00',
-                        prefixIcon: Icon(Icons.attach_money),
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            CountryCurrencyHelper.getSymbolForCurrency(_currency),
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -251,16 +291,19 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  SizedBox(
+                    width: 90,
                     child: DropdownButtonFormField<String>(
                       value: _currency,
                       decoration: const InputDecoration(
                         labelText: 'Currency',
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                       ),
+                      isExpanded: true,
                       items: AppConstants.supportedCurrencies
                           .map((c) => DropdownMenuItem(
                                 value: c,
-                                child: Text(c),
+                                child: Text(c, overflow: TextOverflow.ellipsis),
                               ))
                           .toList(),
                       onChanged: (value) {

@@ -97,7 +97,7 @@ class JournalScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Start documenting your ${trip.destination} adventure! Create entries manually or let AI generate them from your conversations.',
+              'Start documenting your ${trip.displayDestination} adventure! Create entries manually or let AI generate them from your conversations.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
                   ),

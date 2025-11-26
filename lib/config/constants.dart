@@ -40,7 +40,7 @@ class AppConstants {
     'viewer',
   ];
 
-  // Supported Currencies
+  // Supported Currencies (comprehensive list to match country helper)
   static const List<String> supportedCurrencies = [
     'USD',
     'EUR',
@@ -55,6 +55,32 @@ class AppConstants {
     'THB',
     'MXN',
     'BRL',
+    'VND',
+    'KRW',
+    'SGD',
+    'HKD',
+    'MYR',
+    'IDR',
+    'PHP',
+    'TWD',
+    'AED',
+    'SAR',
+    'TRY',
+    'QAR',
+    'NOK',
+    'SEK',
+    'DKK',
+    'PLN',
+    'CZK',
+    'HUF',
+    'RUB',
+    'ZAR',
+    'EGP',
+    'NZD',
+    'ARS',
+    'CLP',
+    'COP',
+    'PEN',
   ];
 
   // Currency display info (code -> name, symbol)

@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/chat_models.dart';
+import '../../data/models/travel_context.dart';
 import '../../data/repositories/chat_repository.dart';
 import '../../data/repositories/expenses_repository.dart';
 import '../../services/ai_service.dart';
+import 'travel_context_provider.dart';
 import 'trips_provider.dart';
 
 // ============================================
@@ -48,6 +50,7 @@ class ChatState {
   final String? error;
   final ParsedExpense? pendingExpense;
   final bool isCreatingExpense;
+  final List<PlaceRecommendation> pendingPlaces;
 
   const ChatState({
     this.session,
@@ -57,6 +60,7 @@ class ChatState {
     this.error,
     this.pendingExpense,
     this.isCreatingExpense = false,
+    this.pendingPlaces = const [],
   });
 
   ChatState copyWith({
@@ -69,6 +73,8 @@ class ChatState {
     ParsedExpense? pendingExpense,
     bool clearPendingExpense = false,
     bool? isCreatingExpense,
+    List<PlaceRecommendation>? pendingPlaces,
+    bool clearPendingPlaces = false,
   }) {
     return ChatState(
       session: session ?? this.session,
@@ -78,6 +84,7 @@ class ChatState {
       error: clearError ? null : (error ?? this.error),
       pendingExpense: clearPendingExpense ? null : (pendingExpense ?? this.pendingExpense),
       isCreatingExpense: isCreatingExpense ?? this.isCreatingExpense,
+      pendingPlaces: clearPendingPlaces ? const [] : (pendingPlaces ?? this.pendingPlaces),
     );
   }
 }
@@ -92,7 +99,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       : super(const ChatState());
 
   /// Create a new chat session
-  Future<String> createNewSession({String? tripId}) async {
+  Future<String> createNewSession({String? tripId, bool withWelcome = true}) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
@@ -106,10 +113,49 @@ class ChatNotifier extends StateNotifier<ChatState> {
       // Refresh the sessions list
       _ref.invalidate(chatSessionsProvider);
 
+      // Generate proactive welcome message if there's an active trip
+      if (withWelcome) {
+        _generateWelcomeMessage(session.id);
+      }
+
       return session.id;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
+    }
+  }
+
+  /// Generate a welcome message with local tips for the current trip
+  Future<void> _generateWelcomeMessage(String sessionId) async {
+    try {
+      final travelContext = _ref.read(currentTravelContextProvider);
+
+      // Only generate welcome if there's an active trip with a destination
+      if (travelContext == null || travelContext.destination == null) {
+        return;
+      }
+
+      // Generate welcome message in background (don't block UI)
+      final welcomeMessage = await _aiService.generateTripWelcome(
+        context: travelContext,
+      );
+
+      // Save welcome message to database
+      final assistantMessage = await _repository.saveMessage(
+        sessionId: sessionId,
+        role: 'assistant',
+        content: welcomeMessage,
+      );
+
+      // Update local state with welcome message
+      if (state.session?.id == sessionId) {
+        state = state.copyWith(
+          messages: [...state.messages, assistantMessage],
+        );
+      }
+    } catch (e) {
+      // Silently fail - welcome message is not critical
+      // debugPrint('Failed to generate welcome message: $e');
     }
   }
 
@@ -144,7 +190,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
     if (content.trim().isEmpty) return;
 
-    state = state.copyWith(isSending: true, clearError: true, clearPendingExpense: true);
+    state = state.copyWith(
+      isSending: true,
+      clearError: true,
+      clearPendingExpense: true,
+      clearPendingPlaces: true,
+    );
 
     try {
       final sessionId = state.session!.id;
@@ -172,10 +223,14 @@ class ChatNotifier extends StateNotifier<ChatState> {
         history.removeLast();
       }
 
-      // Get AI response with expense detection
+      // Get travel context for personalized recommendations
+      final travelContext = _ref.read(currentTravelContextProvider);
+
+      // Get AI response with expense detection and place recommendations
       final aiResponse = await _aiService.sendMessageWithExpenseDetection(
         message: content,
         history: history,
+        context: travelContext,
       );
 
       // Save AI response to database
@@ -185,11 +240,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
         content: aiResponse.message,
       );
 
-      // Update local state with AI response and pending expense if detected
+      // Update local state with AI response, pending expense, and places
       state = state.copyWith(
         messages: [...state.messages, assistantMessage],
         isSending: false,
         pendingExpense: aiResponse.expense,
+        pendingPlaces: aiResponse.places,
       );
 
       // Generate AI title after first message exchange (user + assistant)
@@ -295,6 +351,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = state.copyWith(pendingExpense: expense);
   }
 
+  /// Dismiss the pending places (after user interacts with them)
+  void dismissPendingPlaces() {
+    state = state.copyWith(clearPendingPlaces: true);
+  }
+
   /// Delete current session
   Future<void> deleteCurrentSession() async {
     if (state.session == null) return;
@@ -372,4 +433,16 @@ final pendingExpenseProvider = Provider<ParsedExpense?>((ref) {
 final isCreatingExpenseProvider = Provider<bool>((ref) {
   final state = ref.watch(chatNotifierProvider);
   return state.isCreatingExpense;
+});
+
+/// Provider for pending place recommendations
+final pendingPlacesProvider = Provider<List<PlaceRecommendation>>((ref) {
+  final state = ref.watch(chatNotifierProvider);
+  return state.pendingPlaces;
+});
+
+/// Provider for checking if there are pending places
+final hasPendingPlacesProvider = Provider<bool>((ref) {
+  final places = ref.watch(pendingPlacesProvider);
+  return places.isNotEmpty;
 });

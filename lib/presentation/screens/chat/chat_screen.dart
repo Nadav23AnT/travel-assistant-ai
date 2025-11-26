@@ -9,6 +9,7 @@ import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
 import '../../widgets/chat/expense_confirmation_card.dart';
 import '../../widgets/chat/journal_reminder_card.dart';
+import '../../widgets/chat/place_recommendation_card.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String sessionId;
@@ -156,6 +157,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final session = chatState.session;
     final pendingExpense = chatState.pendingExpense;
     final isCreatingExpense = chatState.isCreatingExpense;
+    final pendingPlaces = chatState.pendingPlaces;
 
     // Watch for active trip and journal status for reminder
     final activeTripAsync = ref.watch(activeTripProvider);
@@ -223,15 +225,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           padding: const EdgeInsets.all(16),
                           itemCount: messages.length +
                               (isSending ? 1 : 0) +
-                              (pendingExpense != null ? 1 : 0),
+                              (pendingExpense != null ? 1 : 0) +
+                              (pendingPlaces.isNotEmpty ? 1 : 0),
                           itemBuilder: (context, index) {
                             // Show typing indicator while sending
                             if (isSending && index == messages.length) {
                               return _buildTypingIndicator();
                             }
 
-                            // Calculate expense card index
-                            final expenseCardIndex = messages.length + (isSending ? 1 : 0);
+                            // Calculate card indices
+                            final typingOffset = isSending ? 1 : 0;
+                            final expenseCardIndex = messages.length + typingOffset;
+                            final placesCardIndex = expenseCardIndex + (pendingExpense != null ? 1 : 0);
 
                             // Show expense confirmation card
                             if (pendingExpense != null && index == expenseCardIndex) {
@@ -243,6 +248,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 },
                                 onEdit: (editedExpense) {
                                   ref.read(chatNotifierProvider.notifier).updatePendingExpense(editedExpense);
+                                },
+                              );
+                            }
+
+                            // Show place recommendations card
+                            if (pendingPlaces.isNotEmpty && index == placesCardIndex) {
+                              return PlaceRecommendationsCard(
+                                places: pendingPlaces,
+                                onDismiss: () {
+                                  ref.read(chatNotifierProvider.notifier).dismissPendingPlaces();
                                 },
                               );
                             }

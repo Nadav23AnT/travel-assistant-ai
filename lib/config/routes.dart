@@ -160,16 +160,17 @@ class AppRoutes {
         ),
 
         // Detail routes (outside shell)
+        // IMPORTANT: createTrip must come BEFORE tripDetail to avoid :id matching "create"
+        GoRoute(
+          path: createTrip,
+          builder: (context, state) => const CreateTripScreen(),
+        ),
         GoRoute(
           path: tripDetail,
           builder: (context, state) {
             final tripId = state.pathParameters['id']!;
             return TripDetailScreen(tripId: tripId);
           },
-        ),
-        GoRoute(
-          path: createTrip,
-          builder: (context, state) => const CreateTripScreen(),
         ),
         GoRoute(
           path: chatDetail,

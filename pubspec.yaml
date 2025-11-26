@@ -61,6 +61,9 @@ dependencies:
   # Charts for expense analytics
   fl_chart: ^0.68.0
 
+  # URL Launcher for Google Maps links
+  url_launcher: ^6.3.0
+
   # Date/Time
   table_calendar: ^3.1.2
   intl: ^0.20.2

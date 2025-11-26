@@ -205,7 +205,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              trip.title,
+              trip.displayTitle,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),

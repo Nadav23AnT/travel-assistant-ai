@@ -1,11 +1,13 @@
 import 'package:equatable/equatable.dart';
 
+import '../../utils/country_currency_helper.dart';
+
 /// Represents a trip
 class TripModel extends Equatable {
   final String id;
   final String ownerId;
   final String title;
-  final String destination;
+  final String destination; // Original destination (might be city or country)
   final String? destinationPlaceId;
   final double? destinationLat;
   final double? destinationLng;
@@ -37,6 +39,33 @@ class TripModel extends Equatable {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  /// Get the country name from the destination
+  /// This converts cities like "Bangkok" to "Thailand"
+  String get country => CountryCurrencyHelper.extractCountryFromDestination(destination);
+
+  /// Get the display name (always shows country)
+  String get displayDestination => country;
+
+  /// Get display title - replaces city names in title with country names
+  /// e.g., "Trip to Bangkok" -> "Trip to Thailand"
+  String get displayTitle {
+    // Check if title contains a city name and replace with country
+    String result = title;
+    for (final entry in CountryCurrencyHelper.cityToCountry.entries) {
+      if (title.contains(entry.key)) {
+        result = title.replaceAll(entry.key, entry.value);
+        break;
+      }
+    }
+    return result;
+  }
+
+  /// Get the currency symbol for this trip's budget currency
+  String get currencySymbol => CountryCurrencyHelper.getSymbolForCurrency(budgetCurrency);
+
+  /// Get the flag emoji for this trip's destination country
+  String get flagEmoji => CountryCurrencyHelper.getFlagForDestination(destination);
 
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(

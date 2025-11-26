@@ -7,6 +7,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../utils/country_currency_helper.dart';
+
 class AuthException implements Exception {
   final String message;
   final String? code;
@@ -290,17 +292,22 @@ class AuthService {
           onConflict: 'user_id',
         );
 
+        // Determine currency based on destination country
+        final country = CountryCurrencyHelper.extractCountryFromDestination(destination);
+        final budgetCurrency = CountryCurrencyHelper.getCurrencyForCountry(country);
+
         // Also create an actual trip record for display on home screen
         await _supabase.from('trips').insert({
           'owner_id': currentUser!.id,
-          'title': 'Trip to $destination',
-          'destination': destination,
+          'title': 'Trip to $country',
+          'destination': destination, // Keep original for coordinates lookup
           'destination_place_id': destinationPlaceId,
           'destination_lat': destinationLat,
           'destination_lng': destinationLng,
           'start_date': startDate?.toIso8601String().split('T').first,
           'end_date': endDate?.toIso8601String().split('T').first,
           'status': 'planning',
+          'budget_currency': budgetCurrency,
         });
       }
     } catch (e) {

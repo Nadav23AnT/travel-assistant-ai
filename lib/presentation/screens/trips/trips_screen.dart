@@ -66,12 +66,19 @@ class TripsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Cover image or placeholder
+            // Cover image or flag placeholder
             Container(
               height: 120,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: AppTheme.primaryLight.withAlpha(77),
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryColor.withAlpha(230),
+                    AppTheme.primaryColor.withAlpha(180),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 image: trip.coverImageUrl != null
                     ? DecorationImage(
                         image: NetworkImage(trip.coverImageUrl!),
@@ -80,12 +87,40 @@ class TripsScreen extends ConsumerWidget {
                     : null,
               ),
               child: trip.coverImageUrl == null
-                  ? Center(
-                      child: Icon(
-                        Icons.flight_takeoff,
-                        size: 48,
-                        color: AppTheme.primaryColor.withAlpha(128),
-                      ),
+                  ? Stack(
+                      children: [
+                        // Large flag emoji as background
+                        Positioned(
+                          right: -20,
+                          top: -10,
+                          child: Text(
+                            trip.flagEmoji,
+                            style: const TextStyle(fontSize: 100),
+                          ),
+                        ),
+                        // Gradient overlay for visual depth
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primaryColor.withAlpha(200),
+                                AppTheme.primaryColor.withAlpha(50),
+                              ],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                          ),
+                        ),
+                        // Small flag in corner
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: Text(
+                            trip.flagEmoji,
+                            style: const TextStyle(fontSize: 28),
+                          ),
+                        ),
+                      ],
                     )
                   : null,
             ),
@@ -100,7 +135,7 @@ class TripsScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          trip.title,
+                          trip.displayTitle,
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -142,7 +177,7 @@ class TripsScreen extends ConsumerWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          trip.destination,
+                          trip.displayDestination,
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: AppTheme.textSecondary,

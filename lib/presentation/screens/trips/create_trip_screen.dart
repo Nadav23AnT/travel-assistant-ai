@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/constants.dart';
 import '../../../config/theme.dart';
+import '../../../utils/country_currency_helper.dart';
+import '../../providers/trips_provider.dart';
 
-class CreateTripScreen extends StatefulWidget {
+class CreateTripScreen extends ConsumerStatefulWidget {
   const CreateTripScreen({super.key});
 
   @override
-  State<CreateTripScreen> createState() => _CreateTripScreenState();
+  ConsumerState<CreateTripScreen> createState() => _CreateTripScreenState();
 }
 
-class _CreateTripScreenState extends State<CreateTripScreen> {
+class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _destinationController = TextEditingController();
@@ -24,12 +27,44 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Listen to changes to update preview and currency
+    _destinationController.addListener(_onInputChanged);
+    _titleController.addListener(_onInputChanged);
+  }
+
+  @override
   void dispose() {
+    _destinationController.removeListener(_onInputChanged);
+    _titleController.removeListener(_onInputChanged);
     _titleController.dispose();
     _destinationController.dispose();
     _budgetController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  /// Rebuild UI when inputs change (for preview)
+  void _onInputChanged() {
+    setState(() {});
+    // Also update currency based on destination
+    _updateCurrencyForDestination();
+  }
+
+  /// Update currency based on destination country
+  void _updateCurrencyForDestination() {
+    final destination = _destinationController.text.trim();
+    if (destination.isEmpty) return;
+
+    final suggestedCurrency = CountryCurrencyHelper.getCurrencyForDestination(destination);
+    // Only use the suggested currency if it's in our supported list
+    final finalCurrency = AppConstants.supportedCurrencies.contains(suggestedCurrency)
+        ? suggestedCurrency
+        : AppConstants.defaultCurrency;
+    if (finalCurrency != _currency) {
+      setState(() => _currency = finalCurrency);
+    }
   }
 
   Future<void> _selectDateRange() async {
@@ -62,16 +97,55 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
     setState(() => _isLoading = true);
 
-    // TODO: Implement actual trip creation with Supabase
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final destination = _destinationController.text.trim();
+      final title = _titleController.text.trim();
+      final budget = double.tryParse(_budgetController.text.trim());
+      final description = _descriptionController.text.trim();
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      // Create the trip using the provider
+      final trip = await ref.read(tripOperationProvider.notifier).createTrip(
+        title: title,
+        destination: destination,
+        startDate: _startDate!,
+        endDate: _endDate!,
+        budgetAmount: budget,
+        budgetCurrency: _currency,
+        description: description.isNotEmpty ? description : null,
+      );
 
-    context.pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Trip created successfully!')),
-    );
+      if (!mounted) return;
+
+      if (trip != null) {
+        context.pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Trip to ${trip.displayDestination} created!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      } else {
+        final error = ref.read(tripOperationProvider).error;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error ?? 'Failed to create trip'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -103,40 +177,77 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Cover image placeholder
-              GestureDetector(
-                onTap: () {
-                  // TODO: Implement image picker
-                },
-                child: Container(
-                  height: 160,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.primaryColor.withAlpha(77),
-                      width: 2,
-                      style: BorderStyle.solid,
-                    ),
+              // Flag preview based on destination
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryColor.withAlpha(230),
+                      AppTheme.primaryColor.withAlpha(180),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_photo_alternate_outlined,
-                        size: 48,
-                        color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  children: [
+                    // Flag emoji background (updates based on destination)
+                    Positioned(
+                      right: -20,
+                      top: -10,
+                      child: Text(
+                        _destinationController.text.isNotEmpty
+                            ? CountryCurrencyHelper.getFlagForDestination(_destinationController.text)
+                            : '🌍',
+                        style: const TextStyle(fontSize: 100),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add Cover Photo',
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w600,
+                    ),
+                    // Gradient overlay
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.primaryColor.withAlpha(200),
+                            AppTheme.primaryColor.withAlpha(50),
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    // Preview text
+                    Positioned(
+                      left: 16,
+                      bottom: 16,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _titleController.text.isNotEmpty
+                                ? _titleController.text
+                                : 'Trip Preview',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                            ),
+                          ),
+                          if (_destinationController.text.isNotEmpty)
+                            Text(
+                              CountryCurrencyHelper.extractCountryFromDestination(_destinationController.text),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),
@@ -158,19 +269,77 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Destination
-              TextFormField(
-                controller: _destinationController,
-                decoration: const InputDecoration(
-                  labelText: 'Destination *',
-                  hintText: 'e.g., Paris, France',
-                  prefixIcon: Icon(Icons.location_on_outlined),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a destination';
+              // Destination with autocomplete
+              Autocomplete<String>(
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  if (textEditingValue.text.isEmpty) {
+                    return const Iterable<String>.empty();
                   }
-                  return null;
+                  final query = textEditingValue.text.toLowerCase();
+                  // Get all countries from the helper
+                  final allCountries = CountryCurrencyHelper.countryToCode.keys.toList();
+                  return allCountries.where((country) =>
+                      country.toLowerCase().contains(query));
+                },
+                displayStringForOption: (String option) => option,
+                fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                  // Sync with our destination controller
+                  controller.addListener(() {
+                    if (_destinationController.text != controller.text) {
+                      _destinationController.text = controller.text;
+                    }
+                  });
+                  // Initialize with existing value
+                  if (controller.text.isEmpty && _destinationController.text.isNotEmpty) {
+                    controller.text = _destinationController.text;
+                  }
+                  return TextFormField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    decoration: const InputDecoration(
+                      labelText: 'Destination *',
+                      hintText: 'Start typing a country...',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                      suffixIcon: Icon(Icons.arrow_drop_down),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a destination';
+                      }
+                      return null;
+                    },
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(8),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 250, maxWidth: 350),
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          itemCount: options.length,
+                          itemBuilder: (context, index) {
+                            final option = options.elementAt(index);
+                            final flag = CountryCurrencyHelper.getFlagForCountry(option);
+                            return ListTile(
+                              leading: Text(flag, style: const TextStyle(fontSize: 24)),
+                              title: Text(option),
+                              dense: true,
+                              onTap: () => onSelected(option),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                onSelected: (String selection) {
+                  _destinationController.text = selection;
+                  _onInputChanged();
                 },
               ),
               const SizedBox(height: 16),
@@ -196,18 +365,31 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Budget
+              // Budget with dynamic currency symbol
               Row(
                 children: [
                   Expanded(
                     flex: 2,
                     child: TextFormField(
                       controller: _budgetController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
                         labelText: 'Budget',
                         hintText: '0.00',
-                        prefixIcon: Icon(Icons.attach_money),
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            CountryCurrencyHelper.getSymbolForCurrency(_currency),
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
                       ),
                     ),
                   ),
@@ -221,7 +403,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                       items: AppConstants.supportedCurrencies
                           .map((c) => DropdownMenuItem(
                                 value: c,
-                                child: Text(c),
+                                child: Text('$c ${CountryCurrencyHelper.getSymbolForCurrency(c)}'),
                               ))
                           .toList(),
                       onChanged: (value) {

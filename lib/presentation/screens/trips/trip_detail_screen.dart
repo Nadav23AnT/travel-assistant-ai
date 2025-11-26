@@ -124,24 +124,34 @@ class TripDetailScreen extends ConsumerWidget {
       expandedHeight: 200,
       pinned: true,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          trip.destination,
-          style: const TextStyle(
-            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              trip.flagEmoji,
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              trip.displayDestination,
+              style: const TextStyle(
+                shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+              ),
+            ),
+          ],
         ),
         background: Stack(
           fit: StackFit.expand,
           children: [
-            // Cover image or gradient
+            // Cover image or flag background
             trip.coverImageUrl != null
                 ? Image.network(
                     trip.coverImageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _buildDefaultCover(),
+                    errorBuilder: (_, __, ___) => _buildFlagCover(trip),
                   )
-                : _buildDefaultCover(),
-            // Gradient overlay
+                : _buildFlagCover(trip),
+            // Gradient overlay for text readability
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -198,24 +208,43 @@ class TripDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDefaultCover() {
+  Widget _buildFlagCover(TripModel trip) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryColor,
-            AppTheme.primaryColor.withAlpha(179),
+            AppTheme.primaryColor.withAlpha(230),
+            AppTheme.primaryColor.withAlpha(180),
           ],
         ),
       ),
-      child: const Center(
-        child: Icon(
-          Icons.flight_takeoff,
-          size: 64,
-          color: Colors.white54,
-        ),
+      child: Stack(
+        children: [
+          // Large flag emoji as background
+          Positioned(
+            right: -30,
+            top: -20,
+            child: Text(
+              trip.flagEmoji,
+              style: const TextStyle(fontSize: 180),
+            ),
+          ),
+          // Gradient overlay for visual depth
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primaryColor.withAlpha(220),
+                  AppTheme.primaryColor.withAlpha(80),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -523,7 +552,7 @@ class TripDetailScreen extends ConsumerWidget {
             _InfoRow(
               icon: Icons.location_on_outlined,
               label: 'Destination',
-              value: trip.destination,
+              value: trip.displayDestination,
             ),
             const SizedBox(height: 12),
 
@@ -633,7 +662,7 @@ class TripDetailScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Document your ${trip.destination} adventure! Create entries manually or let AI generate them.',
+                                  'Document your ${trip.displayDestination} adventure! Create entries manually or let AI generate them.',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: AppTheme.textSecondary,
                                       ),
@@ -725,7 +754,7 @@ class TripDetailScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Chat with TripBuddy to get personalized recommendations for ${trip.destination}!',
+                      'Chat with TripBuddy to get personalized recommendations for ${trip.displayDestination}!',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),

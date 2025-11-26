@@ -66,7 +66,7 @@ class JournalReminderCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Capture today\'s ${trip.destination} memories',
+                        'Capture today\'s ${trip.displayDestination} memories',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: AppTheme.textSecondary,
                             ),

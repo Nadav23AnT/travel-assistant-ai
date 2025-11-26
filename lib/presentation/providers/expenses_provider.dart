@@ -257,6 +257,7 @@ final showInHomeCurrencyProvider = Provider<bool>((ref) {
 });
 
 /// Provider to get the local currency for the current trip
+/// Uses the trip's budgetCurrency which is set based on destination
 final tripLocalCurrencyProvider = Provider<String?>((ref) {
   final tripId = ref.watch(effectiveTripIdProvider);
   if (tripId == null) return null;
@@ -265,7 +266,8 @@ final tripLocalCurrencyProvider = Provider<String?>((ref) {
   return tripAsync.when(
     data: (trip) {
       if (trip == null) return null;
-      return DestinationCurrencyMapper.getCurrencyForDestination(trip.destination);
+      // Use the trip's budgetCurrency which is derived from destination country
+      return trip.budgetCurrency;
     },
     loading: () => null,
     error: (_, __) => null,

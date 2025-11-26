@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../config/theme.dart';
+import '../../utils/country_currency_helper.dart';
 import 'expense_model.dart';
 
 /// Represents computed statistics for expenses
@@ -123,21 +124,8 @@ class ExpenseStats {
       _formatCurrency(estimatedTripTotal, displayCurrency);
 
   static String _formatCurrency(double amount, String currency) {
-    const symbols = {
-      'USD': '\$',
-      'EUR': '\u20AC',
-      'GBP': '\u00A3',
-      'ILS': '\u20AA',
-      'JPY': '\u00A5',
-      'AUD': 'A\$',
-      'CAD': 'C\$',
-      'CHF': 'CHF ',
-      'CNY': '\u00A5',
-      'INR': '\u20B9',
-      'THB': '\u0E3F',
-    };
-    final symbol = symbols[currency] ?? '$currency ';
-    return '$symbol${amount.toStringAsFixed(2)}';
+    // Use the centralized helper for currency symbols
+    return CountryCurrencyHelper.formatAmount(amount, currency);
   }
 }
 
