@@ -646,6 +646,69 @@ Please create a journal entry for this day.
     }
   }
 
+  /// Generate a short, descriptive title for a chat conversation
+  Future<String> generateChatTitle({
+    required String userMessage,
+    String? assistantResponse,
+    String? model,
+  }) async {
+    if (_apiKey.isEmpty) {
+      throw AIException('OpenAI API key not configured');
+    }
+
+    try {
+      final prompt = '''
+Generate a short, descriptive title (3-6 words) for this travel chat conversation.
+The title should capture the main topic or intent of the user's message.
+
+User message: "$userMessage"
+${assistantResponse != null ? 'Assistant response: "$assistantResponse"' : ''}
+
+Rules:
+- Maximum 6 words
+- No quotes in the response
+- Be specific and descriptive
+- Focus on the travel topic/activity
+- Examples: "Planning Rome Itinerary", "Dinner at Thai Market", "Temple Visit Questions", "Budget for Bangkok Trip"
+
+Respond with ONLY the title, nothing else.
+''';
+
+      final response = await _dio.post(
+        '/chat/completions',
+        data: {
+          'model': model ?? _defaultModel,
+          'messages': [ChatMessage.user(prompt).toJson()],
+          'temperature': 0.7,
+          'max_tokens': 50,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final choices = data['choices'] as List;
+        if (choices.isNotEmpty) {
+          final content = choices[0]['message']['content'] as String;
+          // Clean up the title - remove quotes, trim
+          return content.trim().replaceAll('"', '').replaceAll("'", '');
+        }
+        throw AIException('No response from AI');
+      } else {
+        throw AIException(
+          'API request failed',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      debugPrint('AI Service Error generating title: ${e.message}');
+      // Return a default title on error
+      return 'Travel Chat';
+    } catch (e) {
+      debugPrint('Error generating title: $e');
+      return 'Travel Chat';
+    }
+  }
+
   /// Parse the journal generation response
   GeneratedJournalContent _parseJournalResponse(String content) {
     try {

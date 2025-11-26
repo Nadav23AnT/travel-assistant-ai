@@ -659,7 +659,9 @@ class HomeScreen extends ConsumerWidget {
         style: const TextStyle(fontWeight: FontWeight.w500),
       ),
       subtitle: Text(
-        dateFormat.format(expense.expenseDate),
+        expense.expenseDate != null
+            ? dateFormat.format(expense.expenseDate!)
+            : 'No date',
         style: TextStyle(
           color: AppTheme.textSecondary,
           fontSize: 12,

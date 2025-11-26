@@ -161,16 +161,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
         messages: [...state.messages, userMessage],
       );
 
-      // Update session title if this is the first message
-      if (state.messages.length == 1) {
-        final title = _repository.generateTitleFromMessage(content);
-        await _repository.updateSessionTitle(sessionId, title);
-        state = state.copyWith(
-          session: state.session!.copyWith(title: title),
-        );
-        _ref.invalidate(chatSessionsProvider);
-      }
-
       // Build conversation history for AI
       final history = state.messages
           .where((m) => m.role != 'system')
@@ -201,9 +191,41 @@ class ChatNotifier extends StateNotifier<ChatState> {
         isSending: false,
         pendingExpense: aiResponse.expense,
       );
+
+      // Generate AI title after first message exchange (user + assistant)
+      if (state.messages.length == 2) {
+        _generateAndUpdateTitle(sessionId, content, aiResponse.message);
+      }
     } catch (e) {
       state = state.copyWith(isSending: false, error: e.toString());
       rethrow;
+    }
+  }
+
+  /// Generate and update chat title using AI (runs in background)
+  Future<void> _generateAndUpdateTitle(
+    String sessionId,
+    String userMessage,
+    String assistantResponse,
+  ) async {
+    try {
+      final title = await _aiService.generateChatTitle(
+        userMessage: userMessage,
+        assistantResponse: assistantResponse,
+      );
+
+      await _repository.updateSessionTitle(sessionId, title);
+
+      if (state.session?.id == sessionId) {
+        state = state.copyWith(
+          session: state.session!.copyWith(title: title),
+        );
+      }
+
+      _ref.invalidate(chatSessionsProvider);
+    } catch (e) {
+      // Silently fail - title generation is not critical
+      // debugPrint('Failed to generate chat title: $e');
     }
   }
 
