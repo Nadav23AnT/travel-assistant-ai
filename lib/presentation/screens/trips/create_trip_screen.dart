@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/constants.dart';
 import '../../../config/theme.dart';
+import '../../../services/budget_estimation_service.dart';
 import '../../../utils/country_currency_helper.dart';
 import '../../providers/trips_provider.dart';
+import '../../widgets/trip/smart_budget_suggestions_card.dart';
 
 class CreateTripScreen extends ConsumerStatefulWidget {
   const CreateTripScreen({super.key});
@@ -64,6 +66,26 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
         : AppConstants.defaultCurrency;
     if (finalCurrency != _currency) {
       setState(() => _currency = finalCurrency);
+    }
+  }
+
+  /// Get trip duration in days
+  int get _tripDays {
+    if (_startDate == null || _endDate == null) return 0;
+    return _endDate!.difference(_startDate!).inDays + 1;
+  }
+
+  /// Apply the smart budget suggestion to the budget field
+  void _applySmartBudget() {
+    final estimate = BudgetEstimationService.getEstimate(
+      destination: _destinationController.text.trim(),
+      tripDays: _tripDays,
+      currency: _currency,
+    );
+    if (estimate != null) {
+      setState(() {
+        _budgetController.text = estimate.totalBudget.toStringAsFixed(0);
+      });
     }
   }
 
@@ -427,44 +449,14 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                   alignLabelWithHint: true,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // AI Planning suggestion
-              Card(
-                color: AppTheme.primaryLight.withAlpha(77),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        color: AppTheme.primaryColor,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Plan with AI',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'After creating your trip, use our AI assistant to generate personalized itineraries!',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              // Smart Budget Suggestions Card
+              SmartBudgetSuggestionsCard(
+                destination: _destinationController.text.trim(),
+                tripDays: _tripDays,
+                currency: _currency,
+                onApplyBudget: _applySmartBudget,
               ),
             ],
           ),
