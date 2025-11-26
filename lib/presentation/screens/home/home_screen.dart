@@ -5,10 +5,12 @@ import 'package:intl/intl.dart';
 
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../../data/models/expense_model.dart';
 import '../../../data/models/trip_model.dart';
 import '../../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/currency_provider.dart';
+import '../../providers/expenses_provider.dart';
 import '../../providers/trips_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -61,7 +63,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Recent expenses
-              _buildRecentExpenses(context),
+              _buildRecentExpenses(context, ref),
             ],
           ),
         ),
@@ -537,7 +539,9 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentExpenses(BuildContext context) {
+  Widget _buildRecentExpenses(BuildContext context, WidgetRef ref) {
+    final recentExpensesAsync = ref.watch(defaultRecentExpensesProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -555,31 +559,137 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.receipt_outlined,
-                    size: 32,
-                    color: AppTheme.textSecondary,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'No expenses recorded yet',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
-                  ),
-                ],
+        recentExpensesAsync.when(
+          loading: () => const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ),
+          error: (error, stack) => Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 32,
+                      color: AppTheme.errorColor,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Failed to load expenses',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
+          data: (expenses) {
+            if (expenses.isEmpty) {
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.receipt_outlined,
+                          size: 32,
+                          color: AppTheme.textSecondary,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No expenses recorded yet',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return Card(
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: expenses.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  return _buildExpenseItem(context, expenses[index]);
+                },
+              ),
+            );
+          },
         ),
       ],
     );
+  }
+
+  Widget _buildExpenseItem(BuildContext context, ExpenseModel expense) {
+    final dateFormat = DateFormat('MMM d');
+    final categoryIcon = _getCategoryIcon(expense.category);
+    final categoryColor = AppTheme.categoryColors[expense.category] ?? AppTheme.textSecondary;
+
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: categoryColor.withAlpha(26),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          categoryIcon,
+          color: categoryColor,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        expense.description,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      subtitle: Text(
+        dateFormat.format(expense.expenseDate),
+        style: TextStyle(
+          color: AppTheme.textSecondary,
+          fontSize: 12,
+        ),
+      ),
+      trailing: Text(
+        '${expense.amount.toStringAsFixed(2)} ${expense.currency}',
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: categoryColor,
+        ),
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'transport':
+        return Icons.directions_car;
+      case 'accommodation':
+        return Icons.hotel;
+      case 'food':
+        return Icons.restaurant;
+      case 'activities':
+        return Icons.attractions;
+      case 'shopping':
+        return Icons.shopping_bag;
+      default:
+        return Icons.receipt_long;
+    }
   }
 }
 
