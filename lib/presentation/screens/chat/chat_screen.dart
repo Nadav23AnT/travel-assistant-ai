@@ -252,43 +252,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         ),
                 ),
 
-                // Suggestion chips (only for new chats)
-                if (messages.isEmpty && !isSending)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _SuggestionChip(
-                          label: 'Plan a trip to Paris',
-                          onTap: () {
-                            _messageController.text =
-                                'Help me plan a trip to Paris';
-                            _sendMessage();
-                          },
-                        ),
-                        _SuggestionChip(
-                          label: 'Log an expense',
-                          onTap: () {
-                            _messageController.text =
-                                'I spent \$25 on lunch at a cafe';
-                            _sendMessage();
-                          },
-                        ),
-                        _SuggestionChip(
-                          label: 'Weekend getaway ideas',
-                          onTap: () {
-                            _messageController.text =
-                                'Suggest some weekend getaway ideas';
-                            _sendMessage();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
                 // Input area
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -354,39 +317,161 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 32),
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppTheme.primaryLight.withAlpha(51),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.auto_awesome,
+                Icons.travel_explore,
                 size: 48,
                 color: AppTheme.primaryColor,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Text(
-              'Hi! I\'m TripBuddy',
+              'Hey there, traveler! 👋',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
             const SizedBox(height: 8),
             Text(
-              'I can help you plan trips, find recommendations, create itineraries, and more. What would you like to explore today?',
+              'I\'m TripBuddy, your travel companion! I\'m here to help you document your adventures, plan activities, and create a beautiful travel journal.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
+                    height: 1.4,
                   ),
             ),
+            const SizedBox(height: 24),
+            Text(
+              'What would you like to do?',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 16),
+
+            // Quick action buttons
+            _buildQuickActionButton(
+              icon: Icons.calendar_today,
+              label: 'Tell me about your day',
+              description: 'Share what you did, saw, or experienced',
+              color: AppTheme.primaryColor,
+              onTap: () {
+                _messageController.text = 'Let me tell you about my day today...';
+                _sendMessage();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildQuickActionButton(
+              icon: Icons.explore,
+              label: 'Plan an activity',
+              description: 'Get recommendations for things to do',
+              color: AppTheme.successColor,
+              onTap: () {
+                _messageController.text = 'What are some good activities I should do here?';
+                _sendMessage();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildQuickActionButton(
+              icon: Icons.receipt_long,
+              label: 'Log an expense',
+              description: 'Track spending on your trip',
+              color: AppTheme.accentColor,
+              onTap: () {
+                _messageController.text = 'I want to log an expense';
+                _sendMessage();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildQuickActionButton(
+              icon: Icons.auto_stories,
+              label: 'Generate my journal',
+              description: 'Create today\'s travel journal entry',
+              color: Colors.purple,
+              onTap: () {
+                _messageController.text = 'Help me write my travel journal for today';
+                _sendMessage();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildQuickActionButton(
+              icon: Icons.help_outline,
+              label: 'Ask anything',
+              description: 'Travel tips, local info, recommendations',
+              color: AppTheme.textSecondary,
+              onTap: () {
+                // Just focus the text field
+                FocusScope.of(context).requestFocus(FocusNode());
+              },
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton({
+    required IconData icon,
+    required String label,
+    required String description,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withAlpha(20),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withAlpha(50)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withAlpha(30),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: AppTheme.textHint),
           ],
         ),
       ),
@@ -499,21 +584,3 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 }
 
-class _SuggestionChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _SuggestionChip({
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ActionChip(
-      label: Text(label),
-      onPressed: onTap,
-      backgroundColor: AppTheme.primaryLight.withAlpha(77),
-    );
-  }
-}
