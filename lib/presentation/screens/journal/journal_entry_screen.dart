@@ -33,7 +33,6 @@ class _JournalEntryScreenState extends ConsumerState<JournalEntryScreen> {
   List<String> _highlights = [];
   List<String> _locations = [];
   bool _isEditing = false;
-  bool _isGenerating = false;
 
   @override
   void initState() {
@@ -71,7 +70,7 @@ class _JournalEntryScreenState extends ConsumerState<JournalEntryScreen> {
         ? ref.watch(journalEntryByIdProvider(widget.entryId!))
         : null;
 
-    final isLoading = operationState.isLoading || _isGenerating;
+    final isLoading = operationState.isLoading;
     final isNewEntry = widget.entryId == null;
 
     return Scaffold(
@@ -338,63 +337,6 @@ class _JournalEntryScreenState extends ConsumerState<JournalEntryScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // AI Generate button
-                if (_contentController.text.isEmpty) ...[
-                  Card(
-                    color: AppTheme.accentColor.withAlpha(26),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.auto_awesome, color: AppTheme.accentColor),
-                              const SizedBox(width: 8),
-                              Text(
-                                'AI Journal Generation',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Let AI create a journal entry based on your chats and activities today.',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: isLoading ? null : () => _generateEntry(trip),
-                              icon: _isGenerating
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : const Icon(Icons.auto_awesome),
-                              label: Text(_isGenerating ? 'Generating...' : 'Generate with AI'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Center(
-                    child: Text(
-                      'OR write manually',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-
                 // Title field
                 TextFormField(
                   controller: _titleController,
@@ -480,73 +422,6 @@ class _JournalEntryScreenState extends ConsumerState<JournalEntryScreen> {
           ),
       ],
     );
-  }
-
-  Future<void> _generateEntry(TripModel trip) async {
-    setState(() => _isGenerating = true);
-
-    try {
-      // Fetch day context (chat messages and expenses for this date)
-      final dayContext = await ref.read(
-        journalDayContextProvider((tripId: widget.tripId, date: widget.entryDate)).future,
-      );
-
-      // Check if there's any data to generate from
-      if (!dayContext.hasData) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('No chat messages or expenses found for this day. Start a conversation or log some expenses first!'),
-              backgroundColor: AppTheme.warningColor,
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
-        return;
-      }
-
-      // Generate journal entry using day context
-      final aiService = ref.read(aiServiceForJournalProvider);
-      final generatedContent = await aiService.generateJournalEntry(
-        chatMessages: dayContext.chatMessagesForAI,
-        date: widget.entryDate,
-        tripDestination: dayContext.tripDestination ?? trip.displayDestination,
-        expenses: dayContext.expensesForAI,
-      );
-
-      if (mounted) {
-        setState(() {
-          _titleController.text = generatedContent.title;
-          _contentController.text = generatedContent.content;
-          _selectedMood = generatedContent.mood;
-          _highlights = List.from(generatedContent.highlights);
-          _locations = List.from(generatedContent.locations);
-        });
-
-        // Show success message with context info
-        final msgCount = dayContext.chatMessages.length;
-        final expCount = dayContext.expenses.length;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Generated from $msgCount messages and $expCount expenses'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to generate: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isGenerating = false);
-      }
-    }
   }
 
   Future<void> _saveEntry() async {

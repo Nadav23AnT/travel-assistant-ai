@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../config/theme.dart';
 import '../../../data/models/journal_model.dart';
@@ -25,6 +29,25 @@ class JournalScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Trip Journal'),
+        actions: [
+          // Export button - only show if there are entries
+          journalAsync.when(
+            data: (entries) => entries.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.share),
+                    tooltip: 'Export Journal',
+                    onPressed: () => _exportJournal(
+                      context,
+                      ref,
+                      tripAsync.value,
+                      entries,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+            loading: () => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
+          ),
+        ],
       ),
       body: tripAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -39,11 +62,6 @@ class JournalScreen extends ConsumerWidget {
             data: (entries) => _buildJournalList(context, ref, trip, entries),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToNewEntry(context, tripId),
-        icon: const Icon(Icons.add),
-        label: const Text('New Entry'),
       ),
     );
   }
@@ -97,17 +115,34 @@ class JournalScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Start documenting your ${trip.displayDestination} adventure! Create entries manually or let AI generate them from your conversations.',
+              'Your ${trip.displayDestination} journal entries will appear here automatically as you chat and log expenses during your trip.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => _navigateToNewEntry(context, tripId),
-              icon: const Icon(Icons.add),
-              label: const Text('Create First Entry'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.accentColor.withAlpha(26),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.auto_awesome, size: 16, color: AppTheme.accentColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    'AI generates entries daily',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.accentColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -142,17 +177,6 @@ class JournalScreen extends ConsumerWidget {
     );
   }
 
-  void _navigateToNewEntry(BuildContext context, String tripId) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => JournalEntryScreen(
-          tripId: tripId,
-          entryDate: DateTime.now(),
-        ),
-      ),
-    );
-  }
-
   void _navigateToEntry(BuildContext context, JournalModel entry) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -163,6 +187,121 @@ class JournalScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _exportJournal(
+    BuildContext context,
+    WidgetRef ref,
+    TripModel? trip,
+    List<JournalModel> entries,
+  ) async {
+    if (trip == null || entries.isEmpty) return;
+
+    // Show format selection dialog
+    final format = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Export Journal'),
+        content: const Text('Choose export format:'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'txt'),
+            child: const Text('Text (.txt)'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'md'),
+            child: const Text('Markdown (.md)'),
+          ),
+        ],
+      ),
+    );
+
+    if (format == null) return;
+
+    try {
+      // Generate journal content
+      final buffer = StringBuffer();
+      final dateFormat = DateFormat('EEEE, MMMM d, yyyy');
+
+      // Header
+      final journalTitle = trip.title.isNotEmpty ? trip.title : trip.displayDestination;
+      buffer.writeln('# $journalTitle Travel Journal');
+      buffer.writeln();
+      if (trip.startDate != null && trip.endDate != null) {
+        buffer.writeln(
+          '${DateFormat('MMM d').format(trip.startDate!)} - ${DateFormat('MMM d, yyyy').format(trip.endDate!)}',
+        );
+      }
+      buffer.writeln();
+      buffer.writeln('---');
+      buffer.writeln();
+
+      // Sort entries by date
+      final sortedEntries = List<JournalModel>.from(entries)
+        ..sort((a, b) => a.entryDate.compareTo(b.entryDate));
+
+      // Each entry
+      for (final entry in sortedEntries) {
+        final dayNumber = entry.getDayNumber(trip.startDate ?? entry.entryDate);
+
+        buffer.writeln('## Day $dayNumber - ${dateFormat.format(entry.entryDate)}');
+        buffer.writeln();
+
+        if (entry.title != null && entry.title!.isNotEmpty) {
+          buffer.writeln('### ${entry.title}');
+          buffer.writeln();
+        }
+
+        if (entry.mood != null) {
+          buffer.writeln('*Mood: ${entry.mood!.emoji} ${entry.mood!.displayName}*');
+          buffer.writeln();
+        }
+
+        buffer.writeln(entry.content);
+        buffer.writeln();
+
+        if (entry.highlights.isNotEmpty) {
+          buffer.writeln('**Highlights:**');
+          for (final highlight in entry.highlights) {
+            buffer.writeln('- $highlight');
+          }
+          buffer.writeln();
+        }
+
+        if (entry.locations.isNotEmpty) {
+          buffer.writeln('**Places visited:** ${entry.locations.join(', ')}');
+          buffer.writeln();
+        }
+
+        buffer.writeln('---');
+        buffer.writeln();
+      }
+
+      // Footer
+      buffer.writeln();
+      buffer.writeln('*Generated by Travel AI Companion*');
+
+      // Save to file
+      final directory = await getTemporaryDirectory();
+      final fileName = '${journalTitle}_journal'.replaceAll(' ', '_').toLowerCase();
+      final file = File('${directory.path}/$fileName.$format');
+      await file.writeAsString(buffer.toString());
+
+      // Share
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: '$journalTitle Travel Journal',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to export: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
   }
 }
 
