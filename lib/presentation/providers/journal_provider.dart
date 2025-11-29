@@ -7,6 +7,7 @@ import '../../data/repositories/chat_repository.dart';
 import '../../data/repositories/expenses_repository.dart';
 import '../../data/repositories/journal_repository.dart';
 import '../../services/ai_service.dart';
+import '../../services/journal_auto_generator.dart';
 import 'trips_provider.dart';
 
 // ============================================
@@ -365,7 +366,7 @@ final tripJournalByDateProvider =
       return map;
     },
     loading: () => {},
-    error: (_, __) => {},
+    error: (_, _) => {},
   );
 });
 
@@ -376,7 +377,7 @@ final tripJournalCountProvider =
   return entriesAsync.when(
     data: (entries) => entries.length,
     loading: () => 0,
-    error: (_, __) => 0,
+    error: (_, _) => 0,
   );
 });
 
@@ -393,11 +394,11 @@ final shouldShowJournalPromptProvider = Provider<bool>((ref) {
       return hasEntry.when(
         data: (has) => !has,
         loading: () => false,
-        error: (_, __) => false,
+        error: (_, _) => false,
       );
     },
     loading: () => false,
-    error: (_, __) => false,
+    error: (_, _) => false,
   );
 });
 
@@ -525,3 +526,64 @@ final autoGenerateJournalProvider = FutureProvider.family<GeneratedJournalConten
     }
   },
 );
+
+// ============================================
+// AUTO JOURNAL GENERATION PROVIDERS
+// ============================================
+
+/// Provider for JournalAutoGenerator service
+final journalAutoGeneratorProvider = Provider<JournalAutoGenerator>((ref) {
+  return JournalAutoGenerator();
+});
+
+/// Provider that triggers auto-generation for the active trip
+/// This should be watched on app startup (home screen)
+/// Returns null if no active trip, or the generation result
+final journalAutoGenResultProvider = FutureProvider.autoDispose<AutoGenResult?>((ref) async {
+  final generator = ref.watch(journalAutoGeneratorProvider);
+  return generator.generateForActiveTrip();
+});
+
+/// State provider to track if the journal ready notification has been dismissed
+final journalNotificationDismissedProvider = StateProvider<bool>((ref) => false);
+
+/// Provider to check if we should show the "Journal Ready" notification card
+/// Returns true if:
+/// - Auto-generation just completed
+/// - Trip just ended (within last 7 days)
+/// - Generated at least 1 entry
+/// - User hasn't dismissed the notification
+final shouldShowJournalReadyProvider = Provider<bool>((ref) {
+  final dismissed = ref.watch(journalNotificationDismissedProvider);
+  if (dismissed) return false;
+
+  final resultAsync = ref.watch(journalAutoGenResultProvider);
+  return resultAsync.maybeWhen(
+    data: (result) => result?.shouldShowNotification ?? false,
+    orElse: () => false,
+  );
+});
+
+/// Provider to get the auto-gen result data (for showing in UI)
+final journalReadyDataProvider = Provider<AutoGenResult?>((ref) {
+  final resultAsync = ref.watch(journalAutoGenResultProvider);
+  return resultAsync.maybeWhen(
+    data: (result) => result,
+    orElse: () => null,
+  );
+});
+
+/// Provider to dismiss the journal ready notification
+final dismissJournalNotificationProvider = Provider<void Function()>((ref) {
+  return () {
+    ref.read(journalNotificationDismissedProvider.notifier).state = true;
+  };
+});
+
+/// Provider to manually refresh/re-run auto journal generation
+final refreshAutoJournalProvider = Provider<void Function()>((ref) {
+  return () {
+    ref.invalidate(journalAutoGenResultProvider);
+    ref.read(journalNotificationDismissedProvider.notifier).state = false;
+  };
+});

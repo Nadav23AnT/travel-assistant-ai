@@ -14,8 +14,10 @@ import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
+import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
 import '../../widgets/home/day_tip_card.dart';
+import '../../widgets/home/journal_ready_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -37,6 +39,10 @@ class HomeScreen extends ConsumerWidget {
 
     final activeTripAsync = ref.watch(activeTripProvider);
 
+    // Watch journal auto-generation (triggers on app open)
+    final showJournalReady = ref.watch(shouldShowJournalReadyProvider);
+    final journalReadyData = ref.watch(journalReadyDataProvider);
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -47,6 +53,15 @@ class HomeScreen extends ConsumerWidget {
               // Welcome header
               _buildWelcomeHeader(context, ref),
               const SizedBox(height: 24),
+
+              // Journal Ready notification (shows when trip ended)
+              if (showJournalReady && journalReadyData != null)
+                JournalReadyCard(
+                  result: journalReadyData,
+                  onDismiss: ref.read(dismissJournalNotificationProvider),
+                ),
+              if (showJournalReady && journalReadyData != null)
+                const SizedBox(height: 16),
 
               // Active trip card
               activeTripAsync.when(
