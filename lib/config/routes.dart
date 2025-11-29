@@ -54,14 +54,22 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String journal = '/trips/:id/journal';
 
-  // Navigation keys
-  static final _rootNavigatorKey = GlobalKey<NavigatorState>();
-  static final _shellNavigatorKey = GlobalKey<NavigatorState>();
+  // Singleton router instance
+  static GoRouter? _router;
+  static bool _isAuthenticated = false;
+  static final _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
 
-  // Router configuration
+  // Router configuration - returns singleton instance
   static GoRouter router({required bool isAuthenticated}) {
-    return GoRouter(
-      navigatorKey: _rootNavigatorKey,
+    _isAuthenticated = isAuthenticated;
+
+    if (_router != null) {
+      // Refresh the router to re-evaluate redirects
+      _router!.refresh();
+      return _router!;
+    }
+
+    _router = GoRouter(
       initialLocation: splash,
       debugLogDiagnostics: true,
       redirect: (context, state) {
@@ -74,11 +82,11 @@ class AppRoutes {
             state.matchedLocation.startsWith('/onboarding');
 
         // Allow unauthenticated access to onboarding pages (they're protected by auth screens)
-        if (!isAuthenticated && !isOnAuthPage && !isOnOnboardingPage) {
+        if (!_isAuthenticated && !isOnAuthPage && !isOnOnboardingPage) {
           return login;
         }
 
-        if (isAuthenticated &&
+        if (_isAuthenticated &&
             isOnAuthPage &&
             state.matchedLocation != splash) {
           return home;
@@ -212,5 +220,7 @@ class AppRoutes {
         ),
       ),
     );
+
+    return _router!;
   }
 }
