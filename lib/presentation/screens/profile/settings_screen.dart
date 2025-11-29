@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../config/constants.dart';
 import '../../../config/theme.dart';
@@ -104,6 +103,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onTap: () => _showDeleteAccountDialog(context, l10n),
             ),
 
+            // Help & Legal
+            _buildSectionHeader(context, l10n.helpAndLegal.toUpperCase()),
+            _buildSettingTile(
+              context,
+              title: l10n.helpAndSupport,
+              icon: Icons.help_outline,
+              onTap: () => context.push('/legal/help-support'),
+            ),
+            _buildSettingTile(
+              context,
+              title: l10n.termsOfService,
+              icon: Icons.description_outlined,
+              onTap: () => context.push('/legal/terms-of-service'),
+            ),
+            _buildSettingTile(
+              context,
+              title: l10n.privacyPolicy,
+              icon: Icons.privacy_tip_outlined,
+              onTap: () => context.push('/legal/privacy-policy'),
+            ),
+
             // About
             _buildSectionHeader(context, l10n.about.toUpperCase()),
             _buildSettingTile(
@@ -113,18 +133,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               icon: Icons.info_outline,
               showChevron: false,
               onTap: () {},
-            ),
-            _buildSettingTile(
-              context,
-              title: l10n.termsOfService,
-              icon: Icons.description_outlined,
-              onTap: () => _launchUrl('https://tripbuddy.app/terms'),
-            ),
-            _buildSettingTile(
-              context,
-              title: l10n.privacyPolicy,
-              icon: Icons.privacy_tip_outlined,
-              onTap: () => _launchUrl('https://tripbuddy.app/privacy'),
             ),
             _buildSettingTile(
               context,
@@ -830,10 +838,4 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
 }

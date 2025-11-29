@@ -1384,6 +1384,12 @@ abstract class AppLocalizations {
   /// **'Help & Support'**
   String get helpAndSupport;
 
+  /// Help and legal section header
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Legal'**
+  String get helpAndLegal;
+
   /// Free subscription plan
   ///
   /// In en, this message translates to:

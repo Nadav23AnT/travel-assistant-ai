@@ -17,6 +17,7 @@ import '../presentation/screens/profile/profile_screen.dart';
 import '../presentation/screens/profile/edit_profile_screen.dart';
 import '../presentation/screens/profile/settings_screen.dart';
 import '../presentation/screens/journal/journal_screen.dart';
+import '../presentation/screens/legal/legal_document_screen.dart';
 import '../presentation/screens/onboarding/language_selection_screen.dart';
 import '../presentation/screens/onboarding/currency_selection_screen.dart';
 import '../presentation/screens/onboarding/destination_selection_screen.dart';
@@ -53,6 +54,11 @@ class AppRoutes {
   static const String editProfile = '/profile/edit';
   static const String settings = '/settings';
   static const String journal = '/trips/:id/journal';
+
+  // Legal routes
+  static const String privacyPolicy = '/legal/privacy-policy';
+  static const String termsOfService = '/legal/terms-of-service';
+  static const String helpSupport = '/legal/help-support';
 
   // Singleton router instance
   static GoRouter? _router;
@@ -210,6 +216,26 @@ class AppRoutes {
             final tripId = state.pathParameters['id']!;
             return JournalScreen(tripId: tripId);
           },
+        ),
+
+        // Legal routes
+        GoRoute(
+          path: privacyPolicy,
+          builder: (context, state) => const LegalDocumentScreen(
+            documentType: LegalDocumentType.privacyPolicy,
+          ),
+        ),
+        GoRoute(
+          path: termsOfService,
+          builder: (context, state) => const LegalDocumentScreen(
+            documentType: LegalDocumentType.termsOfService,
+          ),
+        ),
+        GoRoute(
+          path: helpSupport,
+          builder: (context, state) => const LegalDocumentScreen(
+            documentType: LegalDocumentType.helpSupport,
+          ),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

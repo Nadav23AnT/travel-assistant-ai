@@ -123,25 +123,19 @@ class ProfileScreen extends ConsumerWidget {
               context,
               icon: Icons.help_outline,
               title: l10n.helpAndSupport,
-              onTap: () {
-                // TODO: Navigate to help
-              },
+              onTap: () => context.push(AppRoutes.helpSupport),
             ),
             _buildMenuItem(
               context,
               icon: Icons.privacy_tip_outlined,
               title: l10n.privacyPolicy,
-              onTap: () {
-                // TODO: Show privacy policy
-              },
+              onTap: () => context.push(AppRoutes.privacyPolicy),
             ),
             _buildMenuItem(
               context,
               icon: Icons.description_outlined,
               title: l10n.termsOfService,
-              onTap: () {
-                // TODO: Show terms
-              },
+              onTap: () => context.push(AppRoutes.termsOfService),
             ),
             const SizedBox(height: 24),
 

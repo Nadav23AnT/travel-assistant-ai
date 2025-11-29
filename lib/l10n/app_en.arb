@@ -952,6 +952,10 @@
   "@helpAndSupport": {
     "description": "Help and support menu item"
   },
+  "helpAndLegal": "Help & Legal",
+  "@helpAndLegal": {
+    "description": "Help and legal section header"
+  },
   "freePlan": "Free Plan",
   "@freePlan": {
     "description": "Free subscription plan"

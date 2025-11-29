@@ -675,6 +675,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get helpAndSupport => 'المساعدة والدعم';
 
   @override
+  String get helpAndLegal => 'Help & Legal';
+
+  @override
   String get freePlan => 'الخطة المجانية';
 
   @override

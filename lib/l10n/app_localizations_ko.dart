@@ -669,6 +669,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get helpAndSupport => '도움말 및 지원';
 
   @override
+  String get helpAndLegal => 'Help & Legal';
+
+  @override
   String get freePlan => '무료 플랜';
 
   @override

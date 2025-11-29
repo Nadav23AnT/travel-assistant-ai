@@ -680,6 +680,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpAndSupport => 'Help & Support';
 
   @override
+  String get helpAndLegal => 'Help & Legal';
+
+  @override
   String get freePlan => 'Free Plan';
 
   @override

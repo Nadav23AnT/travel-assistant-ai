@@ -682,6 +682,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get helpAndSupport => 'Помощь и поддержка';
 
   @override
+  String get helpAndLegal => 'Help & Legal';
+
+  @override
   String get freePlan => 'Бесплатный план';
 
   @override

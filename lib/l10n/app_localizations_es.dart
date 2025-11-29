@@ -685,6 +685,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get helpAndSupport => 'Ayuda y Soporte';
 
   @override
+  String get helpAndLegal => 'Help & Legal';
+
+  @override
   String get freePlan => 'Plan Gratuito';
 
   @override
