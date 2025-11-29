@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/models/travel_context.dart';
 import 'currency_provider.dart';
+import 'locale_provider.dart';
 import 'trips_provider.dart';
 
 /// Provider for the current travel context
@@ -10,6 +11,7 @@ import 'trips_provider.dart';
 final travelContextProvider = FutureProvider<TravelContext?>((ref) async {
   final activeTrip = await ref.watch(activeTripProvider.future);
   final homeCurrency = ref.watch(userHomeCurrencyProvider);
+  final appLanguage = ref.watch(currentLanguageCodeProvider);
 
   // Get user languages from settings
   final languages = await _getUserLanguages();
@@ -19,6 +21,7 @@ final travelContextProvider = FutureProvider<TravelContext?>((ref) async {
     return TravelContext(
       spokenLanguages: languages,
       homeCurrency: homeCurrency,
+      appLanguage: appLanguage,
     );
   }
 
@@ -32,6 +35,7 @@ final travelContextProvider = FutureProvider<TravelContext?>((ref) async {
     budgetCurrency: activeTrip.budgetCurrency,
     spokenLanguages: languages,
     homeCurrency: homeCurrency,
+    appLanguage: appLanguage,
   );
 });
 

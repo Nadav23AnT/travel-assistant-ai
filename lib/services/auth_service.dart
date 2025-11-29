@@ -218,6 +218,34 @@ class AuthService {
   }
 
   // ============================================
+  // PROFILE MANAGEMENT
+  // ============================================
+
+  Future<UserResponse> updateProfile({
+    String? fullName,
+    String? avatarUrl,
+  }) async {
+    try {
+      final attrs = UserAttributes(
+        data: {
+          if (fullName != null) 'full_name': fullName,
+          if (avatarUrl != null) 'avatar_url': avatarUrl,
+        },
+      );
+
+      final response = await _supabase.auth.updateUser(attrs);
+
+      if (response.user == null) {
+        throw AuthException('Failed to update profile');
+      }
+
+      return response;
+    } catch (e) {
+      throw AuthException(_parseError(e));
+    }
+  }
+
+  // ============================================
   // ONBOARDING STATUS
   // ============================================
 

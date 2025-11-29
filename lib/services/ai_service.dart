@@ -7,12 +7,14 @@ import '../config/env.dart';
 import '../data/models/day_tip_model.dart';
 import '../data/models/journal_model.dart';
 import '../data/models/travel_context.dart';
+import 'token_usage_service.dart';
 
 class AIException implements Exception {
   final String message;
   final int? statusCode;
+  final bool isTokenLimitExceeded;
 
-  AIException(this.message, {this.statusCode});
+  AIException(this.message, {this.statusCode, this.isTokenLimitExceeded = false});
 
   @override
   String toString() => message;
@@ -162,13 +164,15 @@ class AIResponse {
 class AIService {
   final Dio _dio;
   final String _apiKey;
+  final TokenUsageService _tokenUsageService;
 
   static const String _baseUrl = 'https://api.openai.com/v1';
   static const String _defaultModel = 'gpt-4o-mini';
 
-  AIService({Dio? dio, String? apiKey})
+  AIService({Dio? dio, String? apiKey, TokenUsageService? tokenUsageService})
       : _dio = dio ?? Dio(),
-        _apiKey = apiKey ?? Env.openaiApiKey {
+        _apiKey = apiKey ?? Env.openaiApiKey,
+        _tokenUsageService = tokenUsageService ?? TokenUsageService() {
     _dio.options.baseUrl = _baseUrl;
     _dio.options.headers = {
       'Content-Type': 'application/json',
@@ -176,8 +180,65 @@ class AIService {
     };
   }
 
+  /// Check credit limit before making an AI request
+  /// Throws AIException with isTokenLimitExceeded=true if limit exceeded
+  Future<void> _checkTokenLimit() async {
+    try {
+      final result = await _tokenUsageService.checkBeforeRequest();
+      if (!result.canProceed) {
+        throw AIException(
+          result.errorMessage ?? 'Daily credit limit exceeded. Please try again tomorrow.',
+          isTokenLimitExceeded: true,
+        );
+      }
+    } catch (e) {
+      if (e is AIException) rethrow;
+      // On service errors, allow the request to proceed (fail-open)
+      debugPrint('Credit limit check failed, allowing request: $e');
+    }
+  }
+
+  /// Record token usage after a successful AI request
+  Future<void> _recordTokenUsage(int tokensUsed) async {
+    if (tokensUsed > 0) {
+      try {
+        await _tokenUsageService.recordUsage(tokensUsed);
+      } catch (e) {
+        debugPrint('Failed to record token usage: $e');
+        // Don't throw - don't break user experience for tracking failures
+      }
+    }
+  }
+
+  /// Extract total tokens from OpenAI API response
+  int _extractTokensUsed(Map<String, dynamic> responseData) {
+    try {
+      final usage = responseData['usage'] as Map<String, dynamic>?;
+      if (usage != null) {
+        return (usage['total_tokens'] as int?) ?? 0;
+      }
+    } catch (e) {
+      debugPrint('Failed to extract token usage: $e');
+    }
+    return 0;
+  }
+
+  /// Get current token usage status for display
+  Future<TokenCheckResult> getTokenUsageStatus() async {
+    return _tokenUsageService.checkBeforeRequest();
+  }
+
   /// System prompt for the travel assistant - Travel Chat Companion
   String buildSystemPrompt({TravelContext? context}) {
+    // Determine response language
+    final languageCode = context?.appLanguage ?? 'en';
+    final languageName = context?.appLanguageDisplayName ?? 'English';
+    final languageInstruction = languageCode != 'en' ? '''
+
+🌐 LANGUAGE REQUIREMENT:
+IMPORTANT: You MUST respond in $languageName ($languageCode). All your messages, recommendations, and responses should be written in $languageName. This is the user's preferred language.
+''' : '';
+
     final contextSection = context != null ? '''
 
 📍 CURRENT TRIP CONTEXT:
@@ -206,7 +267,7 @@ FORMAT for place recommendations:
 
     return '''
 You are TripBuddy, a warm, friendly, and proactive AI travel companion. You help travelers document their trip, share experiences, manage expenses, plan activities, and create a meaningful daily travel journal.
-$contextSection
+$languageInstruction$contextSection
 🎯 YOUR CORE PERSONALITY:
 - Warm, helpful, and conversational - NEVER robotic
 - You guide the user naturally through their travel day
@@ -267,6 +328,9 @@ Remember: Help travelers feel guided, organized, and supported - not just tracke
       throw AIException('OpenAI API key not configured');
     }
 
+    // Check token limit before making request
+    await _checkTokenLimit();
+
     try {
       // Build messages array with system prompt and history
       final messages = <Map<String, dynamic>>[
@@ -292,9 +356,13 @@ Remember: Help travelers feel guided, organized, and supported - not just tracke
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data as Map<String, dynamic>;
         final choices = data['choices'] as List;
         if (choices.isNotEmpty) {
+          // Record token usage after successful response
+          final tokensUsed = _extractTokensUsed(data);
+          await _recordTokenUsage(tokensUsed);
+
           final content = choices[0]['message']['content'] as String;
           return content.trim();
         }
@@ -492,6 +560,9 @@ If no expense in message, respond as a curious travel buddy interested in their 
       throw AIException('OpenAI API key not configured');
     }
 
+    // Check token limit before making request
+    await _checkTokenLimit();
+
     try {
       final systemPrompt = buildExpenseDetectionPrompt(context: context);
       final messages = <Map<String, dynamic>>[
@@ -515,9 +586,13 @@ If no expense in message, respond as a curious travel buddy interested in their 
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data as Map<String, dynamic>;
         final choices = data['choices'] as List;
         if (choices.isNotEmpty) {
+          // Record token usage after successful response
+          final tokensUsed = _extractTokensUsed(data);
+          await _recordTokenUsage(tokensUsed);
+
           final content = choices[0]['message']['content'] as String;
           return _parseAIResponse(content);
         }
@@ -689,6 +764,9 @@ Do not include any text outside the JSON object.
       throw AIException('OpenAI API key not configured');
     }
 
+    // Check token limit before making request
+    await _checkTokenLimit();
+
     try {
       // Build context from chat messages
       final chatContext = chatMessages.isNotEmpty
@@ -736,9 +814,13 @@ Please create a journal entry for this day.
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data as Map<String, dynamic>;
         final choices = data['choices'] as List;
         if (choices.isNotEmpty) {
+          // Record token usage after successful response
+          final tokensUsed = _extractTokensUsed(data);
+          await _recordTokenUsage(tokensUsed);
+
           final content = choices[0]['message']['content'] as String;
           return _parseJournalResponse(content);
         }
@@ -764,29 +846,48 @@ Please create a journal entry for this day.
   }
 
   /// Generate a short, descriptive title for a chat conversation
+  /// Optionally includes trip destination and language for better context
   Future<String> generateChatTitle({
     required String userMessage,
     String? assistantResponse,
+    String? tripDestination,
+    String? language,
     String? model,
   }) async {
     if (_apiKey.isEmpty) {
       throw AIException('OpenAI API key not configured');
     }
 
+    // Check token limit before making request
+    await _checkTokenLimit();
+
     try {
+      final languageInstruction = language != null && language != 'en'
+          ? 'Generate the title in the same language as the user message (detected: $language).'
+          : '';
+
+      final tripContext = tripDestination != null
+          ? 'Trip destination: $tripDestination'
+          : '';
+
       final prompt = '''
 Generate a short, descriptive title (3-6 words) for this travel chat conversation.
 The title should capture the main topic or intent of the user's message.
+$languageInstruction
 
+$tripContext
 User message: "$userMessage"
-${assistantResponse != null ? 'Assistant response: "$assistantResponse"' : ''}
+${assistantResponse != null ? 'Assistant response summary: "${assistantResponse.length > 200 ? assistantResponse.substring(0, 200) : assistantResponse}..."' : ''}
 
 Rules:
-- Maximum 6 words
+- Maximum 6 words, ideally 3-5 words
 - No quotes in the response
 - Be specific and descriptive
-- Focus on the travel topic/activity
-- Examples: "Planning Rome Itinerary", "Dinner at Thai Market", "Temple Visit Questions", "Budget for Bangkok Trip"
+- Focus on the main travel topic/activity/question
+- Use action words when appropriate (Planning, Exploring, Finding, etc.)
+- Include location if mentioned and relevant
+- Good examples: "Planning Rome Itinerary", "Best Thai Street Food", "Temple Visit Tips", "Bangkok Budget Questions", "Tokyo Hotel Recommendations"
+- Bad examples: "Travel Chat", "Question About Trip", "Help Needed"
 
 Respond with ONLY the title, nothing else.
 ''';
@@ -802,12 +903,23 @@ Respond with ONLY the title, nothing else.
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data as Map<String, dynamic>;
         final choices = data['choices'] as List;
         if (choices.isNotEmpty) {
+          // Record token usage after successful response
+          final tokensUsed = _extractTokensUsed(data);
+          await _recordTokenUsage(tokensUsed);
+
           final content = choices[0]['message']['content'] as String;
-          // Clean up the title - remove quotes, trim
-          return content.trim().replaceAll('"', '').replaceAll("'", '');
+          // Clean up the title - remove quotes, trim, and ensure it's not too long
+          var title = content.trim().replaceAll('"', '').replaceAll("'", '');
+
+          // Truncate if somehow still too long
+          if (title.length > 50) {
+            title = '${title.substring(0, 47)}...';
+          }
+
+          return title;
         }
         throw AIException('No response from AI');
       } else {
@@ -818,10 +930,16 @@ Respond with ONLY the title, nothing else.
       }
     } on DioException catch (e) {
       debugPrint('AI Service Error generating title: ${e.message}');
-      // Return a default title on error
+      // Return a context-aware default title on error
+      if (tripDestination != null) {
+        return '$tripDestination Chat';
+      }
       return 'Travel Chat';
     } catch (e) {
       debugPrint('Error generating title: $e');
+      if (tripDestination != null) {
+        return '$tripDestination Chat';
+      }
       return 'Travel Chat';
     }
   }
@@ -870,6 +988,9 @@ Respond with ONLY the title, nothing else.
       return "Welcome to TripBuddy! I'm here to help you plan and document your travels. What would you like to explore?";
     }
 
+    // Check token limit before making request
+    await _checkTokenLimit();
+
     try {
       final prompt = '''
 Generate a warm, helpful welcome message for someone traveling to ${context.destination}.
@@ -902,9 +1023,13 @@ Do NOT include any JSON blocks or markers.
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data as Map<String, dynamic>;
         final choices = data['choices'] as List;
         if (choices.isNotEmpty) {
+          // Record token usage after successful response
+          final tokensUsed = _extractTokensUsed(data);
+          await _recordTokenUsage(tokensUsed);
+
           return (choices[0]['message']['content'] as String).trim();
         }
         throw AIException('No response from AI');
@@ -933,6 +1058,9 @@ Do NOT include any JSON blocks or markers.
     if (_apiKey.isEmpty) {
       throw AIException('OpenAI API key not configured');
     }
+
+    // Check token limit before making request
+    await _checkTokenLimit();
 
     final destination = context.destination ?? 'your destination';
 
@@ -971,9 +1099,13 @@ Include place data at the end for Google Maps integration:
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data as Map<String, dynamic>;
         final choices = data['choices'] as List;
         if (choices.isNotEmpty) {
+          // Record token usage after successful response
+          final tokensUsed = _extractTokensUsed(data);
+          await _recordTokenUsage(tokensUsed);
+
           final content = choices[0]['message']['content'] as String;
           return _parseAIResponse(content);
         }
@@ -994,168 +1126,64 @@ Include place data at the end for Google Maps integration:
   }
 
   /// System prompt for generating daily destination tips - LOCAL EXPERT
-  String _buildDayTipPrompt(String destination, String category) {
-    final categoryDescriptions = {
-      'money': '''ATMs and currency exchange:
-- Compare different ATM networks and their fees
-- Explain which banks/ATMs to USE and which to AVOID (and why)
-- Tips on exchange rates, hidden fees, dynamic currency conversion traps
-- Card acceptance realities, cash-only situations
-- Tipping norms and amounts''',
-      'medical': '''Healthcare and pharmacies:
-- How to find pharmacies (chain names, 24h options)
-- Common medications and their local names/availability
-- What requires prescription vs over-the-counter
-- Hospital/clinic options for tourists (quality varies!)
-- Health precautions specific to the region''',
-      'connectivity': '''SIM cards and internet:
-- Compare ALL major carriers (coverage, speed, price)
-- Where to buy (official stores vs convenience stores - pros/cons)
-- What to AVOID (tourist trap SIM deals, overpriced airport options)
-- Typical data packages and realistic prices
-- eSIM options if available
-- WiFi availability and free hotspot locations''',
-      'customs': '''Cultural etiquette:
-- Greetings and physical contact norms
-- Dress codes for different situations (temples, restaurants, business)
-- Topics to avoid in conversation
-- Gift-giving etiquette
-- Religious and cultural sensitivities
-- Common misunderstandings tourists make''',
-      'safety': '''Safety awareness:
-- Neighborhoods/areas to avoid (especially at night)
-- Common petty crimes and how to prevent them
-- Safe transportation options vs risky ones
-- Police and emergency contacts
-- What NOT to do that tourists commonly do wrong''',
-      'transport': '''Getting around:
-- Compare transport options (metro, bus, taxi, rideshare, motorbike)
-- Which apps to download and use
-- Typical prices so you don\'t get overcharged
-- Tricks drivers use on tourists and how to avoid them
-- Best value options for different situations''',
-      'food': '''Food and dining:
-- Must-try local dishes and where to find authentic versions
-- Street food safety - what to look for, what to avoid
-- Price ranges so you know if you\'re being overcharged
-- Local dining customs and etiquette
-- Vegetarian/allergy considerations
-- Food scams to watch out for''',
-      'scams': '''Tourist scams to avoid:
-- Specific scams common in this destination
-- How scammers approach tourists
-- Red flags to watch for
-- How to respond/escape if targeted
-- Areas where scams are most common''',
-      'language': '''Language tips:
-- Essential phrases that actually help
-- Common misunderstandings
-- How to communicate when there\'s a language barrier
-- Translation app tips
-- Polite vs rude - words/gestures to avoid''',
-      'weather': '''Weather and clothing:
-- What to actually wear (not just temperature but humidity, rain, sun)
-- Indoor vs outdoor temperature differences (AC!)
-- Seasonal considerations
-- Items tourists forget but really need
-- Weather-related health tips''',
-      'shopping': '''Shopping smart:
-- Where locals shop vs tourist traps
-- Fair prices for common items
-- Quality indicators - real vs fake
-- Return policies and consumer rights
-- Best areas for specific items''',
-      'nightlife': '''Nightlife safety:
-- Safe areas for going out
-- Drink safety (spiking, fake alcohol)
-- Cover charges and hidden fees
-- Getting home safely at night
-- What to avoid''',
-      'emergency': '''Emergency preparedness:
-- Emergency numbers (police, ambulance, fire)
-- Nearest embassy/consulate info
-- What to do if passport is lost/stolen
-- Hospital emergency procedures
-- Insurance and payment for emergencies''',
-      'water': '''Water and hygiene:
-- Tap water safety (drinking, brushing teeth, ice)
-- Bottled water - authentic vs refilled bottles
-- Food hygiene indicators
-- Hand sanitizer and hygiene tips
-- Stomach issues - prevention and treatment''',
-      'photography': '''Photography etiquette:
-- Where photography is prohibited or frowned upon
-- Asking permission - when and how
-- Sensitive subjects to avoid photographing
-- Drone regulations
-- Best times/spots for photos''',
-      'bargaining': '''Bargaining and negotiation:
-- When bargaining is expected vs offensive
-- Starting price strategies
-- Walking away technique
-- Fair prices for common tourist items
-- Fixed price vs negotiable situations''',
-      'general': 'practical daily tips for visitors',
-    };
-
-    final categoryFocus = categoryDescriptions[category] ?? categoryDescriptions['general']!;
-
+  String _buildDayTipPrompt(String destination, List<String> categories, String language) {
     return '''
-You are a SEASONED TRAVELER and LOCAL EXPERT who has lived in $destination for many years. You\'ve seen every tourist mistake, know every trick, and genuinely want to help travelers have a safe, authentic, and budget-smart experience.
+You are a SEASONED TRAVELER and LOCAL EXPERT who has lived in $destination for many years.
+You are generating 3 practical daily tips for a traveler visiting $destination.
 
-Generate ONE practical daily tip for a traveler visiting $destination.
+CATEGORIES: ${categories.join(', ')}
 
-CATEGORY: $category
-
-FOCUS AREAS FOR THIS CATEGORY:
-$categoryFocus
+LANGUAGE REQUIREMENT:
+You MUST respond in $language. All titles and content must be in $language.
 
 CRITICAL REQUIREMENTS:
-1. Present OPTIONS - don\'t just recommend one thing, compare alternatives
-2. Explain what to AVOID and WHY - this is often more valuable than recommendations
-3. Be SPECIFIC to $destination - generic advice is useless
-4. Include realistic PRICES in local currency when relevant
-5. Be PRACTICAL - something they can actually use
-6. Keep it CONCISE - 3-4 sentences maximum, but packed with value
-7. Include a SHORT catchy title (max 6 words)
-
-EXAMPLES OF EXCELLENT TIPS:
-
-Money: "ATM Fees: Know Before You Go"
-"In Bangkok, Kasikorn (green) and Bangkok Bank (blue) ATMs charge 220 THB per withdrawal, while Aeon ATMs (in malls) are FREE for international cards. AVOID orange CIMB ATMs - they charge 250 THB AND have poor exchange rates. Always decline \'conversion to home currency\' - it\'s a 3-5% hidden fee."
-
-Connectivity: "Skip the Airport SIM Booth"
-"Airport SIM shops charge 2-3x more. Instead, any 7-Eleven sells AIS, TRUE, and DTAC SIMs for 299-399 THB with 15-30GB data. TRUE has best city coverage, AIS best for rural areas. Bring passport - required for registration. Pro tip: eSIMs via Airalo app work great and you can set up before landing."
-
-Scams: "The Friendly Local Warning"
-"If someone approaches saying \'the temple/palace is closed today\' - it\'s ALWAYS a scam to redirect you to a gem shop or tailor. Verify closures yourself. Similarly, tuk-tuk drivers offering \'20 baht tours\' will take you to commission shops. If it sounds too cheap, you\'re the product."
-
-Water: "Ice Cube Intelligence"
-"Tubular/hollow ice cubes (made in factories) are safe - they\'re made from purified water. Avoid irregular crushed ice at street stalls. Bottled water: check the seal isn\'t broken and the cap has a safety ring. Brands like Singha, Crystal, Nestle are reliable; avoid unknown brands with suspiciously low prices."
+1. Generate exactly 3 tips, one for each category.
+2. Be SPECIFIC to $destination - generic advice is useless.
+3. Keep it CONCISE - 2-3 sentences maximum per tip.
+4. Include a SHORT catchy title (max 5 words).
+5. Be PRACTICAL - something they can actually use today.
 
 Respond in this exact JSON format:
 {
-  "title": "short catchy title",
-  "content": "the practical tip with specific details, options, and what to avoid",
-  "category": "$category"
+  "tips": [
+    {
+      "title": "short catchy title",
+      "content": "practical tip content",
+      "category": "${categories[0]}"
+    },
+    {
+      "title": "short catchy title",
+      "content": "practical tip content",
+      "category": "${categories[1]}"
+    },
+    {
+      "title": "short catchy title",
+      "content": "practical tip content",
+      "category": "${categories[2]}"
+    }
+  ]
 }
 
 Do not include any text outside the JSON object.
 ''';
   }
 
-  /// Generate a daily practical tip for a destination
-  Future<GeneratedTipContent> generateDayTip({
+  /// Generate 3 daily practical tips for a destination
+  Future<List<GeneratedTipContent>> generateDayTips({
     required String destination,
-    required String category,
+    required List<String> categories,
+    String language = 'English',
     String? model,
   }) async {
     if (_apiKey.isEmpty) {
       throw AIException('OpenAI API key not configured');
     }
 
+    // Check token limit before making request
+    await _checkTokenLimit();
+
     try {
-      final systemPrompt = _buildDayTipPrompt(destination, category);
+      final systemPrompt = _buildDayTipPrompt(destination, categories, language);
 
       final response = await _dio.post(
         '/chat/completions',
@@ -1163,19 +1191,23 @@ Do not include any text outside the JSON object.
           'model': model ?? _defaultModel,
           'messages': [
             ChatMessage.system(systemPrompt).toJson(),
-            ChatMessage.user('Generate a $category tip for $destination.').toJson(),
+            ChatMessage.user('Generate 3 tips for $destination in categories: ${categories.join(', ')}.').toJson(),
           ],
           'temperature': 0.9,
-          'max_tokens': 300,
+          'max_tokens': 600,
         },
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data as Map<String, dynamic>;
         final choices = data['choices'] as List;
         if (choices.isNotEmpty) {
+          // Record token usage after successful response
+          final tokensUsed = _extractTokensUsed(data);
+          await _recordTokenUsage(tokensUsed);
+
           final content = choices[0]['message']['content'] as String;
-          return _parseDayTipResponse(content, category);
+          return _parseDayTipsResponse(content, categories);
         }
         throw AIException('No response from AI');
       } else {
@@ -1185,27 +1217,27 @@ Do not include any text outside the JSON object.
         );
       }
     } on DioException catch (e) {
-      debugPrint('AI Service Error generating day tip: ${e.message}');
-      // Return a default tip on error
-      return GeneratedTipContent(
+      debugPrint('AI Service Error generating day tips: ${e.message}');
+      // Return default tips on error
+      return categories.map((c) => GeneratedTipContent(
         title: 'Travel Tip',
         content: 'Check local guides for the best recommendations in $destination!',
-        category: category,
-      );
+        category: c,
+      )).toList();
     } catch (e) {
-      debugPrint('Error generating day tip: $e');
-      return GeneratedTipContent(
+      debugPrint('Error generating day tips: $e');
+      return categories.map((c) => GeneratedTipContent(
         title: 'Travel Tip',
-        content: 'Explore $destination like a local - ask hotel staff for insider tips!',
-        category: category,
-      );
+        content: 'Explore $destination like a local!',
+        category: c,
+      )).toList();
     }
   }
 
-  /// Parse the day tip response
-  GeneratedTipContent _parseDayTipResponse(String content, String fallbackCategory) {
+  /// Parse the day tips response
+  List<GeneratedTipContent> _parseDayTipsResponse(String content, List<String> fallbackCategories) {
     try {
-      // Clean the response - remove markdown code blocks if present
+      // Clean the response
       String cleanContent = content.trim();
       if (cleanContent.startsWith('```json')) {
         cleanContent = cleanContent.substring(7);
@@ -1218,16 +1250,18 @@ Do not include any text outside the JSON object.
       cleanContent = cleanContent.trim();
 
       final json = jsonDecode(cleanContent) as Map<String, dynamic>;
-      return GeneratedTipContent.fromJson(json);
+      final tipsJson = json['tips'] as List;
+
+      return tipsJson.map((t) => GeneratedTipContent.fromJson(t as Map<String, dynamic>)).toList();
     } catch (e) {
-      debugPrint('Failed to parse day tip response: $e');
+      debugPrint('Failed to parse day tips response: $e');
       debugPrint('Raw content: $content');
-      // Return the content as-is if parsing fails
-      return GeneratedTipContent(
+      // Return default tips if parsing fails
+      return fallbackCategories.map((c) => GeneratedTipContent(
         title: 'Daily Tip',
-        content: content.length > 300 ? content.substring(0, 300) : content,
-        category: fallbackCategory,
-      );
+        content: content.length > 100 ? content.substring(0, 100) : content,
+        category: c,
+      )).toList();
     }
   }
 
@@ -1241,6 +1275,9 @@ Do not include any text outside the JSON object.
     if (_apiKey.isEmpty) {
       throw AIException('OpenAI API key not configured');
     }
+
+    // Check token limit before making request
+    await _checkTokenLimit();
 
     try {
       final systemPrompt = '''
@@ -1298,9 +1335,13 @@ Respond ONLY in this exact JSON format:
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data as Map<String, dynamic>;
         final choices = data['choices'] as List;
         if (choices.isNotEmpty) {
+          // Record token usage after successful response
+          final tokensUsed = _extractTokensUsed(data);
+          await _recordTokenUsage(tokensUsed);
+
           final content = choices[0]['message']['content'] as String;
           return _parseBudgetResponse(content, tripDays, currency);
         }

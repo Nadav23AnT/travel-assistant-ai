@@ -80,6 +80,7 @@ class CurrencyService {
   }
 
   /// Convert amount synchronously using cached rates
+  /// Rates are relative to a base currency (the one with rate 1.0)
   double convertSync(
     double amount,
     String from,
@@ -87,21 +88,43 @@ class CurrencyService {
     Map<String, double> rates,
   ) {
     if (from == to) return amount;
+    if (rates.isEmpty) return amount;
 
-    // If rates are based on 'from' currency, direct conversion
-    if (rates.containsKey(to)) {
-      return amount * rates[to]!;
+    // Find the base currency (the one with rate 1.0)
+    String? baseCurrency;
+    for (final entry in rates.entries) {
+      if (entry.value == 1.0) {
+        baseCurrency = entry.key;
+        break;
+      }
     }
 
-    // If rates are based on a different currency, we need to convert through it
-    if (rates.containsKey(from) && rates[from] != null) {
-      // Convert through base currency
-      final amountInBase = amount / rates[from]!;
-      return amountInBase * (rates[to] ?? 1.0);
+    // Get rates for both currencies
+    final fromRate = rates[from];
+    final toRate = rates[to];
+
+    // If we have both rates, convert through the base currency
+    // rate[X] = how many X units equal 1 base unit
+    // So: amount in base = amount_in_from / rate[from]
+    //     amount in to = amount_in_base * rate[to]
+    if (fromRate != null && toRate != null) {
+      final amountInBase = amount / fromRate;
+      return amountInBase * toRate;
+    }
+
+    // If 'from' is the base currency (rate = 1.0), just multiply by 'to' rate
+    if (from == baseCurrency && toRate != null) {
+      return amount * toRate;
+    }
+
+    // If 'to' is the base currency (rate = 1.0), divide by 'from' rate
+    if (to == baseCurrency && fromRate != null) {
+      return amount / fromRate;
     }
 
     // Fallback: return original amount if conversion not possible
-    debugPrint('Warning: Could not convert $from to $to with provided rates');
+    debugPrint('Warning: Could not convert $from to $to with provided rates. '
+        'Base: $baseCurrency, fromRate: $fromRate, toRate: $toRate');
     return amount;
   }
 

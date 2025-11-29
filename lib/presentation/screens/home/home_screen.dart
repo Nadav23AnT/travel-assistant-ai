@@ -8,6 +8,7 @@ import '../../../config/theme.dart';
 import '../../../data/models/chat_models.dart';
 import '../../../data/models/expense_model.dart';
 import '../../../data/models/trip_model.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
@@ -79,6 +80,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildWelcomeHeader(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final user = ref.watch(currentUserProvider);
     final userName = user?.userMetadata?['full_name'] as String? ??
                      user?.email?.split('@').first ??
@@ -87,11 +89,11 @@ class HomeScreen extends ConsumerWidget {
     final hour = DateTime.now().hour;
     String greeting;
     if (hour < 12) {
-      greeting = 'Good morning,';
+      greeting = l10n.welcomeGreetingMorning;
     } else if (hour < 17) {
-      greeting = 'Good afternoon,';
+      greeting = l10n.welcomeGreetingAfternoon;
     } else {
-      greeting = 'Good evening,';
+      greeting = l10n.welcomeGreetingEvening;
     }
 
     return Row(
@@ -145,29 +147,26 @@ class HomeScreen extends ConsumerWidget {
   }
 
   void _showResetDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset User Data'),
-        content: const Text(
-          'This will delete all your trips and reset the onboarding status. '
-          'You will be redirected to start the onboarding process again.\n\n'
-          'This action cannot be undone.',
-        ),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.resetDataTitle),
+        content: Text(l10n.resetDataMessage),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.of(context).pop();
+              Navigator.of(dialogContext).pop();
               await _resetUserData(context, ref);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,
             ),
-            child: const Text('Reset'),
+            child: Text(l10n.reset),
           ),
         ],
       ),
@@ -226,12 +225,13 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildActiveTripCard(BuildContext context, TripModel trip) {
+    final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('MMM d');
     final dateRange = trip.startDate != null && trip.endDate != null
         ? '${dateFormat.format(trip.startDate!)} - ${dateFormat.format(trip.endDate!)}'
-        : 'Dates not set';
+        : l10n.datesNotSet;
 
-    final daysInfo = _getTripDaysInfo(trip);
+    final daysInfo = _getTripDaysInfo(context, trip);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -354,7 +354,7 @@ class HomeScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Dates',
+                          l10n.dates,
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 12,
@@ -403,6 +403,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildNoActiveTripCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: InkWell(
         onTap: () => context.push(AppRoutes.createTrip),
@@ -418,12 +419,12 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'No Active Trip',
+                l10n.noActiveTrip,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
               Text(
-                'Start planning your next adventure!',
+                l10n.startPlanningAdventure,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondary,
                     ),
@@ -432,7 +433,7 @@ class HomeScreen extends ConsumerWidget {
               ElevatedButton.icon(
                 onPressed: () => context.push(AppRoutes.createTrip),
                 icon: const Icon(Icons.add),
-                label: const Text('Create New Trip'),
+                label: Text(l10n.createNewTrip),
               ),
             ],
           ),
@@ -441,11 +442,13 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  _TripDaysInfo _getTripDaysInfo(TripModel trip) {
+  _TripDaysInfo _getTripDaysInfo(BuildContext context, TripModel trip) {
+    final l10n = AppLocalizations.of(context);
+
     if (trip.startDate == null || trip.endDate == null) {
       return _TripDaysInfo(
-        label: 'Duration',
-        value: 'Not set',
+        label: l10n.duration,
+        value: l10n.notSet,
         color: AppTheme.textSecondary,
       );
     }
@@ -466,33 +469,34 @@ class HomeScreen extends ConsumerWidget {
     if (today.isBefore(startDate)) {
       final daysUntil = startDate.difference(today).inDays;
       return _TripDaysInfo(
-        label: 'Starts in',
-        value: '$daysUntil ${daysUntil == 1 ? 'day' : 'days'}',
+        label: l10n.startsIn,
+        value: '$daysUntil ${daysUntil == 1 ? l10n.day : l10n.days}',
         color: AppTheme.primaryColor,
       );
     } else if (today.isAfter(endDate)) {
       return _TripDaysInfo(
-        label: 'Status',
-        value: 'Completed',
+        label: l10n.status,
+        value: l10n.completed,
         color: AppTheme.successColor,
       );
     } else {
       final dayNumber = today.difference(startDate).inDays + 1;
       final totalDays = endDate.difference(startDate).inDays + 1;
       return _TripDaysInfo(
-        label: 'Current',
-        value: 'Day $dayNumber of $totalDays',
+        label: l10n.current,
+        value: l10n.dayOfTotal(dayNumber, totalDays),
         color: AppTheme.accentColor,
       );
     }
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Actions',
+          l10n.quickActions,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 12),
@@ -501,7 +505,7 @@ class HomeScreen extends ConsumerWidget {
             Expanded(
               child: _QuickActionButton(
                 icon: Icons.add,
-                label: 'New Trip',
+                label: l10n.newTrip,
                 color: AppTheme.primaryColor,
                 onTap: () => context.push(AppRoutes.createTrip),
               ),
@@ -510,7 +514,7 @@ class HomeScreen extends ConsumerWidget {
             Expanded(
               child: _QuickActionButton(
                 icon: Icons.receipt_long,
-                label: 'Add Expense',
+                label: l10n.addExpense,
                 color: AppTheme.accentColor,
                 onTap: () => context.push(AppRoutes.addExpense),
               ),
@@ -519,7 +523,7 @@ class HomeScreen extends ConsumerWidget {
             Expanded(
               child: _QuickActionButton(
                 icon: Icons.chat_bubble,
-                label: 'AI Chat',
+                label: l10n.aiChat,
                 color: AppTheme.successColor,
                 onTap: () => context.go(AppRoutes.chat),
               ),
@@ -531,6 +535,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildRecentChats(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final recentChatsAsync = ref.watch(recentChatsProvider);
 
     return Column(
@@ -540,12 +545,12 @@ class HomeScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recent Chats',
+              l10n.recentChats,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             TextButton(
               onPressed: () => context.go(AppRoutes.chat),
-              child: const Text('View All'),
+              child: Text(l10n.viewAll),
             ),
           ],
         ),
@@ -570,7 +575,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Failed to load chats',
+                      l10n.failedToLoadChats,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -598,7 +603,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Start a conversation with TripBuddy!',
+                            l10n.startConversation,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: AppTheme.textSecondary,
                                 ),
@@ -607,7 +612,7 @@ class HomeScreen extends ConsumerWidget {
                           ElevatedButton.icon(
                             onPressed: () => context.go(AppRoutes.chat),
                             icon: const Icon(Icons.add, size: 18),
-                            label: const Text('New Chat'),
+                            label: Text(l10n.newChat),
                           ),
                         ],
                       ),
@@ -635,6 +640,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildChatItem(BuildContext context, ChatSession chat) {
+    final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('MMM d');
     final timeFormat = DateFormat('h:mm a');
     final now = DateTime.now();
@@ -645,11 +651,11 @@ class HomeScreen extends ConsumerWidget {
     if (chatDate.year == now.year &&
         chatDate.month == now.month &&
         chatDate.day == now.day) {
-      timeText = 'Today ${timeFormat.format(chatDate)}';
+      timeText = '${l10n.today} ${timeFormat.format(chatDate)}';
     } else if (chatDate.year == now.year &&
                chatDate.month == now.month &&
                chatDate.day == now.day - 1) {
-      timeText = 'Yesterday';
+      timeText = l10n.yesterday;
     } else {
       timeText = dateFormat.format(chatDate);
     }
@@ -690,6 +696,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildRecentExpenses(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final recentExpensesAsync = ref.watch(defaultRecentExpensesProvider);
 
     return Column(
@@ -699,12 +706,12 @@ class HomeScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recent Expenses',
+              l10n.recentExpenses,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             TextButton(
               onPressed: () => context.go(AppRoutes.expenses),
-              child: const Text('View All'),
+              child: Text(l10n.viewAll),
             ),
           ],
         ),
@@ -729,7 +736,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Failed to load expenses',
+                      l10n.failedToLoadExpenses,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -754,7 +761,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'No expenses recorded yet',
+                          l10n.noExpensesRecorded,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: AppTheme.textSecondary,
                               ),

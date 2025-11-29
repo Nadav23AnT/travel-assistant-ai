@@ -336,6 +336,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get deleteAccountConfirmation => '계정을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.';
 
   @override
+  String get resetAccount => 'Reset Account Data';
+
+  @override
+  String get resetAccountConfirmation =>
+      'Are you sure you want to reset all your data? This will delete all your trips, expenses, chats, and journal entries. Your account will remain active.';
+
+  @override
+  String get accountResetSuccess => 'Account data has been reset successfully';
+
+  @override
+  String get reset => '초기화';
+
+  @override
   String get about => '정보';
 
   @override
@@ -380,9 +393,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get resetDataMessage =>
       '모든 여행이 삭제되고 온보딩 상태가 초기화됩니다. 온보딩 프로세스를 다시 시작하게 됩니다.\n\n이 작업은 취소할 수 없습니다.';
-
-  @override
-  String get reset => '초기화';
 
   @override
   String get dayTip => '오늘의 팁';
@@ -683,4 +693,39 @@ class AppLocalizationsKo extends AppLocalizations {
   String memberSince(String date) {
     return '$date부터 회원';
   }
+
+  @override
+  String get aiUsageToday => 'AI Usage Today';
+
+  @override
+  String get premiumPlan => 'Premium Plan';
+
+  @override
+  String get used => 'used';
+
+  @override
+  String get credits => 'credits';
+
+  @override
+  String creditsUsedCount(String count) {
+    return '$count credits used';
+  }
+
+  @override
+  String creditsRemainingCount(String count) {
+    return '$count remaining';
+  }
+
+  @override
+  String dailyLimitCredits(String count) {
+    return 'Daily limit: $count credits';
+  }
+
+  @override
+  String get creditLimitExceeded =>
+      'Daily credit limit exceeded. Please try again tomorrow.';
+
+  @override
+  String get creditLimitExceededUpgrade =>
+      'Daily credit limit reached. Upgrade to get more credits!';
 }

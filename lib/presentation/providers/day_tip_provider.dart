@@ -9,107 +9,118 @@ import '../../data/models/trip_model.dart';
 import '../../services/ai_service.dart';
 import 'chat_provider.dart';
 import 'trips_provider.dart';
+import 'locale_provider.dart';
 
-/// Provider for the current day's tip
-final dayTipProvider = StateNotifierProvider<DayTipNotifier, AsyncValue<DayTip?>>((ref) {
+/// Provider for the current day's tips (list of 3)
+final dayTipProvider = StateNotifierProvider<DayTipNotifier, AsyncValue<List<DayTip>>>((ref) {
   final aiService = ref.watch(aiServiceProvider);
   final activeTrip = ref.watch(activeTripProvider);
   return DayTipNotifier(ref, aiService, activeTrip);
 });
 
-/// State notifier for Day Tip
-class DayTipNotifier extends StateNotifier<AsyncValue<DayTip?>> {
+/// State notifier for Day Tips
+class DayTipNotifier extends StateNotifier<AsyncValue<List<DayTip>>> {
   final Ref _ref;
   final AIService _aiService;
   final AsyncValue<TripModel?> _activeTrip;
 
-  static const String _cacheKey = 'cached_day_tip';
+  static const String _cacheKey = 'cached_day_tips_v2'; // Changed key for new format
 
   DayTipNotifier(this._ref, this._aiService, this._activeTrip) : super(const AsyncValue.loading()) {
-    _loadTip();
+    _loadTips();
   }
 
-  /// Load tip from cache or generate new one
-  Future<void> _loadTip() async {
+  /// Load tips from cache or generate new ones
+  Future<void> _loadTips() async {
     final trip = _activeTrip.valueOrNull;
     if (trip == null) {
-      state = const AsyncValue.data(null);
+      state = const AsyncValue.data([]);
       return;
     }
 
     try {
       // Try to load from cache first
-      final cachedTip = await _getCachedTip(trip.destination);
-      if (cachedTip != null && cachedTip.isValid) {
-        state = AsyncValue.data(cachedTip);
+      final cachedTips = await _getCachedTips(trip.destination);
+      if (cachedTips != null && cachedTips.isNotEmpty && cachedTips.first.isValid) {
+        state = AsyncValue.data(cachedTips);
         return;
       }
 
-      // Generate new tip
-      await generateNewTip();
+      // Generate new tips
+      await generateNewTips();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 
-  /// Generate a new day tip
-  Future<void> generateNewTip({String? specificCategory}) async {
+  /// Generate new day tips
+  Future<void> generateNewTips() async {
     final trip = _activeTrip.valueOrNull;
     if (trip == null) {
-      state = const AsyncValue.data(null);
+      state = const AsyncValue.data([]);
       return;
     }
 
     state = const AsyncValue.loading();
 
     try {
-      // Pick a category - rotate through categories or use specific
-      final category = specificCategory ?? _selectCategory();
+      // Pick 3 random categories
+      final categories = _selectRandomCategories(3);
+      
+      // Get current language
+      final locale = _ref.read(localeProvider);
+      final languageName = AppLocales.getDisplayName(locale.languageCode);
 
-      final tipContent = await _aiService.generateDayTip(
+      final tipsContent = await _aiService.generateDayTips(
         destination: trip.destination,
-        category: category,
+        categories: categories,
+        language: languageName,
       );
 
-      final tip = DayTip.create(
-        category: tipContent.category,
-        title: tipContent.title,
-        content: tipContent.content,
+      final tips = tipsContent.map((content) => DayTip.create(
+        category: content.category,
+        title: content.title,
+        content: content.content,
         destination: trip.destination,
-      );
+      )).toList();
 
-      // Cache the tip
-      await _cacheTip(tip);
+      // Cache the tips
+      await _cacheTips(tips);
 
-      state = AsyncValue.data(tip);
+      state = AsyncValue.data(tips);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 
-  /// Select a random category for the tip
-  /// Uses a combination of day seed + random for variety but consistency within a day
-  String _selectCategory() {
+  /// Select random categories for the tips
+  List<String> _selectRandomCategories(int count) {
     // Use day as seed for some consistency, but add randomness
     final now = DateTime.now();
     final daySeed = now.year * 1000 + now.month * 100 + now.day;
     final random = Random(daySeed);
-    final categoryIndex = random.nextInt(DayTip.categories.length);
-    return DayTip.categories[categoryIndex];
+    
+    final allCategories = List<String>.from(DayTip.categories);
+    allCategories.shuffle(random);
+    
+    return allCategories.take(count).toList();
   }
 
-  /// Get cached tip
-  Future<DayTip?> _getCachedTip(String destination) async {
+  /// Get cached tips
+  Future<List<DayTip>?> _getCachedTips(String destination) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final cached = prefs.getString(_cacheKey);
       if (cached == null) return null;
 
-      final tip = DayTip.fromJson(jsonDecode(cached) as Map<String, dynamic>);
+      final List<dynamic> jsonList = jsonDecode(cached);
+      final tips = jsonList.map((json) => DayTip.fromJson(json)).toList();
 
-      // Check if tip is for same destination and still valid
-      if (tip.destination == destination && tip.isValid) {
-        return tip;
+      if (tips.isEmpty) return null;
+
+      // Check if tips are for same destination and still valid
+      if (tips.first.destination == destination && tips.first.isValid) {
+        return tips;
       }
       return null;
     } catch (e) {
@@ -117,19 +128,20 @@ class DayTipNotifier extends StateNotifier<AsyncValue<DayTip?>> {
     }
   }
 
-  /// Cache a tip
-  Future<void> _cacheTip(DayTip tip) async {
+  /// Cache tips
+  Future<void> _cacheTips(List<DayTip> tips) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_cacheKey, jsonEncode(tip.toJson()));
+      final jsonList = tips.map((t) => t.toJson()).toList();
+      await prefs.setString(_cacheKey, jsonEncode(jsonList));
     } catch (e) {
       // Ignore cache errors
     }
   }
 
-  /// Refresh the tip (force regenerate)
-  Future<void> refresh({String? category}) async {
-    await generateNewTip(specificCategory: category);
+  /// Refresh the tips (force regenerate)
+  Future<void> refresh() async {
+    await generateNewTips();
   }
 }
 

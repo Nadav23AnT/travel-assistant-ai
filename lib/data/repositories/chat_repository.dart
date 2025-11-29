@@ -54,12 +54,14 @@ class ChatRepository {
   }
 
   /// Get all chat sessions for the current user
+  /// Includes trip flag emoji and destination if linked to a trip
   Future<List<ChatSession>> getUserSessions() async {
     if (_currentUserId == null) {
       throw ChatRepositoryException('User not authenticated');
     }
 
     try {
+      // First get sessions without the join
       final response = await _supabase
           .from('chat_sessions')
           .select()
@@ -67,9 +69,43 @@ class ChatRepository {
           .eq('is_active', true)
           .order('updated_at', ascending: false);
 
-      return (response as List)
+      final sessions = (response as List)
           .map((json) => ChatSession.fromJson(json))
           .toList();
+
+      // If there are sessions with trip IDs, fetch trip data separately
+      final tripIds = sessions
+          .where((s) => s.tripId != null)
+          .map((s) => s.tripId!)
+          .toSet()
+          .toList();
+
+      if (tripIds.isEmpty) {
+        return sessions;
+      }
+
+      // Fetch trip data for the relevant trips
+      final tripsResponse = await _supabase
+          .from('trips')
+          .select('id, flag_emoji, destination')
+          .inFilter('id', tripIds);
+
+      final tripsMap = <String, Map<String, dynamic>>{};
+      for (final trip in tripsResponse as List) {
+        tripsMap[trip['id'] as String] = trip;
+      }
+
+      // Merge trip data into sessions
+      return sessions.map((session) {
+        if (session.tripId != null && tripsMap.containsKey(session.tripId)) {
+          final tripData = tripsMap[session.tripId]!;
+          return session.copyWith(
+            tripFlagEmoji: tripData['flag_emoji'] as String?,
+            tripDestination: tripData['destination'] as String?,
+          );
+        }
+        return session;
+      }).toList();
     } catch (e) {
       debugPrint('Error fetching chat sessions: $e');
       throw ChatRepositoryException('Failed to fetch chat sessions');

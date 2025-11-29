@@ -7,11 +7,18 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../services/token_usage_service.dart';
 import '../../../utils/country_currency_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/expenses_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/trips_provider.dart';
+
+/// Provider for token usage status (auto-refresh)
+final tokenUsageProvider = FutureProvider.autoDispose<TokenCheckResult>((ref) async {
+  final service = TokenUsageService();
+  return service.checkBeforeRequest();
+});
 
 /// Provider for app version info
 final appVersionProvider = FutureProvider<String>((ref) async {
@@ -99,6 +106,10 @@ class ProfileScreen extends ConsumerWidget {
 
             // Subscription card
             _buildSubscriptionCard(context),
+            const SizedBox(height: 16),
+
+            // Token usage card
+            _buildTokenUsageCard(context, ref),
             const SizedBox(height: 16),
 
             // Menu items
@@ -440,6 +451,164 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTokenUsageCard(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final tokenUsageAsync = ref.watch(tokenUsageProvider);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: tokenUsageAsync.when(
+            loading: () => const SizedBox(
+              height: 80,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => _buildTokenUsageContent(
+              context,
+              l10n,
+              tokensUsed: 0,
+              dailyLimit: 10000,
+              planType: 'free',
+            ),
+            data: (usage) => _buildTokenUsageContent(
+              context,
+              l10n,
+              tokensUsed: usage.tokensUsed,
+              dailyLimit: usage.dailyLimit,
+              planType: usage.planType,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTokenUsageContent(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required int tokensUsed,
+    required int dailyLimit,
+    required String planType,
+  }) {
+    final percentage = dailyLimit > 0 ? (tokensUsed / dailyLimit).clamp(0.0, 1.0) : 0.0;
+    final remaining = (dailyLimit - tokensUsed).clamp(0, dailyLimit);
+
+    // Convert tokens to credits (1000 tokens = 10 credits, so tokens/100)
+    final creditsUsed = (tokensUsed / 100).round();
+    final creditsRemaining = (remaining / 100).round();
+    final creditsLimit = (dailyLimit / 100).round();
+
+    // Determine color based on usage
+    Color progressColor;
+    if (percentage < 0.5) {
+      progressColor = AppTheme.successColor;
+    } else if (percentage < 0.8) {
+      progressColor = AppTheme.warningColor;
+    } else {
+      progressColor = AppTheme.errorColor;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryLight,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: AppTheme.primaryColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.aiUsageToday,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  Text(
+                    planType == 'subscription' ? l10n.premiumPlan : l10n.freePlan,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${(percentage * 100).toInt()}%',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: progressColor,
+                      ),
+                ),
+                Text(
+                  l10n.used,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Progress bar
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: percentage,
+            backgroundColor: Colors.grey.shade200,
+            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            minHeight: 8,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Usage details (in credits)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.creditsUsedCount(creditsUsed.toString()),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+            ),
+            Text(
+              l10n.creditsRemainingCount(creditsRemaining.toString()),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: progressColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.dailyLimitCredits(creditsLimit.toString()),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textHint,
+              ),
+        ),
+      ],
     );
   }
 

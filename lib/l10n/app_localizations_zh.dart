@@ -335,6 +335,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deleteAccountConfirmation => '确定要删除账户吗？此操作不可撤销。';
 
   @override
+  String get resetAccount => 'Reset Account Data';
+
+  @override
+  String get resetAccountConfirmation =>
+      'Are you sure you want to reset all your data? This will delete all your trips, expenses, chats, and journal entries. Your account will remain active.';
+
+  @override
+  String get accountResetSuccess => 'Account data has been reset successfully';
+
+  @override
+  String get reset => '重置';
+
+  @override
   String get about => '关于';
 
   @override
@@ -378,9 +391,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get resetDataMessage => '这将删除所有行程并重置引导状态。你将被引导重新开始引导流程。\n\n此操作不可撤销。';
-
-  @override
-  String get reset => '重置';
 
   @override
   String get dayTip => '今日提示';
@@ -680,4 +690,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String memberSince(String date) {
     return '会员自 $date';
   }
+
+  @override
+  String get aiUsageToday => 'AI Usage Today';
+
+  @override
+  String get premiumPlan => 'Premium Plan';
+
+  @override
+  String get used => 'used';
+
+  @override
+  String get credits => 'credits';
+
+  @override
+  String creditsUsedCount(String count) {
+    return '$count credits used';
+  }
+
+  @override
+  String creditsRemainingCount(String count) {
+    return '$count remaining';
+  }
+
+  @override
+  String dailyLimitCredits(String count) {
+    return 'Daily limit: $count credits';
+  }
+
+  @override
+  String get creditLimitExceeded =>
+      'Daily credit limit exceeded. Please try again tomorrow.';
+
+  @override
+  String get creditLimitExceededUpgrade =>
+      'Daily credit limit reached. Upgrade to get more credits!';
 }

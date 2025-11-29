@@ -6,7 +6,8 @@ import 'auth_provider.dart';
 
 // Onboarding data model
 class OnboardingData {
-  final List<String> selectedLanguages;
+  final String appLanguage; // Single app language selection
+  final List<String> selectedLanguages; // Languages user speaks (for travel)
   final String? homeCurrency;
   final String? destination;
   final String? destinationPlaceId;
@@ -19,6 +20,7 @@ class OnboardingData {
   final String? error;
 
   const OnboardingData({
+    this.appLanguage = 'en',
     this.selectedLanguages = const ['en'],
     this.homeCurrency,
     this.destination,
@@ -33,6 +35,7 @@ class OnboardingData {
   });
 
   OnboardingData copyWith({
+    String? appLanguage,
     List<String>? selectedLanguages,
     String? homeCurrency,
     String? destination,
@@ -48,6 +51,7 @@ class OnboardingData {
     bool clearDates = false,
   }) {
     return OnboardingData(
+      appLanguage: appLanguage ?? this.appLanguage,
       selectedLanguages: selectedLanguages ?? this.selectedLanguages,
       homeCurrency: homeCurrency ?? this.homeCurrency,
       destination: clearDestination ? null : (destination ?? this.destination),
@@ -71,6 +75,11 @@ class OnboardingNotifier extends StateNotifier<OnboardingData> {
   final AuthService _authService;
 
   OnboardingNotifier(this._authService) : super(const OnboardingData());
+
+  /// Set the app language (single selection)
+  void setAppLanguage(String languageCode) {
+    state = state.copyWith(appLanguage: languageCode, error: null);
+  }
 
   void setLanguages(List<String> languages) {
     if (languages.isEmpty) return;

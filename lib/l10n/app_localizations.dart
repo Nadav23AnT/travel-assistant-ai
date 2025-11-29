@@ -754,6 +754,30 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete your account? This action cannot be undone.'**
   String get deleteAccountConfirmation;
 
+  /// Reset account data option
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Account Data'**
+  String get resetAccount;
+
+  /// Reset account confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reset all your data? This will delete all your trips, expenses, chats, and journal entries. Your account will remain active.'**
+  String get resetAccountConfirmation;
+
+  /// Success message after resetting account
+  ///
+  /// In en, this message translates to:
+  /// **'Account data has been reset successfully'**
+  String get accountResetSuccess;
+
+  /// Reset button
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
   /// About section
   ///
   /// In en, this message translates to:
@@ -843,12 +867,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This will delete all your trips and reset the onboarding status. You will be redirected to start the onboarding process again.\n\nThis action cannot be undone.'**
   String get resetDataMessage;
-
-  /// Reset button
-  ///
-  /// In en, this message translates to:
-  /// **'Reset'**
-  String get reset;
 
   /// Day tip card title
   ///
@@ -1413,6 +1431,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Member since {date}'**
   String memberSince(String date);
+
+  /// AI usage card title
+  ///
+  /// In en, this message translates to:
+  /// **'AI Usage Today'**
+  String get aiUsageToday;
+
+  /// Premium subscription plan
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Plan'**
+  String get premiumPlan;
+
+  /// Used label
+  ///
+  /// In en, this message translates to:
+  /// **'used'**
+  String get used;
+
+  /// Credits label
+  ///
+  /// In en, this message translates to:
+  /// **'credits'**
+  String get credits;
+
+  /// Credits used count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} credits used'**
+  String creditsUsedCount(String count);
+
+  /// Credits remaining count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} remaining'**
+  String creditsRemainingCount(String count);
+
+  /// Daily credit limit
+  ///
+  /// In en, this message translates to:
+  /// **'Daily limit: {count} credits'**
+  String dailyLimitCredits(String count);
+
+  /// Credit limit exceeded error message
+  ///
+  /// In en, this message translates to:
+  /// **'Daily credit limit exceeded. Please try again tomorrow.'**
+  String get creditLimitExceeded;
+
+  /// Credit limit exceeded with upgrade suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Daily credit limit reached. Upgrade to get more credits!'**
+  String get creditLimitExceededUpgrade;
 }
 
 class _AppLocalizationsDelegate

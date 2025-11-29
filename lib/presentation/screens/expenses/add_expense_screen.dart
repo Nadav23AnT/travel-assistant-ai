@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/constants.dart';
 import '../../../config/theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../utils/country_currency_helper.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
@@ -94,10 +95,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     // Ensure trip is selected
+    final l10n = AppLocalizations.of(context);
     if (_selectedTripId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a trip'),
+        SnackBar(
+          content: Text(l10n.pleaseSelectTrip),
           backgroundColor: AppTheme.errorColor,
         ),
       );
@@ -131,8 +133,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
         context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Expense added successfully!'),
+          SnackBar(
+            content: Text(l10n.expenseAddedSuccess),
             backgroundColor: AppTheme.successColor,
           ),
         );
@@ -141,7 +143,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         final error = ref.read(expenseOperationProvider).error;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(error ?? 'Failed to add expense'),
+            content: Text(error ?? l10n.failedToAddExpense),
             backgroundColor: AppTheme.errorColor,
           ),
         );
@@ -165,6 +167,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   Widget build(BuildContext context) {
     // Watch for user trips to allow selection
     final tripsAsync = ref.watch(userTripsProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -172,7 +175,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Add Expense'),
+        title: Text(l10n.addExpense),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _handleSave,
@@ -182,7 +185,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save'),
+                : Text(l10n.save),
           ),
         ],
       ),
@@ -202,10 +205,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     if (trips.isEmpty) {
                       return Card(
                         color: AppTheme.errorColor.withAlpha(26),
-                        child: const Padding(
-                          padding: EdgeInsets.all(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
                           child: Text(
-                            'No trips found. Create a trip first to add expenses.',
+                            l10n.noTripsFound,
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -224,9 +227,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
                     return DropdownButtonFormField<String>(
                       value: _selectedTripId,
-                      decoration: const InputDecoration(
-                        labelText: 'Trip *',
-                        prefixIcon: Icon(Icons.flight_takeoff),
+                      decoration: InputDecoration(
+                        labelText: '${l10n.trip} *',
+                        prefixIcon: const Icon(Icons.flight_takeoff),
                       ),
                       items: trips.map((trip) => DropdownMenuItem(
                         value: trip.id,
@@ -241,7 +244,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please select a trip';
+                          return l10n.pleaseSelectTrip;
                         }
                         return null;
                       },
@@ -262,7 +265,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           const TextInputType.numberWithOptions(decimal: true),
                       style: Theme.of(context).textTheme.headlineMedium,
                       decoration: InputDecoration(
-                        labelText: 'Amount *',
+                        labelText: '${l10n.amount} *',
                         hintText: '0.00',
                         prefixIcon: Padding(
                           padding: const EdgeInsets.all(12),
@@ -281,10 +284,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter an amount';
+                          return l10n.pleaseEnterAmount;
                         }
                         if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return l10n.pleaseEnterValidNumber;
                         }
                         return null;
                       },
@@ -295,9 +298,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     width: 90,
                     child: DropdownButtonFormField<String>(
                       value: _currency,
-                      decoration: const InputDecoration(
-                        labelText: 'Currency',
-                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      decoration: InputDecoration(
+                        labelText: l10n.currency,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                       ),
                       isExpanded: true,
                       items: AppConstants.supportedCurrencies
@@ -320,14 +323,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               // Description
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description *',
-                  hintText: 'e.g., Lunch at Cafe',
-                  prefixIcon: Icon(Icons.description_outlined),
+                decoration: InputDecoration(
+                  labelText: '${l10n.description} *',
+                  hintText: l10n.descriptionHintExpense,
+                  prefixIcon: const Icon(Icons.description_outlined),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
+                    return l10n.pleaseEnterDescription;
                   }
                   return null;
                 },
@@ -336,7 +339,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
               // Category
               Text(
-                'Category *',
+                '${l10n.category} *',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
@@ -371,10 +374,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 onTap: _selectDate,
                 child: AbsorbPointer(
                   child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Date',
-                      prefixIcon: Icon(Icons.calendar_today_outlined),
-                      suffixIcon: Icon(Icons.arrow_drop_down),
+                    decoration: InputDecoration(
+                      labelText: l10n.date,
+                      prefixIcon: const Icon(Icons.calendar_today_outlined),
+                      suffixIcon: const Icon(Icons.arrow_drop_down),
                     ),
                     controller: TextEditingController(
                       text: _formatDate(_date),
@@ -389,11 +392,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 onPressed: () {
                   // TODO: Implement image picker for receipt
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Receipt photo coming soon!')),
+                    SnackBar(content: Text(l10n.receiptPhotoComingSoon)),
                   );
                 },
                 icon: const Icon(Icons.camera_alt_outlined),
-                label: const Text('Add Receipt Photo'),
+                label: Text(l10n.addReceiptPhoto),
               ),
               const SizedBox(height: 24),
 
@@ -408,7 +411,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Split this expense?',
+                            l10n.splitThisExpense,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           Switch(
@@ -422,7 +425,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       if (_isSplit) ...[
                         const SizedBox(height: 12),
                         Text(
-                          'Select trip members to split with',
+                          l10n.selectTripMembersToSplit,
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: AppTheme.textSecondary,
@@ -437,7 +440,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'No trip members to split with. Create a trip first!',
+                            l10n.noTripMembersToSplit,
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: AppTheme.textSecondary,
@@ -455,9 +458,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               TextFormField(
                 controller: _notesController,
                 maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
-                  hintText: 'Any additional details...',
+                decoration: InputDecoration(
+                  labelText: l10n.notesOptional,
+                  hintText: l10n.additionalDetails,
                   alignLabelWithHint: true,
                 ),
               ),

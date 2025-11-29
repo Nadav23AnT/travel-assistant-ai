@@ -47,11 +47,11 @@ final recentExpensesProvider =
   return repository.getRecentExpenses(limit: limit);
 });
 
-/// Default recent expenses (last 5)
+/// Default recent expenses (last 4)
 final defaultRecentExpensesProvider =
     FutureProvider<List<ExpenseModel>>((ref) async {
   final repository = ref.watch(expensesRepositoryProvider);
-  return repository.getRecentExpenses(limit: 5);
+  return repository.getRecentExpenses(limit: 4);
 });
 
 // ============================================

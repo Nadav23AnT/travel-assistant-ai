@@ -481,6 +481,22 @@
   "@deleteAccountConfirmation": {
     "description": "Delete account confirmation message"
   },
+  "resetAccount": "Reset Account Data",
+  "@resetAccount": {
+    "description": "Reset account data option"
+  },
+  "resetAccountConfirmation": "Are you sure you want to reset all your data? This will delete all your trips, expenses, chats, and journal entries. Your account will remain active.",
+  "@resetAccountConfirmation": {
+    "description": "Reset account confirmation message"
+  },
+  "accountResetSuccess": "Account data has been reset successfully",
+  "@accountResetSuccess": {
+    "description": "Success message after resetting account"
+  },
+  "reset": "Reset",
+  "@reset": {
+    "description": "Reset button text"
+  },
 
   "about": "About",
   "@about": {
@@ -973,5 +989,60 @@
         "example": "Dec 2025"
       }
     }
+  },
+
+  "aiUsageToday": "AI Usage Today",
+  "@aiUsageToday": {
+    "description": "AI usage card title"
+  },
+  "premiumPlan": "Premium Plan",
+  "@premiumPlan": {
+    "description": "Premium subscription plan"
+  },
+  "used": "used",
+  "@used": {
+    "description": "Used label"
+  },
+  "credits": "credits",
+  "@credits": {
+    "description": "Credits label"
+  },
+  "creditsUsedCount": "{count} credits used",
+  "@creditsUsedCount": {
+    "description": "Credits used count",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "19"
+      }
+    }
+  },
+  "creditsRemainingCount": "{count} remaining",
+  "@creditsRemainingCount": {
+    "description": "Credits remaining count",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "81"
+      }
+    }
+  },
+  "dailyLimitCredits": "Daily limit: {count} credits",
+  "@dailyLimitCredits": {
+    "description": "Daily credit limit",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "100"
+      }
+    }
+  },
+  "creditLimitExceeded": "Daily credit limit exceeded. Please try again tomorrow.",
+  "@creditLimitExceeded": {
+    "description": "Credit limit exceeded error message"
+  },
+  "creditLimitExceededUpgrade": "Daily credit limit reached. Upgrade to get more credits!",
+  "@creditLimitExceededUpgrade": {
+    "description": "Credit limit exceeded with upgrade suggestion"
   }
 }

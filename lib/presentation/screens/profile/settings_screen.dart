@@ -91,6 +91,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             _buildSettingTile(
               context,
+              title: l10n.resetAccount,
+              icon: Icons.refresh_outlined,
+              titleColor: AppTheme.warningColor,
+              onTap: () => _showResetAccountDialog(context, l10n),
+            ),
+            _buildSettingTile(
+              context,
               title: l10n.deleteAccount,
               icon: Icons.delete_outline,
               titleColor: AppTheme.errorColor,
@@ -673,6 +680,82 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  void _showResetAccountDialog(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.resetAccount),
+        content: Text(l10n.resetAccountConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _resetAccountData(context, l10n);
+            },
+            child: Text(
+              l10n.reset,
+              style: const TextStyle(color: AppTheme.warningColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _resetAccountData(BuildContext context, AppLocalizations l10n) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    // Store navigator and scaffold messenger before async operations
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Call the reset_user_data function
+      await Supabase.instance.client.rpc('reset_user_data', params: {
+        'p_user_id': user.id,
+      });
+
+      // Refresh settings to get the reset onboarding state
+      await ref.read(userSettingsProvider.notifier).refresh();
+
+      // Close loading dialog
+      navigator.pop();
+
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.accountResetSuccess),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+
+      // Navigate to onboarding flow since onboarding_completed is now false
+      router.go('/onboarding/languages');
+    } catch (e) {
+      // Close loading dialog
+      navigator.pop();
+
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('${l10n.error}: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
   }
 
   void _showDeleteAccountDialog(BuildContext context, AppLocalizations l10n) {

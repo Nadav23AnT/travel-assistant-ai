@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../config/constants.dart';
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../providers/locale_provider.dart';
 import '../../providers/onboarding_provider.dart';
 
 class LanguageSelectionScreen extends ConsumerWidget {
@@ -12,8 +14,9 @@ class LanguageSelectionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final onboardingData = ref.watch(onboardingProvider);
-    final selectedLanguages = onboardingData.selectedLanguages;
+    final selectedLanguage = onboardingData.appLanguage;
 
     return Scaffold(
       body: SafeArea(
@@ -30,7 +33,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
 
               // Header
               Text(
-                'Choose Your Languages',
+                l10n.onboardingLanguageTitle,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -38,7 +41,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Select the languages you speak or want to travel with',
+                l10n.onboardingLanguageSubtitle,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondary,
                     ),
@@ -46,7 +49,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 32),
 
-              // Language grid
+              // Language grid - single selection
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -59,39 +62,28 @@ class LanguageSelectionScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final entry =
                         AppConstants.supportedLanguages.entries.elementAt(index);
-                    final isSelected = selectedLanguages.contains(entry.key);
+                    final isSelected = selectedLanguage == entry.key;
 
                     return _LanguageChip(
                       languageCode: entry.key,
                       languageName: entry.value,
                       isSelected: isSelected,
                       onTap: () {
-                        ref
-                            .read(onboardingProvider.notifier)
-                            .toggleLanguage(entry.key);
+                        // Single selection - set the app language
+                        ref.read(onboardingProvider.notifier).setAppLanguage(entry.key);
+                        // Also update the app locale immediately
+                        ref.read(localeProvider.notifier).setLocaleByCode(entry.key);
                       },
                     );
                   },
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Selected count
-              Text(
-                '${selectedLanguages.length} language${selectedLanguages.length == 1 ? '' : 's'} selected',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-                textAlign: TextAlign.center,
-              ),
               const SizedBox(height: 24),
 
               // Next button
               ElevatedButton(
-                onPressed: selectedLanguages.isNotEmpty
-                    ? () => context.go(AppRoutes.onboardingCurrency)
-                    : null,
-                child: const Text('Continue'),
+                onPressed: () => context.go(AppRoutes.onboardingCurrency),
+                child: Text(l10n.continueButton),
               ),
             ],
           ),

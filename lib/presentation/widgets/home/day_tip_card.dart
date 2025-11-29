@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../config/theme.dart';
 import '../../../data/models/day_tip_model.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../providers/day_tip_provider.dart';
 
 class DayTipCard extends ConsumerWidget {
@@ -10,12 +11,14 @@ class DayTipCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tipAsync = ref.watch(dayTipProvider);
+    final tipsAsync = ref.watch(dayTipProvider);
     final hasActiveTrip = ref.watch(hasDayTipProvider);
 
     if (!hasActiveTrip) {
       return const SizedBox.shrink();
     }
+
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -24,127 +27,92 @@ class DayTipCard extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Daily Tip',
+              l10n.dayTip,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             IconButton(
               icon: const Icon(Icons.refresh, size: 20),
               onPressed: () => ref.read(dayTipProvider.notifier).refresh(),
-              tooltip: 'Get new tip',
+              tooltip: l10n.refreshTip,
               color: AppTheme.textSecondary,
             ),
           ],
         ),
         const SizedBox(height: 8),
-        tipAsync.when(
+        tipsAsync.when(
           loading: () => _buildLoadingCard(context),
           error: (error, _) => _buildErrorCard(context, ref, error.toString()),
-          data: (tip) => tip != null
-              ? _buildTipCard(context, ref, tip)
+          data: (tips) => tips.isNotEmpty
+              ? _buildTipsList(context, ref, tips)
               : _buildNoTripCard(context),
         ),
       ],
     );
   }
 
-  Widget _buildTipCard(BuildContext context, WidgetRef ref, DayTip tip) {
+  Widget _buildTipsList(BuildContext context, WidgetRef ref, List<DayTip> tips) {
+    return Column(
+      children: tips.map((tip) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: _buildSingleTipCard(context, tip),
+      )).toList(),
+    );
+  }
+
+  Widget _buildSingleTipCard(BuildContext context, DayTip tip) {
     final icon = _getCategoryIcon(tip.category);
     final categoryName = DayTip.getCategoryDisplayName(tip.category);
     final categoryColor = _getCategoryColor(tip.category);
 
     return Card(
       clipBehavior: Clip.antiAlias,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              categoryColor.withAlpha(30),
-              categoryColor.withAlpha(10),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          border: Border(
+            left: BorderSide(color: categoryColor, width: 4),
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with category
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: categoryColor.withAlpha(40),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: categoryColor,
-                      size: 20,
-                    ),
+                  Icon(
+                    icon,
+                    color: categoryColor,
+                    size: 18,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          categoryName,
-                          style: TextStyle(
-                            color: categoryColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          tip.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ],
+                  const SizedBox(width: 8),
+                  Text(
+                    categoryName.toUpperCase(),
+                    style: TextStyle(
+                      color: categoryColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              // Tip content
+              const SizedBox(height: 6),
+              Text(
+                tip.title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+              ),
+              const SizedBox(height: 4),
               Text(
                 tip.content,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.5,
+                      height: 1.4,
+                      fontSize: 13,
                     ),
-              ),
-              const SizedBox(height: 12),
-              // Category chips for quick access
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: DayTip.categories
-                      .where((c) => c != tip.category)
-                      .take(4)
-                      .map((category) => Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ActionChip(
-                              avatar: Icon(
-                                _getCategoryIcon(category),
-                                size: 16,
-                                color: _getCategoryColor(category),
-                              ),
-                              label: Text(
-                                DayTip.getCategoryDisplayName(category),
-                                style: const TextStyle(fontSize: 11),
-                              ),
-                              onPressed: () => ref
-                                  .read(dayTipProvider.notifier)
-                                  .refresh(category: category),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ))
-                      .toList(),
-                ),
               ),
             ],
           ),
@@ -154,43 +122,47 @@ class DayTipCard extends ConsumerWidget {
   }
 
   Widget _buildLoadingCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Getting local tip...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-            ),
-          ],
+        child: Center(
+          child: Column(
+            children: [
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.loading,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildErrorCard(BuildContext context, WidgetRef ref, String error) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Icon(
-              Icons.lightbulb_outline,
+              Icons.error_outline,
               size: 32,
-              color: AppTheme.textSecondary,
+              color: AppTheme.errorColor,
             ),
             const SizedBox(height: 8),
             Text(
-              'Could not load tip',
+              l10n.errorOccurred,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -199,7 +171,7 @@ class DayTipCard extends ConsumerWidget {
             TextButton.icon(
               onPressed: () => ref.read(dayTipProvider.notifier).refresh(),
               icon: const Icon(Icons.refresh, size: 16),
-              label: const Text('Try Again'),
+              label: Text(l10n.tryAgain),
             ),
           ],
         ),
@@ -208,6 +180,7 @@ class DayTipCard extends ConsumerWidget {
   }
 
   Widget _buildNoTripCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -221,7 +194,7 @@ class DayTipCard extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Create a trip to get daily tips!',
+                l10n.createTripForTips,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondary,
                     ),

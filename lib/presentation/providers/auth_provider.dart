@@ -120,6 +120,20 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     }
   }
 
+  Future<void> updateProfile({String? fullName, String? avatarUrl}) async {
+    state = const AsyncValue.loading();
+    try {
+      final response = await _authService.updateProfile(
+        fullName: fullName,
+        avatarUrl: avatarUrl,
+      );
+      state = AsyncValue.data(response.user);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
   Future<void> signOut() async {
     try {
       await _authService.signOut();

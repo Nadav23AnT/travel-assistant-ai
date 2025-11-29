@@ -69,6 +69,9 @@ dependencies:
   # URL Launcher for Google Maps links
   url_launcher: ^6.3.0
 
+  # Markdown rendering for legal docs
+  flutter_markdown: ^0.7.4+3
+
   # Date/Time
   table_calendar: ^3.1.2
   intl: ^0.20.2
@@ -92,3 +95,4 @@ flutter:
     - .env
     - assets/images/
     - assets/icons/
+    - legal/

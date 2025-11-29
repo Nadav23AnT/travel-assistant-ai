@@ -1,7 +1,7 @@
 # TripBuddy - Architecture & Specification
 
-**Version:** 1.0.0
-**Last Updated:** November 2025
+**Version:** 1.7.0
+**Last Updated:** November 29, 2025
 **Related:** See `claude.md` for development workflow and coding standards.
 
 ---
@@ -563,6 +563,55 @@ AI requests are proxied through Supabase Edge Functions for:
 - Usage tracking and rate limiting
 - Response caching
 - Premium tier enforcement
+
+### 5.5 Token Usage Limits
+
+The app implements per-user daily token limits to control AI costs:
+
+**Database Schema:**
+```sql
+-- Daily token usage tracking
+CREATE TABLE public.daily_token_usage (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    usage_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    tokens_used INTEGER NOT NULL DEFAULT 0,
+    request_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, usage_date)
+);
+
+-- Plan type column on profiles
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS plan_type TEXT DEFAULT 'free'
+CHECK (plan_type IN ('free', 'subscription'));
+```
+
+**Key Functions:**
+- `check_token_limit(user_id, free_limit, subscription_limit)` - Returns allowed status, usage stats
+- `increment_token_usage(user_id, tokens)` - Increments daily usage with UPSERT
+
+**Limits (from .env):**
+- Free users: 10,000 tokens/day (~7-10 conversations)
+- Subscription users: 100,000 tokens/day (~70-100 conversations)
+
+**Implementation Files:**
+- `lib/services/token_usage_service.dart` - Service with limit checking middleware
+- `lib/data/repositories/token_usage_repository.dart` - CRUD operations
+- `lib/services/ai_service.dart` - Integrated token checking on all AI methods
+- `supabase/migrations/20251129_token_usage.sql` - Database migration
+
+**Usage Flow:**
+1. Before AI request → `_checkTokenLimit()` called
+2. If limit exceeded → `AIException` with `isTokenLimitExceeded=true`
+3. After successful AI response → `_recordTokenUsage(tokensUsed)` called
+4. Token count from OpenAI `response.data['usage']['total_tokens']`
+
+**UI Display:**
+- Profile screen shows token usage card with progress bar
+- Color-coded: green (<50%), yellow (50-80%), red (>80%)
+- Shows tokens used, remaining, and daily limit
 
 ---
 
@@ -1166,6 +1215,34 @@ Components:
 +----------------------------------+
 ```
 
+#### Edit Profile Screen
+```
++----------------------------------+
+|  Edit Profile            [Save]  |
++----------------------------------+
+|                                  |
+|         [Avatar Image]           |
+|          [Camera Icon]           |
+|                                  |
+|  Full Name                       |
+|  +----------------------------+  |
+|  | John Smith                 |  |
+|  +----------------------------+  |
+|                                  |
+|  Avatar URL                      |
+|  +----------------------------+  |
+|  | https://example.com/avatar |  |
+|  +----------------------------+  |
+|                                  |
+|  Email                           |
+|  +----------------------------+  |
+|  | john@example.com           |  |
+|  +----------------------------+  |
+|  [Read Only]                     |
+|                                  |
++----------------------------------+
+```
+
 #### Settings Screen
 ```
 +----------------------------------+
@@ -1229,8 +1306,6 @@ Components:
 - [x] Create/edit trip flow (fully functional)
 - [x] Trip detail screen with tabs
 - [x] Smart Budget Suggestions on create trip
-- [ ] Itinerary management (day-by-day activities)
-- [ ] Google Places integration
 - [ ] Trip sharing and members
 
 ### Phase 3: AI Integration - COMPLETED
@@ -1253,7 +1328,7 @@ Components:
 - [x] Add/edit expense flow
 - [x] Expense confirmation via chat
 - [x] Category breakdown and stats
-- [ ] Receipt photo capture
+- [x] Category breakdown and stats
 - [ ] Expense splitting logic
 - [ ] Balance calculations
 - [ ] Settlement tracking
@@ -1268,9 +1343,12 @@ Components:
 - [x] Highlights and locations extraction
 - [ ] PDF export
 
-### Phase 6: Polish & Launch - PENDING
+### Phase 6: Polish & Launch - IN PROGRESS
 **Goal:** Production readiness
 
+- [x] Multi-language support (12 languages)
+- [x] RTL support (Hebrew, Arabic)
+- [x] Currency conversion fixes
 - [ ] Settings screen with preferences
 - [ ] Premium subscription flow
 - [ ] RevenueCat integration
@@ -1501,7 +1579,8 @@ Personalize recommendations based on their preferences and location.
 #### 5.3 Profile & Settings
 - Real stats from database
 - Settings screen with preferences
-- Edit profile functionality
+- [x] Edit profile functionality
+- Edit Profile screen design
 
 ---
 
@@ -1528,7 +1607,8 @@ Personalize recommendations based on their preferences and location.
 | `lib/presentation/providers/currency_provider.dart` | Complete | Currency conversion |
 | `lib/presentation/providers/day_tip_provider.dart` | Complete | Daily tips state |
 | **Services** | | |
-| `lib/services/ai_service.dart` | Complete | AI generation (chat, journal, tips, budget) |
+| `lib/services/ai_service.dart` | Complete | AI generation (chat, journal, tips, budget) + token limits |
+| `lib/services/token_usage_service.dart` | Complete | Token usage limit checking middleware |
 | `lib/services/currency_service.dart` | Complete | Exchange rates |
 | `lib/services/budget_estimation_service.dart` | Complete | Smart budget suggestions |
 | `lib/services/auth_service.dart` | Complete | Authentication |
@@ -1537,6 +1617,7 @@ Personalize recommendations based on their preferences and location.
 | `lib/data/repositories/journal_repository.dart` | Complete | Full CRUD for journals |
 | `lib/data/repositories/trips_repository.dart` | Complete | Full CRUD for trips |
 | `lib/data/repositories/chat_repository.dart` | Complete | Chat session management |
+| `lib/data/repositories/token_usage_repository.dart` | Complete | Token usage CRUD + limit checking |
 | **Models** | | |
 | `lib/data/models/expense_model.dart` | Complete | Expense data model |
 | `lib/data/models/expense_stats.dart` | Complete | Stats for dashboard |
@@ -1556,6 +1637,19 @@ Personalize recommendations based on their preferences and location.
 | `lib/config/theme.dart` | Reference | Colors, categoryColors |
 | `lib/config/routes.dart` | Complete | App routing |
 | `lib/config/constants.dart` | Complete | App constants |
+| **Localization (i18n)** | | |
+| `lib/l10n/app_en.arb` | Complete | English (base) - ~220 keys |
+| `lib/l10n/app_es.arb` | Complete | Spanish |
+| `lib/l10n/app_fr.arb` | Complete | French |
+| `lib/l10n/app_de.arb` | Complete | German |
+| `lib/l10n/app_it.arb` | Complete | Italian |
+| `lib/l10n/app_pt.arb` | Complete | Portuguese |
+| `lib/l10n/app_ja.arb` | Complete | Japanese |
+| `lib/l10n/app_zh.arb` | Complete | Chinese (Simplified) |
+| `lib/l10n/app_ko.arb` | Complete | Korean |
+| `lib/l10n/app_ru.arb` | Complete | Russian |
+| `lib/l10n/app_ar.arb` | Complete | Arabic (RTL) |
+| `lib/l10n/app_he.arb` | Complete | Hebrew (RTL) |
 
 ---
 
@@ -1657,6 +1751,61 @@ REVENUECAT_API_KEY=...
 
 ## Changelog
 
+### v1.7.0 (November 29, 2025)
+- **Sprint 3 & 4 Completions:**
+  - Full dark theme implementation in `lib/config/theme.dart`
+  - Settings screen fully functional (dark mode, date format, distance units, privacy)
+  - New Chat FAB button added to chat list screen
+  - Trip flag emoji shown as chat session icon (with destination subtitle)
+  - Enhanced chat title generation with trip context and language support
+  - Fixed token usage service initialization error (lazy Supabase init)
+- **Files Updated:**
+  - `lib/config/theme.dart` (complete dark theme)
+  - `lib/data/models/chat_models.dart` (added tripFlagEmoji, tripDestination)
+  - `lib/data/repositories/chat_repository.dart` (JOIN with trips for flag)
+  - `lib/data/repositories/token_usage_repository.dart` (lazy init fix)
+  - `lib/presentation/screens/chat/chat_list_screen.dart` (FAB + flag icons)
+  - `lib/presentation/providers/chat_provider.dart` (trip context in title gen)
+  - `lib/services/ai_service.dart` (enhanced generateChatTitle)
+
+### v1.6.0 (November 29, 2025)
+- **Token Usage Limits - COMPLETE:**
+  - Per-user daily token limits to control AI costs
+  - Database: `daily_token_usage` table with automatic date-based reset
+  - Added `plan_type` column to profiles (free/subscription)
+  - PostgreSQL functions: `check_token_limit()`, `increment_token_usage()`
+  - Token limit middleware integrated into all AI methods
+  - Profile screen shows token usage card with progress bar
+  - Color-coded usage status (green/yellow/red)
+  - Environment variables: `FREE_DAILY_TOKENS=10000`, `SUBSCRIPTION_DAILY_TOKENS=100000`
+- **Files Created:**
+  - `supabase/migrations/20251129_token_usage.sql`
+  - `lib/services/token_usage_service.dart`
+  - `lib/data/repositories/token_usage_repository.dart`
+- **Files Updated:**
+  - `lib/services/ai_service.dart` (token limit checking on all methods)
+  - `lib/presentation/screens/profile/profile_screen.dart` (usage display)
+  - `lib/l10n/app_en.arb` (new localization keys)
+  - `.env` (token limit variables)
+
+### v1.5.0 (November 29, 2025)
+- **Multi-Language Support (i18n) - COMPLETE:**
+  - Full localization for 12 languages (en, es, fr, de, he, ja, zh, ko, it, pt, ru, ar)
+  - RTL support for Hebrew and Arabic
+  - All screens localized: Home, Trips, Expenses, Chat, Profile, Onboarding
+  - ~220 localization keys per language
+  - AI chatbot responds in user's selected language
+- **Currency Conversion Fix:**
+  - Fixed `convertSync` in CurrencyService - amounts now properly convert when switching currency modes
+  - Exchange rates fetched dynamically when switching between Home/USD/Local currencies
+  - Proper cross-currency conversion through base currency
+- **Files Updated:**
+  - `lib/l10n/app_*.arb` (all 12 language files)
+  - `lib/services/currency_service.dart` (conversion fix)
+  - `lib/presentation/screens/expenses/expenses_screen.dart` (localization + currency fix)
+  - `lib/presentation/screens/expenses/add_expense_screen.dart` (localization)
+  - `lib/presentation/screens/profile/profile_screen.dart` (localization)
+
 ### v1.4.0 (November 26, 2025)
 - **New Features:**
   - Smart Budget Suggestions on Create Trip screen
@@ -1704,22 +1853,143 @@ REVENUECAT_API_KEY=...
 
 ---
 
-## Remaining Features (Future Sprints)
+## Upcoming Features (Implementation Plan)
 
-### Sprint Priority 1: Settings & Profile
-- [ ] Settings screen with AI preferences, notifications, account management
-- [ ] User settings sync with `user_settings` table
-- [ ] Profile stats from database
+### Sprint 1: Dashboard Improvements
+- [ ] Limit Recent Chats to 4 items with "View All" link
+- [ ] Limit Recent Expenses to 4 items with "View All" link
 
-### Sprint Priority 2: Group Features
-- [ ] Itinerary management (day-by-day activities)
-- [ ] Trip sharing and members
-- [ ] Expense splitting
-- [ ] Balance calculations and settlement
+### Sprint 2: Multi-Language Support (i18n) - COMPLETED
+- [x] Add flutter_localizations and intl packages
+- [x] Create ARB files for 12 languages:
+  - English (en), Spanish (es), French (fr), German (de)
+  - Hebrew (he), Japanese (ja), Chinese (zh), Korean (ko)
+  - Italian (it), Portuguese (pt), Russian (ru), Arabic (ar)
+- [x] Support RTL for Hebrew and Arabic
+- [x] Create LocaleProvider for language management
+- [x] Store language preference in user_settings table
+- [x] Update AI chatbot to respond in user's selected language
+- [x] Translate all screens using AppLocalizations:
+  - Home screen (greetings, quick actions, recent chats/expenses)
+  - Trips screens (list, detail, create)
+  - Expenses screens (dashboard, add expense)
+  - Chat screens (welcome, prompts, messages)
+  - Profile screen (stats, settings, sign out)
+  - Onboarding flow (language selection)
+  - Daily Tips feature
 
-### Sprint Priority 3: Polish
-- [ ] Receipt photo capture
+### Sprint 3: Expanded Settings & Profile - COMPLETED
+- [x] **General Settings:**
+  - App Language (with flag icons)
+  - Default Currency
+  - Date Format (DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD)
+  - Distance Units (Kilometers / Miles)
+  - Dark Mode Toggle (full dark theme implementation)
+- [x] **Notifications:**
+  - Push Notifications toggle
+  - Email Notifications toggle
+  - Trip Reminders toggle
+- [x] **Privacy:**
+  - Share usage analytics toggle
+  - Location tracking toggle
+- [ ] **Account:**
+  - Change Password
+  - Export My Data
+  - Delete Account (with confirmation)
+- [ ] **About:**
+  - App Version, Terms, Privacy Policy, Rate App
+- [ ] Profile Screen Expansion:
+  - Quick settings shortcuts
+  - Member since date
+  - Invite Friends option
+
+### Sprint 4: Feature Enhancements & Bug Fixes - MOSTLY COMPLETED
+- [ ] **Multi-Language Fixes:**
+  - Ensure Daily Tips use the selected locale (currently English only).
+- [x] **Daily Tips Redesign:**
+  - Change to show 3 random short tips in different categories (instead of one long tip).
+  - Update `DayTipProvider` and UI.
+- [x] **AI Chat Improvements:**
+  - Add prominent "New Chat" FAB button (FloatingActionButton.extended).
+  - Use Trip Flag as icon for chat sessions (with trip destination subtitle).
+  - Improve chat title generation logic (now includes trip context, language support).
+- [ ] **Automated Trip Journal:**
+  - Fully automate journal generation based on daily activities/chat.
+  - Remove user manual generation requirement.
+  - **Backend:** Create Edge Function or Trigger for daily summary generation.
+- [ ] **Bug Fixes:**
+  - Fix "GlobalKey used multiple times" error in Expenses Summary.
+
+### Sprint 5: Shared Trips (Couples/Groups)
+- [ ] Add "Share Trip" button on trip detail screen
+- [ ] Two sharing options:
+  - Invite by email (sends invite notification)
+  - Generate shareable link/code
+- [ ] Members list view with role badges (owner, editor, viewer)
+- [ ] Create trip_invitations table for pending invites
+- [ ] Accept/decline invitation flow
+- [ ] Add share_code column to trips table
+- [ ] Join trip screen (enter code or deep link)
+- [ ] Create TripMembersRepository and Provider
+- [ ] Update userTripsProvider to include shared trips
+
+### Sprint 5: Polish & Future
 - [ ] PDF export for journals
 - [ ] Premium subscription flow (RevenueCat)
 - [ ] Error handling improvements
 - [ ] Performance optimization
+- [ ] Performance optimization
+- [ ] Expense splitting and settlements
+- [ ] Trip sharing and members
+- [ ] App store submission (iOS & Android)
+
+---
+
+## Database Changes Required
+
+### User Settings Table Updates
+```sql
+ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS app_language TEXT DEFAULT 'en';
+ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS date_format TEXT DEFAULT 'DD/MM/YYYY';
+ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS distance_unit TEXT DEFAULT 'km';
+ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS dark_mode BOOLEAN DEFAULT false;
+ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS share_analytics BOOLEAN DEFAULT true;
+ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS location_tracking BOOLEAN DEFAULT true;
+```
+
+### Trip Sharing Tables
+```sql
+-- Add share code to trips
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS share_code TEXT UNIQUE;
+
+-- Trip invitations table
+CREATE TABLE IF NOT EXISTS trip_invitations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    invited_by UUID REFERENCES profiles(id),
+    role TEXT DEFAULT 'editor' CHECK (role IN ('editor', 'viewer')),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'expired')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '7 days',
+    UNIQUE(trip_id, email)
+);
+
+-- RLS for invitations
+ALTER TABLE trip_invitations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view invitations for their email" ON trip_invitations
+    FOR SELECT USING (email = auth.jwt()->>'email');
+
+CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
+    FOR ALL USING (
+        EXISTS (SELECT 1 FROM trips WHERE id = trip_id AND owner_id = auth.uid())
+    );
+```
+
+---
+
+## Deferred Features
+
+- Receipt photo capture (moved to Sprint 5)
+- AI Model selection in settings (dev controlled for now)

@@ -12,6 +12,8 @@ class ChatSession extends Equatable {
   final bool isActive;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? tripFlagEmoji; // Optional: fetched from trip relation
+  final String? tripDestination; // Optional: fetched from trip relation
 
   const ChatSession({
     required this.id,
@@ -24,9 +26,20 @@ class ChatSession extends Equatable {
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
+    this.tripFlagEmoji,
+    this.tripDestination,
   });
 
   factory ChatSession.fromJson(Map<String, dynamic> json) {
+    // Handle trip relation data if joined
+    String? flagEmoji;
+    String? destination;
+    if (json['trips'] != null && json['trips'] is Map) {
+      final tripData = json['trips'] as Map<String, dynamic>;
+      flagEmoji = tripData['flag_emoji'] as String?;
+      destination = tripData['destination'] as String?;
+    }
+
     return ChatSession(
       id: json['id'] as String,
       userId: json['user_id'] as String,
@@ -38,6 +51,8 @@ class ChatSession extends Equatable {
       isActive: json['is_active'] as bool? ?? true,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      tripFlagEmoji: flagEmoji,
+      tripDestination: destination,
     );
   }
 
@@ -67,6 +82,8 @@ class ChatSession extends Equatable {
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? tripFlagEmoji,
+    String? tripDestination,
   }) {
     return ChatSession(
       id: id ?? this.id,
@@ -79,6 +96,8 @@ class ChatSession extends Equatable {
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      tripFlagEmoji: tripFlagEmoji ?? this.tripFlagEmoji,
+      tripDestination: tripDestination ?? this.tripDestination,
     );
   }
 

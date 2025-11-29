@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/constants.dart';
 import '../../../config/theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/budget_estimation_service.dart';
 import '../../../utils/country_currency_helper.dart';
 import '../../providers/trips_provider.dart';
@@ -172,13 +173,14 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Create Trip'),
+        title: Text(l10n.createTrip),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _handleCreateTrip,
@@ -188,7 +190,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save'),
+                : Text(l10n.save),
           ),
         ],
       ),
@@ -250,7 +252,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                           Text(
                             _titleController.text.isNotEmpty
                                 ? _titleController.text
-                                : 'Trip Preview',
+                                : l10n.tripPreview,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -277,14 +279,14 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
               // Title
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Trip Title *',
-                  hintText: 'e.g., Paris Adventure 2025',
-                  prefixIcon: Icon(Icons.title),
+                decoration: InputDecoration(
+                  labelText: '${l10n.tripTitle} *',
+                  hintText: l10n.tripTitleHint,
+                  prefixIcon: const Icon(Icons.title),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a trip title';
+                    return l10n.tripTitleRequired;
                   }
                   return null;
                 },
@@ -318,15 +320,15 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                   return TextFormField(
                     controller: controller,
                     focusNode: focusNode,
-                    decoration: const InputDecoration(
-                      labelText: 'Destination *',
-                      hintText: 'Start typing a country...',
-                      prefixIcon: Icon(Icons.location_on_outlined),
-                      suffixIcon: Icon(Icons.arrow_drop_down),
+                    decoration: InputDecoration(
+                      labelText: '${l10n.destination} *',
+                      hintText: l10n.destinationHint,
+                      prefixIcon: const Icon(Icons.location_on_outlined),
+                      suffixIcon: const Icon(Icons.arrow_drop_down),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please select a destination';
+                        return l10n.destinationRequired;
                       }
                       return null;
                     },
@@ -372,8 +374,8 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                 child: AbsorbPointer(
                   child: TextFormField(
                     decoration: InputDecoration(
-                      labelText: 'Trip Dates *',
-                      hintText: 'Select dates',
+                      labelText: '${l10n.tripDates} *',
+                      hintText: l10n.selectDates,
                       prefixIcon: const Icon(Icons.calendar_today_outlined),
                       suffixIcon: const Icon(Icons.arrow_drop_down),
                     ),
@@ -396,7 +398,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                       controller: _budgetController,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
-                        labelText: 'Budget',
+                        labelText: l10n.budget,
                         hintText: '0.00',
                         prefixIcon: Padding(
                           padding: const EdgeInsets.all(12),
@@ -419,8 +421,8 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       value: _currency,
-                      decoration: const InputDecoration(
-                        labelText: 'Currency',
+                      decoration: InputDecoration(
+                        labelText: l10n.currency,
                       ),
                       items: AppConstants.supportedCurrencies
                           .map((c) => DropdownMenuItem(
@@ -443,9 +445,9 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'What are you excited about for this trip?',
+                decoration: InputDecoration(
+                  labelText: l10n.description,
+                  hintText: l10n.descriptionHint,
                   alignLabelWithHint: true,
                 ),
               ),

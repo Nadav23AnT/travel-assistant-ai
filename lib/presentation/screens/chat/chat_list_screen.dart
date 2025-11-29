@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../config/theme.dart';
 import '../../../data/models/chat_models.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../providers/chat_provider.dart';
 
 class ChatListScreen extends ConsumerWidget {
@@ -12,17 +13,19 @@ class ChatListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final sessionsAsync = ref.watch(chatSessionsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Chats'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.push('/chat/new'),
-          ),
-        ],
+        title: Text(l10n.aiChats),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/chat/new'),
+        icon: const Icon(Icons.add),
+        label: Text(l10n.newChat),
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
       ),
       body: sessionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -62,19 +65,20 @@ class ChatListScreen extends ConsumerWidget {
   }
 
   void _showDeleteDialog(BuildContext context, WidgetRef ref, ChatSession session) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Chat'),
-        content: Text('Delete "${session.title}"? This cannot be undone.'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteChat),
+        content: Text(l10n.deleteChatTitle(session.title)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               try {
                 final repository = ref.read(chatRepositoryProvider);
                 await repository.deleteSession(session.id);
@@ -83,7 +87,7 @@ class ChatListScreen extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Error deleting chat: $e'),
+                      content: Text('${l10n.errorDeletingChat}: $e'),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -91,7 +95,7 @@ class ChatListScreen extends ConsumerWidget {
               }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -99,6 +103,7 @@ class ChatListScreen extends ConsumerWidget {
   }
 
   Widget _buildErrorState(BuildContext context, WidgetRef ref, Object error) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -112,7 +117,7 @@ class ChatListScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Failed to load chats',
+              l10n.failedToLoadChats,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
@@ -127,7 +132,7 @@ class ChatListScreen extends ConsumerWidget {
             ElevatedButton.icon(
               onPressed: () => ref.invalidate(chatSessionsProvider),
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l10n.retry),
             ),
           ],
         ),
@@ -136,6 +141,7 @@ class ChatListScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -156,12 +162,12 @@ class ChatListScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'AI Travel Assistant',
+              l10n.aiTravelAssistant,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'Start a conversation with your AI travel buddy to plan trips, get recommendations, and more!',
+              l10n.aiTravelAssistantDescription,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -171,7 +177,7 @@ class ChatListScreen extends ConsumerWidget {
             ElevatedButton.icon(
               onPressed: () => context.push('/chat/new'),
               icon: const Icon(Icons.chat_bubble_outline),
-              label: const Text('Start New Chat'),
+              label: Text(l10n.startNewChat),
             ),
           ],
         ),
@@ -193,6 +199,9 @@ class _ChatSessionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Determine if we have a trip flag to show
+    final hasFlag = session.tripFlagEmoji != null && session.tripFlagEmoji!.isNotEmpty;
+
     return Dismissible(
       key: Key(session.id),
       direction: DismissDirection.endToStart,
@@ -211,26 +220,57 @@ class _ChatSessionTile extends StatelessWidget {
       },
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryLight.withAlpha(77),
-          child: const Icon(
-            Icons.auto_awesome,
-            color: AppTheme.primaryColor,
-            size: 20,
-          ),
-        ),
+        leading: hasFlag
+            ? Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryLight.withAlpha(77),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    session.tripFlagEmoji!,
+                    style: const TextStyle(fontSize: 22),
+                  ),
+                ),
+              )
+            : CircleAvatar(
+                backgroundColor: AppTheme.primaryLight.withAlpha(77),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+              ),
         title: Text(
           session.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
-        subtitle: Text(
-          _formatDate(session.updatedAt),
-          style: TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 12,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (session.tripDestination != null && session.tripDestination!.isNotEmpty)
+              Text(
+                session.tripDestination!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            Text(
+              _formatDate(context, session.updatedAt),
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
         trailing: IconButton(
           icon: Icon(
@@ -245,17 +285,18 @@ class _ChatSessionTile extends StatelessWidget {
   }
 
   void _showOptions(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text('Delete Chat', style: TextStyle(color: Colors.red)),
+              title: Text(l10n.deleteChat, style: const TextStyle(color: Colors.red)),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 onDelete();
               },
             ),
@@ -265,16 +306,17 @@ class _ChatSessionTile extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final dateToCheck = DateTime(date.year, date.month, date.day);
 
     if (dateToCheck == today) {
-      return 'Today at ${DateFormat.jm().format(date)}';
+      return l10n.todayAt(DateFormat.jm().format(date));
     } else if (dateToCheck == yesterday) {
-      return 'Yesterday at ${DateFormat.jm().format(date)}';
+      return l10n.yesterdayAt(DateFormat.jm().format(date));
     } else if (now.difference(date).inDays < 7) {
       return DateFormat('EEEE').format(date);
     } else {

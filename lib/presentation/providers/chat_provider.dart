@@ -265,9 +265,18 @@ class ChatNotifier extends StateNotifier<ChatState> {
     String assistantResponse,
   ) async {
     try {
+      // Get trip destination if available
+      final activeTrip = _ref.read(activeTripProvider).valueOrNull;
+
+      // Get user's language preference from travel context
+      final travelContext = _ref.read(travelContextProvider).valueOrNull;
+      final language = travelContext?.appLanguage;
+
       final title = await _aiService.generateChatTitle(
         userMessage: userMessage,
         assistantResponse: assistantResponse,
+        tripDestination: activeTrip?.destination,
+        language: language,
       );
 
       await _repository.updateSessionTitle(sessionId, title);
@@ -451,8 +460,8 @@ final hasPendingPlacesProvider = Provider<bool>((ref) {
 final recentChatsProvider = FutureProvider<List<ChatSession>>((ref) async {
   final repository = ref.watch(chatRepositoryProvider);
   final sessions = await repository.getUserSessions();
-  // Return last 5 sessions, sorted by most recent
+  // Return last 4 sessions, sorted by most recent
   final sorted = List<ChatSession>.from(sessions)
     ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-  return sorted.take(5).toList();
+  return sorted.take(4).toList();
 });

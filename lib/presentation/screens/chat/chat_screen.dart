@@ -4,12 +4,20 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/theme.dart';
 import '../../../data/models/chat_models.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/token_usage_service.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
 import '../../widgets/chat/expense_confirmation_card.dart';
 import '../../widgets/chat/journal_reminder_card.dart';
 import '../../widgets/chat/place_recommendation_card.dart';
+
+/// Provider for credit usage in chat (auto-refresh)
+final chatCreditUsageProvider = FutureProvider.autoDispose<TokenCheckResult>((ref) async {
+  final service = TokenUsageService();
+  return service.checkBeforeRequest();
+});
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String sessionId;
@@ -39,6 +47,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _initializeChat() async {
     final chatNotifier = ref.read(chatNotifierProvider.notifier);
+    final l10n = AppLocalizations.of(context);
 
     if (widget.sessionId == 'new') {
       // Create a new session
@@ -47,7 +56,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error creating chat: $e')),
+            SnackBar(content: Text('${l10n.errorCreatingChat}: $e')),
           );
         }
       }
@@ -58,7 +67,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error loading chat: $e')),
+            SnackBar(content: Text('${l10n.errorLoadingChat}: $e')),
           );
         }
       }
@@ -82,6 +91,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       await ref.read(chatNotifierProvider.notifier).sendMessage(text);
       _scrollToBottom();
+      // Refresh credit usage indicator after message sent
+      ref.invalidate(chatCreditUsageProvider);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -107,19 +118,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _showDeleteDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Chat'),
-        content: const Text('Are you sure you want to delete this chat?'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteChat),
+        content: Text(l10n.deleteChatConfirmation),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
-              final navigator = Navigator.of(context);
+              final navigator = Navigator.of(dialogContext);
               final router = GoRouter.of(context);
               navigator.pop();
               await ref.read(chatNotifierProvider.notifier).deleteCurrentSession();
@@ -128,7 +140,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -136,11 +148,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _confirmExpense() async {
+    final l10n = AppLocalizations.of(context);
     final success = await ref.read(chatNotifierProvider.notifier).confirmPendingExpense();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? 'Expense added!' : 'Failed to add expense'),
+          content: Text(success ? l10n.expenseAdded : l10n.failedToAddExpense),
           backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
@@ -150,6 +163,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final chatState = ref.watch(chatNotifierProvider);
     final messages = chatState.messages;
     final isSending = chatState.isSending;
@@ -173,7 +187,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             context.pop();
           },
         ),
-        title: Text(session?.title ?? 'AI Chat'),
+        title: Text(session?.title ?? l10n.aiChat),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -182,14 +196,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 _showDeleteDialog();
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
+            itemBuilder: (menuContext) => [
+              PopupMenuItem(
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Delete Chat', style: TextStyle(color: Colors.red)),
+                    const Icon(Icons.delete_outline, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Text(l10n.deleteChat, style: const TextStyle(color: Colors.red)),
                   ],
                 ),
               ),
@@ -201,6 +215,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // Credit usage indicator at top
+                _buildCreditIndicator(context, ref),
+
                 // Journal reminder banner (if applicable)
                 if (shouldShowJournalReminder)
                   activeTripAsync.when(
@@ -288,7 +305,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             controller: _messageController,
                             enabled: !isSending,
                             decoration: InputDecoration(
-                              hintText: 'Ask me anything about travel...',
+                              hintText: l10n.chatHint,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(24),
                               ),
@@ -331,7 +348,87 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  /// Small credit usage indicator at the top of chat
+  Widget _buildCreditIndicator(BuildContext context, WidgetRef ref) {
+    final creditUsageAsync = ref.watch(chatCreditUsageProvider);
+    final l10n = AppLocalizations.of(context);
+
+    return creditUsageAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (usage) {
+        final percentage = usage.dailyLimit > 0
+            ? (usage.tokensUsed / usage.dailyLimit).clamp(0.0, 1.0)
+            : 0.0;
+        final creditsUsed = (usage.tokensUsed / 100).round();
+        final creditsLimit = (usage.dailyLimit / 100).round();
+
+        // Determine color based on usage
+        Color progressColor;
+        if (percentage < 0.5) {
+          progressColor = AppTheme.successColor;
+        } else if (percentage < 0.8) {
+          progressColor = AppTheme.warningColor;
+        } else {
+          progressColor = AppTheme.errorColor;
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            border: Border(
+              bottom: BorderSide(
+                color: AppTheme.dividerColor.withAlpha(128),
+                width: 1,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                size: 16,
+                color: progressColor,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
+                    value: percentage,
+                    backgroundColor: Colors.grey.shade200,
+                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                    minHeight: 4,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$creditsUsed/$creditsLimit',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: progressColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                l10n.credits,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textHint,
+                      fontSize: 11,
+                    ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -353,14 +450,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Hey there, traveler! 👋',
+              l10n.chatWelcomeTitle,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
             const SizedBox(height: 8),
             Text(
-              'I\'m TripBuddy, your travel companion! I\'m here to help you document your adventures, plan activities, and create a beautiful travel journal.',
+              l10n.chatWelcomeDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
@@ -369,7 +466,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'What would you like to do?',
+              l10n.chatWhatToDo,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -379,52 +476,52 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             // Quick action buttons
             _buildQuickActionButton(
               icon: Icons.calendar_today,
-              label: 'Tell me about your day',
-              description: 'Share what you did, saw, or experienced',
+              label: l10n.tellAboutDay,
+              description: l10n.tellAboutDayDescription,
               color: AppTheme.primaryColor,
               onTap: () {
-                _messageController.text = 'Let me tell you about my day today...';
+                _messageController.text = l10n.tellAboutDayPrompt;
                 _sendMessage();
               },
             ),
             const SizedBox(height: 12),
             _buildQuickActionButton(
               icon: Icons.explore,
-              label: 'Plan an activity',
-              description: 'Get recommendations for things to do',
+              label: l10n.planActivity,
+              description: l10n.planActivityDescription,
               color: AppTheme.successColor,
               onTap: () {
-                _messageController.text = 'What are some good activities I should do here?';
+                _messageController.text = l10n.planActivityPrompt;
                 _sendMessage();
               },
             ),
             const SizedBox(height: 12),
             _buildQuickActionButton(
               icon: Icons.receipt_long,
-              label: 'Log an expense',
-              description: 'Track spending on your trip',
+              label: l10n.logExpenseAction,
+              description: l10n.logExpenseDescription,
               color: AppTheme.accentColor,
               onTap: () {
-                _messageController.text = 'I want to log an expense';
+                _messageController.text = l10n.logExpensePrompt;
                 _sendMessage();
               },
             ),
             const SizedBox(height: 12),
             _buildQuickActionButton(
               icon: Icons.auto_stories,
-              label: 'Generate my journal',
-              description: 'Create today\'s travel journal entry',
+              label: l10n.generateJournal,
+              description: l10n.generateJournalDescription,
               color: Colors.purple,
               onTap: () {
-                _messageController.text = 'Help me write my travel journal for today';
+                _messageController.text = l10n.generateJournalPrompt;
                 _sendMessage();
               },
             ),
             const SizedBox(height: 12),
             _buildQuickActionButton(
               icon: Icons.help_outline,
-              label: 'Ask anything',
-              description: 'Travel tips, local info, recommendations',
+              label: l10n.askAnything,
+              description: l10n.askAnythingDescription,
               color: AppTheme.textSecondary,
               onTap: () {
                 // Just focus the text field

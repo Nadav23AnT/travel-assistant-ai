@@ -14,6 +14,7 @@ class TravelContext {
   final int? totalTripDays;
   final int? remainingDays;
   final String? tripStatus; // planning, active, completed
+  final String appLanguage; // App UI language code (en, es, fr, etc.)
 
   const TravelContext({
     this.destination,
@@ -29,6 +30,7 @@ class TravelContext {
     this.totalTripDays,
     this.remainingDays,
     this.tripStatus,
+    this.appLanguage = 'en',
   });
 
   /// Check if user is currently on the trip
@@ -104,6 +106,25 @@ class TravelContext {
     return buffer.toString();
   }
 
+  /// Get app language display name
+  String get appLanguageDisplayName {
+    switch (appLanguage) {
+      case 'en': return 'English';
+      case 'es': return 'Spanish';
+      case 'fr': return 'French';
+      case 'de': return 'German';
+      case 'he': return 'Hebrew';
+      case 'ja': return 'Japanese';
+      case 'zh': return 'Chinese';
+      case 'ko': return 'Korean';
+      case 'it': return 'Italian';
+      case 'pt': return 'Portuguese';
+      case 'ru': return 'Russian';
+      case 'ar': return 'Arabic';
+      default: return 'English';
+    }
+  }
+
   /// Create from trip model and user settings
   factory TravelContext.fromTripAndSettings({
     required String? destination,
@@ -115,6 +136,7 @@ class TravelContext {
     String budgetCurrency = 'USD',
     List<String>? spokenLanguages,
     String homeCurrency = 'USD',
+    String appLanguage = 'en',
   }) {
     int? currentDay;
     int? totalDays;
@@ -146,6 +168,7 @@ class TravelContext {
       currentDayOfTrip: currentDay,
       totalTripDays: totalDays,
       remainingDays: remaining,
+      appLanguage: appLanguage,
     );
   }
 }

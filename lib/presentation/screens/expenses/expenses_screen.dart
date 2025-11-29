@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
 import '../../../data/models/expense_stats.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
 import '../../widgets/charts/expense_pie_chart.dart';
@@ -42,9 +43,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final homeCurrency = ref.watch(userHomeCurrencyProvider);
     final localCurrency = ref.watch(tripLocalCurrencyProvider);
 
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Expenses'),
+        title: Text(l10n.expenses),
         actions: [
           // Currency toggle with 3 options: Home, USD, Local
           Padding(
@@ -61,15 +64,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     homeCurrency,
                     style: const TextStyle(fontSize: 11),
                   ),
-                  tooltip: 'Home Currency',
+                  tooltip: l10n.homeCurrency,
                 ),
-                const ButtonSegment(
+                ButtonSegment(
                   value: CurrencyDisplayMode.usd,
-                  label: Text(
+                  label: const Text(
                     'USD',
                     style: TextStyle(fontSize: 11),
                   ),
-                  tooltip: 'US Dollar',
+                  tooltip: l10n.usDollar,
                 ),
                 ButtonSegment(
                   value: CurrencyDisplayMode.local,
@@ -79,13 +82,28 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   ),
                   tooltip: localCurrency != null
                       ? DestinationCurrencyMapper.getCurrencyDisplayName(localCurrency)
-                      : 'Local Currency',
+                      : l10n.localCurrency,
                 ),
               ],
               selected: {displayMode},
-              onSelectionChanged: (selected) {
-                ref.read(currencyDisplayModeProvider.notifier).state =
-                    selected.first;
+              onSelectionChanged: (selected) async {
+                final newMode = selected.first;
+                ref.read(currencyDisplayModeProvider.notifier).state = newMode;
+
+                // Fetch exchange rates for the target currency
+                String targetCurrency;
+                switch (newMode) {
+                  case CurrencyDisplayMode.home:
+                    targetCurrency = homeCurrency;
+                    break;
+                  case CurrencyDisplayMode.usd:
+                    targetCurrency = 'USD';
+                    break;
+                  case CurrencyDisplayMode.local:
+                    targetCurrency = localCurrency ?? homeCurrency;
+                    break;
+                }
+                await ref.read(exchangeRatesProvider.notifier).fetchRates(targetCurrency);
               },
             ),
           ),
@@ -135,19 +153,20 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(AppRoutes.addExpense),
         icon: const Icon(Icons.add),
-        label: const Text('Add Expense'),
+        label: Text(l10n.addExpense),
       ),
     );
   }
 
   Widget _buildSummarySection(ExpensesDashboardData data) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Overview',
+            l10n.overview,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -160,14 +179,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 SummaryStatCard(
                   type: StatType.totalSpent,
                   value: data.stats.formattedTotal,
-                  subtitle: '${data.stats.totalExpenseCount} expenses',
+                  subtitle: l10n.expensesCount(data.stats.totalExpenseCount),
                 ),
                 const SizedBox(width: 12),
                 SummaryStatCard(
                   type: StatType.dailyAverage,
                   value: data.stats.formattedDailyAverage,
                   subtitle: data.stats.elapsedDays > 0
-                      ? '${data.stats.elapsedDays} days tracked'
+                      ? l10n.daysTracked(data.stats.elapsedDays)
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -175,7 +194,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   type: StatType.estimatedTotal,
                   value: data.stats.formattedEstimatedTotal,
                   subtitle: data.stats.tripDays > 0
-                      ? '${data.stats.tripDays} day trip'
+                      ? l10n.dayTrip(data.stats.tripDays)
                       : null,
                 ),
               ],
@@ -187,6 +206,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   Widget _buildTripInfoBanner(ExpensesDashboardData data) {
+    final l10n = AppLocalizations.of(context);
     final trip = data.trip!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -221,7 +241,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '${data.stats.remainingDays} days left',
+                l10n.daysLeft(data.stats.remainingDays),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11,
@@ -235,14 +255,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   Widget _buildCategorySection(ExpensesDashboardData data) {
+    final l10n = AppLocalizations.of(context);
     // Define all categories for empty state
-    const allCategories = [
-      ('transport', 'Transport', Icons.directions_car),
-      ('accommodation', 'Accommodation', Icons.hotel),
-      ('food', 'Food & Drinks', Icons.restaurant),
-      ('activities', 'Activities', Icons.attractions),
-      ('shopping', 'Shopping', Icons.shopping_bag),
-      ('other', 'Other', Icons.receipt_long),
+    final allCategories = [
+      ('transport', l10n.categoryTransport, Icons.directions_car),
+      ('accommodation', l10n.categoryAccommodation, Icons.hotel),
+      ('food', l10n.foodAndDrinks, Icons.restaurant),
+      ('activities', l10n.categoryActivities, Icons.attractions),
+      ('shopping', l10n.categoryShopping, Icons.shopping_bag),
+      ('other', l10n.categoryOther, Icons.receipt_long),
     ];
 
     return Padding(
@@ -251,7 +272,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'By Category',
+            l10n.byCategory,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -316,13 +337,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   Widget _buildSpendingOverTimeSection(ExpensesDashboardData data) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Spending Over Time',
+            l10n.spendingOverTime,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -367,6 +389,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -387,14 +410,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'No Expenses Yet',
+              l10n.noExpensesYet,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Start tracking your travel expenses by adding your first expense.',
+              l10n.startTrackingExpenses,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -404,7 +427,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ElevatedButton.icon(
               onPressed: () => context.push(AppRoutes.addExpense),
               icon: const Icon(Icons.add),
-              label: const Text('Add Expense'),
+              label: Text(l10n.addExpense),
             ),
           ],
         ),
@@ -413,13 +436,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   Widget _buildLoadingState() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Overview',
+            l10n.overview,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -459,6 +483,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   Widget _buildErrorState(BuildContext context, Object error) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -472,7 +497,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Something went wrong',
+              l10n.somethingWentWrong,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
@@ -487,7 +512,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ElevatedButton.icon(
               onPressed: _onRefresh,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: Text(l10n.tryAgain),
             ),
           ],
         ),

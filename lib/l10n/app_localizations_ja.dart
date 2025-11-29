@@ -335,6 +335,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get deleteAccountConfirmation => 'アカウントを削除してもよろしいですか？この操作は取り消せません。';
 
   @override
+  String get resetAccount => 'Reset Account Data';
+
+  @override
+  String get resetAccountConfirmation =>
+      'Are you sure you want to reset all your data? This will delete all your trips, expenses, chats, and journal entries. Your account will remain active.';
+
+  @override
+  String get accountResetSuccess => 'Account data has been reset successfully';
+
+  @override
+  String get reset => 'リセット';
+
+  @override
   String get about => 'アプリについて';
 
   @override
@@ -379,9 +392,6 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get resetDataMessage =>
       'すべての旅行が削除され、オンボーディング状態がリセットされます。オンボーディングプロセスを最初からやり直します。\n\nこの操作は取り消せません。';
-
-  @override
-  String get reset => 'リセット';
 
   @override
   String get dayTip => '今日のヒント';
@@ -682,4 +692,39 @@ class AppLocalizationsJa extends AppLocalizations {
   String memberSince(String date) {
     return '$dateから会員';
   }
+
+  @override
+  String get aiUsageToday => 'AI Usage Today';
+
+  @override
+  String get premiumPlan => 'Premium Plan';
+
+  @override
+  String get used => 'used';
+
+  @override
+  String get credits => 'credits';
+
+  @override
+  String creditsUsedCount(String count) {
+    return '$count credits used';
+  }
+
+  @override
+  String creditsRemainingCount(String count) {
+    return '$count remaining';
+  }
+
+  @override
+  String dailyLimitCredits(String count) {
+    return 'Daily limit: $count credits';
+  }
+
+  @override
+  String get creditLimitExceeded =>
+      'Daily credit limit exceeded. Please try again tomorrow.';
+
+  @override
+  String get creditLimitExceededUpgrade =>
+      'Daily credit limit reached. Upgrade to get more credits!';
 }
