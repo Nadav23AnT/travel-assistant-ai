@@ -24,10 +24,16 @@ class DayTipNotifier extends StateNotifier<AsyncValue<List<DayTip>>> {
   final AIService _aiService;
   final AsyncValue<TripModel?> _activeTrip;
 
-  static const String _cacheKey = 'cached_day_tips_v2'; // Changed key for new format
+  static const String _cacheKeyPrefix = 'cached_day_tips_v3'; // v3: includes language
 
   DayTipNotifier(this._ref, this._aiService, this._activeTrip) : super(const AsyncValue.loading()) {
     _loadTips();
+  }
+
+  /// Get cache key including language
+  String _getCacheKey() {
+    final locale = _ref.read(localeProvider);
+    return '${_cacheKeyPrefix}_${locale.languageCode}';
   }
 
   /// Load tips from cache or generate new ones
@@ -39,7 +45,7 @@ class DayTipNotifier extends StateNotifier<AsyncValue<List<DayTip>>> {
     }
 
     try {
-      // Try to load from cache first
+      // Try to load from cache first (language-specific)
       final cachedTips = await _getCachedTips(trip.destination);
       if (cachedTips != null && cachedTips.isNotEmpty && cachedTips.first.isValid) {
         state = AsyncValue.data(cachedTips);
@@ -106,11 +112,12 @@ class DayTipNotifier extends StateNotifier<AsyncValue<List<DayTip>>> {
     return allCategories.take(count).toList();
   }
 
-  /// Get cached tips
+  /// Get cached tips (language-specific)
   Future<List<DayTip>?> _getCachedTips(String destination) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cached = prefs.getString(_cacheKey);
+      final cacheKey = _getCacheKey();
+      final cached = prefs.getString(cacheKey);
       if (cached == null) return null;
 
       final List<dynamic> jsonList = jsonDecode(cached);
@@ -128,12 +135,13 @@ class DayTipNotifier extends StateNotifier<AsyncValue<List<DayTip>>> {
     }
   }
 
-  /// Cache tips
+  /// Cache tips (language-specific)
   Future<void> _cacheTips(List<DayTip> tips) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      final cacheKey = _getCacheKey();
       final jsonList = tips.map((t) => t.toJson()).toList();
-      await prefs.setString(_cacheKey, jsonEncode(jsonList));
+      await prefs.setString(cacheKey, jsonEncode(jsonList));
     } catch (e) {
       // Ignore cache errors
     }
