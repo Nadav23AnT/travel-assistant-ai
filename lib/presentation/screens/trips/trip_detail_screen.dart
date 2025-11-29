@@ -347,7 +347,7 @@ class TripDetailScreen extends ConsumerWidget {
             label: 'Total Spent',
             value: '\$${totalSpent.toStringAsFixed(0)}',
             color: AppTheme.primaryColor,
-            onTap: () => context.push(AppRoutes.expenses),
+            onTap: () => context.go(AppRoutes.expenses),
           ),
         ),
         const SizedBox(width: 12),
@@ -371,7 +371,7 @@ class TripDetailScreen extends ConsumerWidget {
             label: 'Expenses',
             value: '${expenses.length}',
             color: AppTheme.successColor,
-            onTap: () => context.push(AppRoutes.expenses),
+            onTap: () => context.go(AppRoutes.expenses),
           ),
         ),
       ],
@@ -387,7 +387,7 @@ class TripDetailScreen extends ConsumerWidget {
   ) {
     return Card(
       child: InkWell(
-        onTap: () => context.push(AppRoutes.expenses),
+        onTap: () => context.go(AppRoutes.expenses),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -788,7 +788,7 @@ class TripDetailScreen extends ConsumerWidget {
                   ),
             ),
             TextButton(
-              onPressed: () => context.push(AppRoutes.expenses),
+              onPressed: () => context.go(AppRoutes.expenses),
               child: const Text('See All'),
             ),
           ],
