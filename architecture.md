@@ -1948,7 +1948,7 @@ REVENUECAT_API_KEY=...
   - Onboarding flow (language selection)
   - Daily Tips feature
 
-### Sprint 3: Expanded Settings & Profile - COMPLETED
+### Sprint 3: Expanded Settings & Profile - FULLY COMPLETED
 - [x] **General Settings:**
   - App Language (with flag icons)
   - Default Currency
@@ -1962,16 +1962,19 @@ REVENUECAT_API_KEY=...
 - [x] **Privacy:**
   - Share usage analytics toggle
   - Location tracking toggle
-- [ ] **Account:**
-  - Change Password
-  - Export My Data
+- [x] **Account:**
+  - Change Password (with dialog and Supabase update)
+  - Export My Data (email notification)
+  - Reset Account (full data wipe with RPC)
   - Delete Account (with confirmation)
-- [ ] **About:**
-  - App Version, Terms, Privacy Policy, Rate App
-- [ ] Profile Screen Expansion:
-  - Quick settings shortcuts
-  - Member since date
-  - Invite Friends option
+- [x] **About:**
+  - App Version (dynamic from package_info_plus)
+  - Terms of Service, Privacy Policy links
+  - Rate App dialog
+- [x] Profile Screen Expansion:
+  - Quick settings shortcuts (language selector card)
+  - Member since date (shown in profile header)
+  - [ ] Invite Friends option (pending)
 
 ### Sprint 4: Feature Enhancements & Bug Fixes - COMPLETED
 - [ ] **Multi-Language Fixes:**
@@ -1989,8 +1992,8 @@ REVENUECAT_API_KEY=...
   - Created `JournalAutoGenerator` service for client-side auto-generation.
   - Added `JournalReadyCard` notification when trip ends.
   - Added export functionality (Text/Markdown via share sheet).
-- [ ] **Bug Fixes:**
-  - Fix "GlobalKey used multiple times" error in Expenses Summary.
+- [x] **Bug Fixes:**
+  - Fixed "GlobalKey used multiple times" error in Expenses Summary.
 
 ### Sprint 5: Shared Trips (Couples/Groups)
 - [ ] Add "Share Trip" button on trip detail screen
