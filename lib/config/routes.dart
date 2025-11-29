@@ -57,7 +57,6 @@ class AppRoutes {
   // Singleton router instance
   static GoRouter? _router;
   static bool _isAuthenticated = false;
-  static final _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
 
   // Router configuration - returns singleton instance
   static GoRouter router({required bool isAuthenticated}) {
@@ -135,7 +134,6 @@ class AppRoutes {
 
         // Main app shell with bottom navigation
         ShellRoute(
-          navigatorKey: _shellNavigatorKey,
           builder: (context, state, child) => MainScaffold(child: child),
           routes: [
             GoRoute(
