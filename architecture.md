@@ -1793,6 +1793,26 @@ REVENUECAT_API_KEY=...
 
 ## Changelog
 
+### v1.9.0 (November 29, 2025)
+- **Referral System - COMPLETE:**
+  - Users get unique 8-character referral code in Profile → "Invite Friends"
+  - New users can enter referral code during registration
+  - Both referrer and referred user get 50 credits (5000 tokens)
+  - Share functionality with native share sheet
+  - Tracks referral stats: friends invited, credits earned
+- **Database Schema:**
+  - Added `referral_code`, `referred_by`, `referral_credits_earned` to profiles
+  - Created `referrals` table for tracking referral history
+  - PostgreSQL functions: `generate_referral_code()`, `ensure_referral_code()`, `process_referral()`, `get_referral_stats()`
+- **Files Created:**
+  - `lib/services/referral_service.dart`
+  - `supabase/migrations/20251129100003_referral_system.sql`
+  - `supabase/referral_system_standalone.sql`
+- **Files Updated:**
+  - `lib/presentation/screens/profile/profile_screen.dart` (Invite Friends card)
+  - `lib/presentation/screens/auth/register_screen.dart` (referral code input)
+  - `lib/l10n/app_en.arb` (referral localization keys)
+
 ### v1.8.0 (November 29, 2025)
 - **Automatic Trip Journal - COMPLETE:**
   - Journal entries now auto-generated daily on app open (no manual trigger)
@@ -1974,7 +1994,7 @@ REVENUECAT_API_KEY=...
 - [x] Profile Screen Expansion:
   - Quick settings shortcuts (language selector card)
   - Member since date (shown in profile header)
-  - [ ] Invite Friends option (pending)
+  - [x] Invite Friends / Referral System (COMPLETED v1.9.0)
 
 ### Sprint 4: Feature Enhancements & Bug Fixes - COMPLETED
 - [ ] **Multi-Language Fixes:**
