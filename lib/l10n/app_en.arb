@@ -1,0 +1,977 @@
+{
+  "@@locale": "en",
+  "@@last_modified": "2024-11-26",
+
+  "appTitle": "TripBuddy",
+  "@appTitle": {
+    "description": "The app name"
+  },
+
+  "home": "Home",
+  "@home": {
+    "description": "Home navigation label"
+  },
+
+  "welcomeGreetingMorning": "Good morning,",
+  "@welcomeGreetingMorning": {
+    "description": "Morning greeting on home screen"
+  },
+  "welcomeGreetingAfternoon": "Good afternoon,",
+  "@welcomeGreetingAfternoon": {
+    "description": "Afternoon greeting on home screen"
+  },
+  "welcomeGreetingEvening": "Good evening,",
+  "@welcomeGreetingEvening": {
+    "description": "Evening greeting on home screen"
+  },
+
+  "noActiveTrip": "No Active Trip",
+  "@noActiveTrip": {
+    "description": "Title when no trip is active"
+  },
+  "startPlanningAdventure": "Start planning your next adventure!",
+  "@startPlanningAdventure": {
+    "description": "Subtitle when no trip is active"
+  },
+  "createNewTrip": "Create New Trip",
+  "@createNewTrip": {
+    "description": "Button to create a new trip"
+  },
+
+  "quickActions": "Quick Actions",
+  "@quickActions": {
+    "description": "Section title for quick actions"
+  },
+  "newTrip": "New Trip",
+  "@newTrip": {
+    "description": "Quick action for new trip"
+  },
+  "addExpense": "Add Expense",
+  "@addExpense": {
+    "description": "Quick action for adding expense"
+  },
+  "aiChat": "AI Chat",
+  "@aiChat": {
+    "description": "Quick action for AI chat"
+  },
+
+  "recentChats": "Recent Chats",
+  "@recentChats": {
+    "description": "Section title for recent chats"
+  },
+  "recentExpenses": "Recent Expenses",
+  "@recentExpenses": {
+    "description": "Section title for recent expenses"
+  },
+  "viewAll": "View All",
+  "@viewAll": {
+    "description": "Link to view all items"
+  },
+
+  "startConversation": "Start a conversation with TripBuddy!",
+  "@startConversation": {
+    "description": "Prompt to start chatting"
+  },
+  "newChat": "New Chat",
+  "@newChat": {
+    "description": "Button to start new chat"
+  },
+  "noExpensesRecorded": "No expenses recorded yet",
+  "@noExpensesRecorded": {
+    "description": "Message when no expenses exist"
+  },
+
+  "today": "Today",
+  "@today": {
+    "description": "Today label"
+  },
+  "yesterday": "Yesterday",
+  "@yesterday": {
+    "description": "Yesterday label"
+  },
+
+  "dates": "Dates",
+  "@dates": {
+    "description": "Label for trip dates"
+  },
+  "datesNotSet": "Dates not set",
+  "@datesNotSet": {
+    "description": "Message when dates are not set"
+  },
+  "duration": "Duration",
+  "@duration": {
+    "description": "Label for trip duration"
+  },
+  "notSet": "Not set",
+  "@notSet": {
+    "description": "Generic not set message"
+  },
+  "startsIn": "Starts in",
+  "@startsIn": {
+    "description": "Label for days until trip starts"
+  },
+  "status": "Status",
+  "@status": {
+    "description": "Label for status"
+  },
+  "completed": "Completed",
+  "@completed": {
+    "description": "Completed status"
+  },
+  "current": "Current",
+  "@current": {
+    "description": "Current status"
+  },
+  "day": "day",
+  "@day": {
+    "description": "Singular day"
+  },
+  "days": "days",
+  "@days": {
+    "description": "Plural days"
+  },
+  "dayOfTotal": "Day {current} of {total}",
+  "@dayOfTotal": {
+    "description": "Current day of trip",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+
+  "createTrip": "Create Trip",
+  "@createTrip": {
+    "description": "Title for create trip screen"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save button"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button"
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit button"
+  },
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm button"
+  },
+
+  "tripTitle": "Trip Title",
+  "@tripTitle": {
+    "description": "Label for trip title field"
+  },
+  "tripTitleHint": "e.g., Paris Adventure 2025",
+  "@tripTitleHint": {
+    "description": "Hint for trip title field"
+  },
+  "tripTitleRequired": "Please enter a trip title",
+  "@tripTitleRequired": {
+    "description": "Validation message for trip title"
+  },
+
+  "destination": "Destination",
+  "@destination": {
+    "description": "Label for destination field"
+  },
+  "destinationHint": "Start typing a country...",
+  "@destinationHint": {
+    "description": "Hint for destination field"
+  },
+  "destinationRequired": "Please select a destination",
+  "@destinationRequired": {
+    "description": "Validation message for destination"
+  },
+
+  "tripDates": "Trip Dates",
+  "@tripDates": {
+    "description": "Label for trip dates field"
+  },
+  "selectDates": "Select dates",
+  "@selectDates": {
+    "description": "Hint for date selection"
+  },
+  "pleaseSelectDates": "Please select trip dates",
+  "@pleaseSelectDates": {
+    "description": "Validation message for dates"
+  },
+
+  "budget": "Budget",
+  "@budget": {
+    "description": "Label for budget field"
+  },
+  "currency": "Currency",
+  "@currency": {
+    "description": "Label for currency field"
+  },
+
+  "description": "Description",
+  "@description": {
+    "description": "Label for description field"
+  },
+  "descriptionHint": "What are you excited about for this trip?",
+  "@descriptionHint": {
+    "description": "Hint for description field"
+  },
+
+  "smartBudgetSuggestions": "Smart Budget Suggestions",
+  "@smartBudgetSuggestions": {
+    "description": "Title for budget suggestions card"
+  },
+  "smartBudgetInstructions": "After choosing a destination and trip dates, the app will automatically suggest an average traveler budget for this trip.",
+  "@smartBudgetInstructions": {
+    "description": "Instructions for budget suggestions"
+  },
+  "estimatedDailyBudget": "Estimated daily budget:",
+  "@estimatedDailyBudget": {
+    "description": "Label for daily budget estimate"
+  },
+  "basedOnAverageTravelers": "Based on average travelers in {destination}.",
+  "@basedOnAverageTravelers": {
+    "description": "Note about budget estimate source",
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "totalForDays": "Total for {days} days: {amount} {currency}",
+  "@totalForDays": {
+    "description": "Total budget for trip duration",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "apply": "Apply",
+  "@apply": {
+    "description": "Apply button"
+  },
+
+  "tripPreview": "Trip Preview",
+  "@tripPreview": {
+    "description": "Default trip preview title"
+  },
+  "tripCreatedSuccess": "Trip to {destination} created!",
+  "@tripCreatedSuccess": {
+    "description": "Success message when trip is created",
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCreateTrip": "Failed to create trip",
+  "@failedToCreateTrip": {
+    "description": "Error message when trip creation fails"
+  },
+
+  "expenses": "Expenses",
+  "@expenses": {
+    "description": "Expenses screen title"
+  },
+  "amount": "Amount",
+  "@amount": {
+    "description": "Label for amount field"
+  },
+  "category": "Category",
+  "@category": {
+    "description": "Label for category field"
+  },
+  "date": "Date",
+  "@date": {
+    "description": "Label for date field"
+  },
+  "notes": "Notes",
+  "@notes": {
+    "description": "Label for notes field"
+  },
+
+  "categoryTransport": "Transport",
+  "@categoryTransport": {
+    "description": "Transport expense category"
+  },
+  "categoryAccommodation": "Accommodation",
+  "@categoryAccommodation": {
+    "description": "Accommodation expense category"
+  },
+  "categoryFood": "Food",
+  "@categoryFood": {
+    "description": "Food expense category"
+  },
+  "categoryActivities": "Activities",
+  "@categoryActivities": {
+    "description": "Activities expense category"
+  },
+  "categoryShopping": "Shopping",
+  "@categoryShopping": {
+    "description": "Shopping expense category"
+  },
+  "categoryOther": "Other",
+  "@categoryOther": {
+    "description": "Other expense category"
+  },
+
+  "chat": "Chat",
+  "@chat": {
+    "description": "Chat screen title"
+  },
+  "typeMessage": "Type a message...",
+  "@typeMessage": {
+    "description": "Chat input placeholder"
+  },
+  "send": "Send",
+  "@send": {
+    "description": "Send button"
+  },
+
+  "trips": "Trips",
+  "@trips": {
+    "description": "Trips screen title"
+  },
+  "myTrips": "My Trips",
+  "@myTrips": {
+    "description": "My trips section title"
+  },
+  "upcomingTrips": "Upcoming Trips",
+  "@upcomingTrips": {
+    "description": "Upcoming trips section"
+  },
+  "pastTrips": "Past Trips",
+  "@pastTrips": {
+    "description": "Past trips section"
+  },
+  "activeTrip": "Active Trip",
+  "@activeTrip": {
+    "description": "Active trip label"
+  },
+
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile screen title"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings screen title"
+  },
+  "signOut": "Sign Out",
+  "@signOut": {
+    "description": "Sign out button"
+  },
+  "signIn": "Sign In",
+  "@signIn": {
+    "description": "Sign in button"
+  },
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Sign up button"
+  },
+
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Full name field label"
+  },
+
+  "generalSettings": "General",
+  "@generalSettings": {
+    "description": "General settings section"
+  },
+  "appLanguage": "App Language",
+  "@appLanguage": {
+    "description": "App language setting"
+  },
+  "defaultCurrency": "Default Currency",
+  "@defaultCurrency": {
+    "description": "Default currency setting"
+  },
+  "dateFormat": "Date Format",
+  "@dateFormat": {
+    "description": "Date format setting"
+  },
+  "distanceUnits": "Distance Units",
+  "@distanceUnits": {
+    "description": "Distance units setting"
+  },
+  "kilometers": "Kilometers",
+  "@kilometers": {
+    "description": "Kilometers option"
+  },
+  "miles": "Miles",
+  "@miles": {
+    "description": "Miles option"
+  },
+  "darkMode": "Dark Mode",
+  "@darkMode": {
+    "description": "Dark mode setting"
+  },
+
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications section"
+  },
+  "pushNotifications": "Push Notifications",
+  "@pushNotifications": {
+    "description": "Push notifications toggle"
+  },
+  "emailNotifications": "Email Notifications",
+  "@emailNotifications": {
+    "description": "Email notifications toggle"
+  },
+  "tripReminders": "Trip Reminders",
+  "@tripReminders": {
+    "description": "Trip reminders toggle"
+  },
+
+  "privacy": "Privacy",
+  "@privacy": {
+    "description": "Privacy section"
+  },
+  "shareAnalytics": "Share Usage Analytics",
+  "@shareAnalytics": {
+    "description": "Analytics sharing toggle"
+  },
+  "locationTracking": "Location Tracking",
+  "@locationTracking": {
+    "description": "Location tracking toggle"
+  },
+
+  "account": "Account",
+  "@account": {
+    "description": "Account section"
+  },
+  "changePassword": "Change Password",
+  "@changePassword": {
+    "description": "Change password option"
+  },
+  "exportData": "Export My Data",
+  "@exportData": {
+    "description": "Export data option"
+  },
+  "deleteAccount": "Delete Account",
+  "@deleteAccount": {
+    "description": "Delete account option"
+  },
+  "deleteAccountConfirmation": "Are you sure you want to delete your account? This action cannot be undone.",
+  "@deleteAccountConfirmation": {
+    "description": "Delete account confirmation message"
+  },
+
+  "about": "About",
+  "@about": {
+    "description": "About section"
+  },
+  "appVersion": "App Version",
+  "@appVersion": {
+    "description": "App version label"
+  },
+  "termsOfService": "Terms of Service",
+  "@termsOfService": {
+    "description": "Terms of service link"
+  },
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy link"
+  },
+  "rateApp": "Rate the App",
+  "@rateApp": {
+    "description": "Rate app link"
+  },
+
+  "error": "Error",
+  "@error": {
+    "description": "Generic error title"
+  },
+  "errorOccurred": "An error occurred",
+  "@errorOccurred": {
+    "description": "Generic error message"
+  },
+  "tryAgain": "Try Again",
+  "@tryAgain": {
+    "description": "Try again button"
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading message"
+  },
+
+  "noDate": "No date",
+  "@noDate": {
+    "description": "No date placeholder"
+  },
+  "failedToLoadChats": "Failed to load chats",
+  "@failedToLoadChats": {
+    "description": "Error loading chats"
+  },
+  "failedToLoadExpenses": "Failed to load expenses",
+  "@failedToLoadExpenses": {
+    "description": "Error loading expenses"
+  },
+
+  "resetData": "Reset Data",
+  "@resetData": {
+    "description": "Reset data button"
+  },
+  "resetDataTitle": "Reset User Data",
+  "@resetDataTitle": {
+    "description": "Reset data dialog title"
+  },
+  "resetDataMessage": "This will delete all your trips and reset the onboarding status. You will be redirected to start the onboarding process again.\n\nThis action cannot be undone.",
+  "@resetDataMessage": {
+    "description": "Reset data confirmation message"
+  },
+  "reset": "Reset",
+  "@reset": {
+    "description": "Reset button"
+  },
+
+  "dayTip": "Today's Travel Tip",
+  "@dayTip": {
+    "description": "Day tip card title"
+  },
+  "dayTipDescription": "AI-powered travel recommendations",
+  "@dayTipDescription": {
+    "description": "Day tip card subtitle"
+  },
+  "refreshTip": "Refresh Tip",
+  "@refreshTip": {
+    "description": "Refresh tip button"
+  },
+
+  "onboardingWelcome": "Welcome to TripBuddy",
+  "@onboardingWelcome": {
+    "description": "Onboarding welcome title"
+  },
+  "onboardingLanguageTitle": "Choose Your Language",
+  "@onboardingLanguageTitle": {
+    "description": "Language selection title"
+  },
+  "onboardingLanguageSubtitle": "Select your preferred language for the app",
+  "@onboardingLanguageSubtitle": {
+    "description": "Language selection subtitle"
+  },
+  "continueButton": "Continue",
+  "@continueButton": {
+    "description": "Continue button"
+  },
+  "skip": "Skip",
+  "@skip": {
+    "description": "Skip button"
+  },
+  "getStarted": "Get Started",
+  "@getStarted": {
+    "description": "Get started button"
+  },
+
+  "languageEnglish": "English",
+  "@languageEnglish": {
+    "description": "English language name"
+  },
+  "languageSpanish": "Spanish",
+  "@languageSpanish": {
+    "description": "Spanish language name"
+  },
+  "languageFrench": "French",
+  "@languageFrench": {
+    "description": "French language name"
+  },
+  "languageGerman": "German",
+  "@languageGerman": {
+    "description": "German language name"
+  },
+  "languageHebrew": "Hebrew",
+  "@languageHebrew": {
+    "description": "Hebrew language name"
+  },
+  "languageJapanese": "Japanese",
+  "@languageJapanese": {
+    "description": "Japanese language name"
+  },
+  "languageChinese": "Chinese",
+  "@languageChinese": {
+    "description": "Chinese language name"
+  },
+  "languageKorean": "Korean",
+  "@languageKorean": {
+    "description": "Korean language name"
+  },
+  "languageItalian": "Italian",
+  "@languageItalian": {
+    "description": "Italian language name"
+  },
+  "languagePortuguese": "Portuguese",
+  "@languagePortuguese": {
+    "description": "Portuguese language name"
+  },
+  "languageRussian": "Russian",
+  "@languageRussian": {
+    "description": "Russian language name"
+  },
+  "languageArabic": "Arabic",
+  "@languageArabic": {
+    "description": "Arabic language name"
+  },
+
+  "chatHint": "Ask me anything about travel...",
+  "@chatHint": {
+    "description": "Chat input hint"
+  },
+  "deleteChat": "Delete Chat",
+  "@deleteChat": {
+    "description": "Delete chat action"
+  },
+  "deleteChatConfirmation": "Are you sure you want to delete this chat?",
+  "@deleteChatConfirmation": {
+    "description": "Delete chat confirmation"
+  },
+  "expenseAdded": "Expense added!",
+  "@expenseAdded": {
+    "description": "Expense added success message"
+  },
+  "failedToAddExpense": "Failed to add expense",
+  "@failedToAddExpense": {
+    "description": "Expense add failure message"
+  },
+  "chatWelcomeTitle": "Hey there, traveler!",
+  "@chatWelcomeTitle": {
+    "description": "Chat welcome title"
+  },
+  "chatWelcomeDescription": "I'm TripBuddy, your travel companion! I'm here to help you document your adventures, plan activities, and create a beautiful travel journal.",
+  "@chatWelcomeDescription": {
+    "description": "Chat welcome description"
+  },
+  "chatWhatToDo": "What would you like to do?",
+  "@chatWhatToDo": {
+    "description": "Chat action prompt"
+  },
+  "tellAboutDay": "Tell me about your day",
+  "@tellAboutDay": {
+    "description": "Tell about day action"
+  },
+  "tellAboutDayDescription": "Share what you did, saw, or experienced",
+  "@tellAboutDayDescription": {
+    "description": "Tell about day description"
+  },
+  "tellAboutDayPrompt": "Let me tell you about my day today...",
+  "@tellAboutDayPrompt": {
+    "description": "Prompt sent when clicking tell about day"
+  },
+  "planActivity": "Plan an activity",
+  "@planActivity": {
+    "description": "Plan activity action"
+  },
+  "planActivityDescription": "Get recommendations for things to do",
+  "@planActivityDescription": {
+    "description": "Plan activity description"
+  },
+  "planActivityPrompt": "What are some good activities I should do here?",
+  "@planActivityPrompt": {
+    "description": "Prompt sent when clicking plan activity"
+  },
+  "logExpenseAction": "Log an expense",
+  "@logExpenseAction": {
+    "description": "Log expense action"
+  },
+  "logExpenseDescription": "Track spending on your trip",
+  "@logExpenseDescription": {
+    "description": "Log expense description"
+  },
+  "logExpensePrompt": "I want to log an expense",
+  "@logExpensePrompt": {
+    "description": "Prompt sent when clicking log expense"
+  },
+  "generateJournal": "Generate my journal",
+  "@generateJournal": {
+    "description": "Generate journal action"
+  },
+  "generateJournalDescription": "Create today's travel journal entry",
+  "@generateJournalDescription": {
+    "description": "Generate journal description"
+  },
+  "generateJournalPrompt": "Help me write my travel journal for today",
+  "@generateJournalPrompt": {
+    "description": "Prompt sent when clicking generate journal"
+  },
+  "askAnything": "Ask anything",
+  "@askAnything": {
+    "description": "Ask anything action"
+  },
+  "askAnythingDescription": "Travel tips, local info, recommendations",
+  "@askAnythingDescription": {
+    "description": "Ask anything description"
+  },
+  "aiChats": "AI Chats",
+  "@aiChats": {
+    "description": "AI Chats screen title"
+  },
+  "startNewChat": "Start New Chat",
+  "@startNewChat": {
+    "description": "Start new chat button"
+  },
+  "aiTravelAssistant": "AI Travel Assistant",
+  "@aiTravelAssistant": {
+    "description": "AI assistant title"
+  },
+  "aiTravelAssistantDescription": "Start a conversation with your AI travel buddy to plan trips, get recommendations, and more!",
+  "@aiTravelAssistantDescription": {
+    "description": "AI assistant description"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button"
+  },
+  "errorDeletingChat": "Error deleting chat",
+  "@errorDeletingChat": {
+    "description": "Error deleting chat message"
+  },
+  "todayAt": "Today at {time}",
+  "@todayAt": {
+    "description": "Today at time",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "yesterdayAt": "Yesterday at {time}",
+  "@yesterdayAt": {
+    "description": "Yesterday at time",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteChatTitle": "Delete \"{title}\"? This cannot be undone.",
+  "@deleteChatTitle": {
+    "description": "Delete chat title confirmation",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCreatingChat": "Error creating chat",
+  "@errorCreatingChat": {
+    "description": "Error creating chat message"
+  },
+  "errorLoadingChat": "Error loading chat",
+  "@errorLoadingChat": {
+    "description": "Error loading chat message"
+  },
+
+  "createTripForTips": "Create a trip to get daily tips!",
+  "@createTripForTips": {
+    "description": "Message when no trip for tips"
+  },
+
+  "overview": "Overview",
+  "@overview": {
+    "description": "Overview section title"
+  },
+  "expensesCount": "{count} expenses",
+  "@expensesCount": {
+    "description": "Number of expenses",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysTracked": "{count} days tracked",
+  "@daysTracked": {
+    "description": "Number of days tracked",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dayTrip": "{count} day trip",
+  "@dayTrip": {
+    "description": "Trip duration",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysLeft": "{count} days left",
+  "@daysLeft": {
+    "description": "Days remaining",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "byCategory": "By Category",
+  "@byCategory": {
+    "description": "By category section title"
+  },
+  "spendingOverTime": "Spending Over Time",
+  "@spendingOverTime": {
+    "description": "Spending over time section title"
+  },
+  "noExpensesYet": "No Expenses Yet",
+  "@noExpensesYet": {
+    "description": "No expenses title"
+  },
+  "startTrackingExpenses": "Start tracking your travel expenses by adding your first expense.",
+  "@startTrackingExpenses": {
+    "description": "No expenses description"
+  },
+  "somethingWentWrong": "Something went wrong",
+  "@somethingWentWrong": {
+    "description": "Error title"
+  },
+  "homeCurrency": "Home Currency",
+  "@homeCurrency": {
+    "description": "Home currency tooltip"
+  },
+  "usDollar": "US Dollar",
+  "@usDollar": {
+    "description": "USD tooltip"
+  },
+  "localCurrency": "Local Currency",
+  "@localCurrency": {
+    "description": "Local currency tooltip"
+  },
+  "foodAndDrinks": "Food & Drinks",
+  "@foodAndDrinks": {
+    "description": "Food category name"
+  },
+
+  "pleaseSelectTrip": "Please select a trip",
+  "@pleaseSelectTrip": {
+    "description": "Trip selection validation"
+  },
+  "expenseAddedSuccess": "Expense added successfully!",
+  "@expenseAddedSuccess": {
+    "description": "Expense added success message"
+  },
+  "noTripsFound": "No trips found. Create a trip first to add expenses.",
+  "@noTripsFound": {
+    "description": "No trips message"
+  },
+  "trip": "Trip",
+  "@trip": {
+    "description": "Trip label"
+  },
+  "pleaseEnterAmount": "Please enter an amount",
+  "@pleaseEnterAmount": {
+    "description": "Amount validation"
+  },
+  "pleaseEnterValidNumber": "Please enter a valid number",
+  "@pleaseEnterValidNumber": {
+    "description": "Number validation"
+  },
+  "pleaseEnterDescription": "Please enter a description",
+  "@pleaseEnterDescription": {
+    "description": "Description validation"
+  },
+  "descriptionHintExpense": "e.g., Lunch at Cafe",
+  "@descriptionHintExpense": {
+    "description": "Expense description hint"
+  },
+  "addReceiptPhoto": "Add Receipt Photo",
+  "@addReceiptPhoto": {
+    "description": "Receipt photo button"
+  },
+  "receiptPhotoComingSoon": "Receipt photo coming soon!",
+  "@receiptPhotoComingSoon": {
+    "description": "Receipt photo coming soon message"
+  },
+  "splitThisExpense": "Split this expense?",
+  "@splitThisExpense": {
+    "description": "Split expense question"
+  },
+  "selectTripMembersToSplit": "Select trip members to split with",
+  "@selectTripMembersToSplit": {
+    "description": "Split members instruction"
+  },
+  "noTripMembersToSplit": "No trip members to split with. Create a trip first!",
+  "@noTripMembersToSplit": {
+    "description": "No trip members message"
+  },
+  "notesOptional": "Notes (optional)",
+  "@notesOptional": {
+    "description": "Notes label"
+  },
+  "additionalDetails": "Any additional details...",
+  "@additionalDetails": {
+    "description": "Notes hint"
+  },
+
+  "countries": "Countries",
+  "@countries": {
+    "description": "Countries label"
+  },
+  "helpAndSupport": "Help & Support",
+  "@helpAndSupport": {
+    "description": "Help and support menu item"
+  },
+  "freePlan": "Free Plan",
+  "@freePlan": {
+    "description": "Free subscription plan"
+  },
+  "upgradeUnlockFeatures": "Upgrade to unlock unlimited trips and AI features",
+  "@upgradeUnlockFeatures": {
+    "description": "Upgrade prompt"
+  },
+  "upgrade": "Upgrade",
+  "@upgrade": {
+    "description": "Upgrade button"
+  },
+  "signOutConfirmation": "Are you sure you want to sign out?",
+  "@signOutConfirmation": {
+    "description": "Sign out confirmation"
+  },
+  "failedToSignOut": "Failed to sign out",
+  "@failedToSignOut": {
+    "description": "Sign out error"
+  },
+  "notSignedIn": "Not signed in",
+  "@notSignedIn": {
+    "description": "Not signed in message"
+  },
+  "traveler": "Traveler",
+  "@traveler": {
+    "description": "Default traveler name"
+  },
+  "memberSince": "Member since {date}",
+  "@memberSince": {
+    "description": "Member since date text",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Dec 2025"
+      }
+    }
+  }
+}

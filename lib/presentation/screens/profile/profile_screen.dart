@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../utils/country_currency_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/expenses_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../providers/trips_provider.dart';
+
+/// Provider for app version info
+final appVersionProvider = FutureProvider<String>((ref) async {
+  final info = await PackageInfo.fromPlatform();
+  return '${info.version} (${info.buildNumber})';
+});
 
 /// Provider for profile statistics
 final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
@@ -53,21 +63,21 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final user = ref.watch(currentUserProvider);
-    final userEmail = user?.email ?? 'Not signed in';
+    final userEmail = user?.email ?? l10n.notSignedIn;
     final userName = user?.userMetadata?['full_name'] as String? ??
                      user?.email?.split('@').first ??
-                     'Traveler';
+                     l10n.traveler;
+    final currentLocale = ref.watch(localeProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(l10n.profile),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () {
-              // TODO: Navigate to edit profile
-            },
+            onPressed: () => context.push(AppRoutes.editProfile),
           ),
         ],
       ),
@@ -76,12 +86,16 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             const SizedBox(height: 24),
             // Profile header
-            _buildProfileHeader(context, userName, userEmail),
+            _buildProfileHeader(context, ref, userName, userEmail, user),
             const SizedBox(height: 24),
 
             // Stats
             _buildStats(context, ref),
             const SizedBox(height: 24),
+
+            // Language selector
+            _buildLanguageSelector(context, ref, currentLocale),
+            const SizedBox(height: 16),
 
             // Subscription card
             _buildSubscriptionCard(context),
@@ -91,13 +105,13 @@ class ProfileScreen extends ConsumerWidget {
             _buildMenuItem(
               context,
               icon: Icons.settings_outlined,
-              title: 'Settings',
+              title: l10n.settings,
               onTap: () => context.push(AppRoutes.settings),
             ),
             _buildMenuItem(
               context,
               icon: Icons.help_outline,
-              title: 'Help & Support',
+              title: l10n.helpAndSupport,
               onTap: () {
                 // TODO: Navigate to help
               },
@@ -105,7 +119,7 @@ class ProfileScreen extends ConsumerWidget {
             _buildMenuItem(
               context,
               icon: Icons.privacy_tip_outlined,
-              title: 'Privacy Policy',
+              title: l10n.privacyPolicy,
               onTap: () {
                 // TODO: Show privacy policy
               },
@@ -113,7 +127,7 @@ class ProfileScreen extends ConsumerWidget {
             _buildMenuItem(
               context,
               icon: Icons.description_outlined,
-              title: 'Terms of Service',
+              title: l10n.termsOfService,
               onTap: () {
                 // TODO: Show terms
               },
@@ -128,9 +142,9 @@ class ProfileScreen extends ConsumerWidget {
                   _showSignOutDialog(context, ref);
                 },
                 icon: const Icon(Icons.logout, color: AppTheme.errorColor),
-                label: const Text(
-                  'Sign Out',
-                  style: TextStyle(color: AppTheme.errorColor),
+                label: Text(
+                  l10n.signOut,
+                  style: const TextStyle(color: AppTheme.errorColor),
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppTheme.errorColor),
@@ -139,13 +153,8 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 32),
 
-            // App version
-            Text(
-              'Version 1.0.0',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-            ),
+            // App version (dynamic)
+            _buildAppVersion(context, ref),
             const SizedBox(height: 24),
           ],
         ),
@@ -153,7 +162,27 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, String userName, String userEmail) {
+  Widget _buildProfileHeader(
+    BuildContext context,
+    WidgetRef ref,
+    String userName,
+    String userEmail,
+    dynamic user,
+  ) {
+    final l10n = AppLocalizations.of(context);
+
+    // Format member since date
+    String? memberSinceText;
+    if (user?.createdAt != null) {
+      try {
+        final createdAt = DateTime.parse(user!.createdAt!);
+        final formattedDate = DateFormat.yMMM().format(createdAt);
+        memberSinceText = l10n.memberSince(formattedDate);
+      } catch (_) {
+        // Ignore parsing errors
+      }
+    }
+
     return Column(
       children: [
         CircleAvatar(
@@ -180,11 +209,21 @@ class ProfileScreen extends ConsumerWidget {
                 color: AppTheme.textSecondary,
               ),
         ),
+        if (memberSinceText != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            memberSinceText,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textHint,
+                ),
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildStats(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final statsAsync = ref.watch(profileStatsProvider);
 
     return Padding(
@@ -201,7 +240,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _StatItem(
-                    label: 'Trips',
+                    label: l10n.trips,
                     value: '-',
                     icon: Icons.luggage_outlined,
                   ),
@@ -209,7 +248,7 @@ class ProfileScreen extends ConsumerWidget {
                 Container(width: 1, height: 40, color: AppTheme.textHint),
                 Expanded(
                   child: _StatItem(
-                    label: 'Expenses',
+                    label: l10n.expenses,
                     value: '-',
                     icon: Icons.receipt_long_outlined,
                   ),
@@ -217,7 +256,7 @@ class ProfileScreen extends ConsumerWidget {
                 Container(width: 1, height: 40, color: AppTheme.textHint),
                 Expanded(
                   child: _StatItem(
-                    label: 'Countries',
+                    label: l10n.countries,
                     value: '-',
                     icon: Icons.public_outlined,
                   ),
@@ -228,7 +267,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _StatItem(
-                    label: 'Trips',
+                    label: l10n.trips,
                     value: '${stats.tripCount}',
                     icon: Icons.luggage_outlined,
                   ),
@@ -236,7 +275,7 @@ class ProfileScreen extends ConsumerWidget {
                 Container(width: 1, height: 40, color: AppTheme.textHint),
                 Expanded(
                   child: _StatItem(
-                    label: 'Expenses',
+                    label: l10n.expenses,
                     value: '${stats.expenseCount}',
                     icon: Icons.receipt_long_outlined,
                   ),
@@ -244,7 +283,7 @@ class ProfileScreen extends ConsumerWidget {
                 Container(width: 1, height: 40, color: AppTheme.textHint),
                 Expanded(
                   child: _StatItem(
-                    label: 'Countries',
+                    label: l10n.countries,
                     value: '${stats.countriesCount}',
                     icon: Icons.public_outlined,
                   ),
@@ -257,7 +296,100 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildLanguageSelector(BuildContext context, WidgetRef ref, Locale currentLocale) {
+    final l10n = AppLocalizations.of(context);
+    final currentLanguageName = _getLanguageName(currentLocale.languageCode, l10n);
+    final flag = AppLocales.getFlag(currentLocale.languageCode);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Card(
+        child: ListTile(
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryLight,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(flag, style: const TextStyle(fontSize: 20)),
+            ),
+          ),
+          title: Text(l10n.appLanguage),
+          subtitle: Text(
+            currentLanguageName,
+            style: TextStyle(color: AppTheme.textSecondary),
+          ),
+          trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+          onTap: () => _showLanguageDialog(context, ref, currentLocale),
+        ),
+      ),
+    );
+  }
+
+  String _getLanguageName(String code, AppLocalizations l10n) {
+    switch (code) {
+      case 'en': return l10n.languageEnglish;
+      case 'es': return l10n.languageSpanish;
+      case 'fr': return l10n.languageFrench;
+      case 'de': return l10n.languageGerman;
+      case 'he': return l10n.languageHebrew;
+      case 'ja': return l10n.languageJapanese;
+      case 'zh': return l10n.languageChinese;
+      case 'ko': return l10n.languageKorean;
+      case 'it': return l10n.languageItalian;
+      case 'pt': return l10n.languagePortuguese;
+      case 'ru': return l10n.languageRussian;
+      case 'ar': return l10n.languageArabic;
+      default: return l10n.languageEnglish;
+    }
+  }
+
+  void _showLanguageDialog(BuildContext context, WidgetRef ref, Locale currentLocale) {
+    final l10n = AppLocalizations.of(context);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.appLanguage),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: AppLocales.supportedLocales.length,
+            itemBuilder: (context, index) {
+              final locale = AppLocales.supportedLocales[index];
+              final flag = AppLocales.getFlag(locale.languageCode);
+              final name = _getLanguageName(locale.languageCode, l10n);
+              final isSelected = locale.languageCode == currentLocale.languageCode;
+
+              return ListTile(
+                leading: Text(flag, style: const TextStyle(fontSize: 24)),
+                title: Text(name),
+                trailing: isSelected
+                    ? const Icon(Icons.check, color: AppTheme.primaryColor)
+                    : null,
+                onTap: () {
+                  ref.read(localeProvider.notifier).setLocaleByCode(locale.languageCode);
+                  Navigator.pop(dialogContext);
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSubscriptionCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Card(
@@ -283,14 +415,14 @@ class ProfileScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Free Plan',
+                      l10n.freePlan,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Upgrade to unlock unlimited trips and AI features',
+                      l10n.upgradeUnlockFeatures,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -302,7 +434,7 @@ class ProfileScreen extends ConsumerWidget {
                 onPressed: () {
                   // TODO: Navigate to subscription screen
                 },
-                child: const Text('Upgrade'),
+                child: Text(l10n.upgrade),
               ),
             ],
           ),
@@ -329,15 +461,16 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showSignOutDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: Text(l10n.signOut),
+        content: Text(l10n.signOutConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -365,19 +498,45 @@ class ProfileScreen extends ConsumerWidget {
                   Navigator.of(context).pop(); // Close loading
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to sign out: $e'),
+                      content: Text('${l10n.failedToSignOut}: $e'),
                       backgroundColor: AppTheme.errorColor,
                     ),
                   );
                 }
               }
             },
-            child: const Text(
-              'Sign Out',
-              style: TextStyle(color: AppTheme.errorColor),
+            child: Text(
+              l10n.signOut,
+              style: const TextStyle(color: AppTheme.errorColor),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAppVersion(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final versionAsync = ref.watch(appVersionProvider);
+
+    return versionAsync.when(
+      data: (version) => Text(
+        '${l10n.appVersion} $version',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondary,
+            ),
+      ),
+      loading: () => Text(
+        '${l10n.appVersion} ...',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondary,
+            ),
+      ),
+      error: (_, __) => Text(
+        '${l10n.appVersion} 1.0.0',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondary,
+            ),
       ),
     );
   }
