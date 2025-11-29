@@ -45,7 +45,7 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
   Future<void> _loadMarkdownContent() async {
     try {
       final content = await rootBundle.loadString(
-        'legal/${widget.documentType.fileName}',
+        'assets/legal/${widget.documentType.fileName}',
       );
       setState(() {
         _markdownContent = content;
