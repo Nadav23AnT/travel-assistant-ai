@@ -1599,6 +1599,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid referral code'**
   String get invalidReferralCode;
+
+  /// Title for trip members section
+  ///
+  /// In en, this message translates to:
+  /// **'Trip Members'**
+  String get tripMembers;
+
+  /// Button to share trip invite code
+  ///
+  /// In en, this message translates to:
+  /// **'Share Invite Code'**
+  String get shareInviteCode;
+
+  /// Label for invite code
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Code'**
+  String get inviteCode;
+
+  /// Button to copy code
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Code'**
+  String get copyCode;
+
+  /// Message when code is copied
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied!'**
+  String get codeCopied;
+
+  /// Button/title for joining a trip
+  ///
+  /// In en, this message translates to:
+  /// **'Join Trip'**
+  String get joinTrip;
+
+  /// Hint for invite code input
+  ///
+  /// In en, this message translates to:
+  /// **'Enter invite code'**
+  String get enterInviteCode;
+
+  /// Success message when joining trip
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully joined trip!'**
+  String get joinTripSuccess;
+
+  /// Error when invite code is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid invite code'**
+  String get invalidInviteCode;
+
+  /// Error when already a trip member
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already a member of this trip'**
+  String get alreadyMember;
+
+  /// Badge for shared trips
+  ///
+  /// In en, this message translates to:
+  /// **'Shared with you'**
+  String get sharedWithYou;
+
+  /// Button to leave a trip
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Trip'**
+  String get leaveTrip;
+
+  /// Button to remove a member
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Member'**
+  String get removeMember;
+
+  /// Confirmation to leave trip
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to leave this trip?'**
+  String get confirmLeaveTrip;
+
+  /// Label for trip owner
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get tripOwner;
+
+  /// Label for trip member
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get tripMember;
+
+  /// Prompt to invite friends when no members
+  ///
+  /// In en, this message translates to:
+  /// **'Invite friends to collaborate on this trip!'**
+  String get inviteFriendsToTrip;
+
+  /// Message when no other members on trip
+  ///
+  /// In en, this message translates to:
+  /// **'No other members yet'**
+  String get noOtherMembers;
+
+  /// Description for share code sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Share this code with friends so they can join your trip and collaborate on planning!'**
+  String get shareCodeDescription;
+
+  /// Info text about what shared members can do
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with this code can join your trip and add expenses, edit the itinerary, and more.'**
+  String get shareCodeInfo;
+
+  /// Title for join trip screen
+  ///
+  /// In en, this message translates to:
+  /// **'Join a Trip'**
+  String get joinTripTitle;
+
+  /// Description for join trip screen
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the invite code from your friend to join their trip.'**
+  String get joinTripDescription;
+
+  /// Loading text while joining trip
+  ///
+  /// In en, this message translates to:
+  /// **'Joining...'**
+  String get joining;
+
+  /// Help text on join trip screen
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your friend to share their trip invite code with you from the Trip Details screen.'**
+  String get joinTripHelp;
+
+  /// Error when code length is wrong
+  ///
+  /// In en, this message translates to:
+  /// **'Code must be 8 characters'**
+  String get invalidCodeLength;
+
+  /// Error when trying to join own trip
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t join your own trip'**
+  String get cannotJoinOwnTrip;
+
+  /// Badge label for shared trips
+  ///
+  /// In en, this message translates to:
+  /// **'Shared'**
+  String get sharedTrip;
 }
 
 class _AppLocalizationsDelegate

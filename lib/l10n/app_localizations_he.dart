@@ -758,7 +758,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get generatingJournals => 'Creating your journal entries...';
 
   @override
-  String get inviteFriends => 'Invite Friends';
+  String get inviteFriends => 'הזמן חברים';
 
   @override
   String get inviteFriendsSubtitle => 'Get 50 free credits for each friend!';
@@ -797,4 +797,89 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get invalidReferralCode => 'Invalid referral code';
+
+  @override
+  String get tripMembers => 'משתתפי הטיול';
+
+  @override
+  String get shareInviteCode => 'שתף קוד הזמנה';
+
+  @override
+  String get inviteCode => 'קוד הזמנה';
+
+  @override
+  String get copyCode => 'העתק קוד';
+
+  @override
+  String get codeCopied => 'הקוד הועתק!';
+
+  @override
+  String get joinTrip => 'הצטרף לטיול';
+
+  @override
+  String get enterInviteCode => 'הזן קוד הזמנה';
+
+  @override
+  String get joinTripSuccess => 'הצטרפת לטיול בהצלחה!';
+
+  @override
+  String get invalidInviteCode => 'קוד הזמנה לא תקין';
+
+  @override
+  String get alreadyMember => 'אתה כבר משתתף בטיול הזה';
+
+  @override
+  String get sharedWithYou => 'שותף איתך';
+
+  @override
+  String get leaveTrip => 'עזוב טיול';
+
+  @override
+  String get removeMember => 'הסר משתתף';
+
+  @override
+  String get confirmLeaveTrip => 'האם אתה בטוח שברצונך לעזוב את הטיול?';
+
+  @override
+  String get tripOwner => 'מארגן';
+
+  @override
+  String get tripMember => 'משתתף';
+
+  @override
+  String get inviteFriendsToTrip => 'הזמן חברים לשתף פעולה בטיול!';
+
+  @override
+  String get noOtherMembers => 'עדיין אין משתתפים נוספים';
+
+  @override
+  String get shareCodeDescription =>
+      'שתף קוד זה עם חברים כדי שיוכלו להצטרף לטיול ולשתף פעולה בתכנון!';
+
+  @override
+  String get shareCodeInfo =>
+      'כל מי שיש לו קוד זה יכול להצטרף לטיול ולהוסיף הוצאות, לערוך את המסלול ועוד.';
+
+  @override
+  String get joinTripTitle => 'הצטרף לטיול';
+
+  @override
+  String get joinTripDescription =>
+      'הזן את קוד ההזמנה מהחבר שלך כדי להצטרף לטיול שלו.';
+
+  @override
+  String get joining => 'מצטרף...';
+
+  @override
+  String get joinTripHelp =>
+      'בקש מהחבר שלך לשתף את קוד ההזמנה לטיול שלו ממסך פרטי הטיול.';
+
+  @override
+  String get invalidCodeLength => 'הקוד חייב להכיל 8 תווים';
+
+  @override
+  String get cannotJoinOwnTrip => 'לא ניתן להצטרף לטיול שלך עצמך';
+
+  @override
+  String get sharedTrip => 'משותף';
 }

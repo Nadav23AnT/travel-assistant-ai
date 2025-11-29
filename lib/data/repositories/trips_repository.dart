@@ -24,25 +24,42 @@ class TripsRepository {
   // READ OPERATIONS
   // ============================================
 
-  /// Get all trips for the current user
+  /// Get all trips for the current user (owned + shared)
   Future<List<TripModel>> getUserTrips() async {
     if (_currentUserId == null) {
       throw TripsRepositoryException('User not authenticated');
     }
 
     try {
-      final response = await _supabase
-          .from('trips')
-          .select()
-          .eq('owner_id', _currentUserId!)
-          .order('start_date', ascending: true);
+      // Use the database function to get both owned and shared trips
+      final response = await _supabase.rpc(
+        'get_user_all_trips',
+        params: {'p_user_id': _currentUserId},
+      );
 
-      return (response as List)
-          .map((json) => TripModel.fromJson(json))
+      if (response == null) return [];
+
+      final List<dynamic> jsonList = response as List<dynamic>;
+      return jsonList
+          .map((json) => TripModel.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
       debugPrint('Error fetching trips: $e');
-      throw TripsRepositoryException('Failed to fetch trips');
+      // Fallback to owner-only trips if RPC fails
+      try {
+        final response = await _supabase
+            .from('trips')
+            .select()
+            .eq('owner_id', _currentUserId!)
+            .order('start_date', ascending: true);
+
+        return (response as List)
+            .map((json) => TripModel.fromJson(json, isOwner: true))
+            .toList();
+      } catch (e2) {
+        debugPrint('Fallback also failed: $e2');
+        throw TripsRepositoryException('Failed to fetch trips');
+      }
     }
   }
 

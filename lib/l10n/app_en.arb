@@ -1142,5 +1142,114 @@
   "invalidReferralCode": "Invalid referral code",
   "@invalidReferralCode": {
     "description": "Error when referral code is invalid"
+  },
+
+  "tripMembers": "Trip Members",
+  "@tripMembers": {
+    "description": "Title for trip members section"
+  },
+  "shareInviteCode": "Share Invite Code",
+  "@shareInviteCode": {
+    "description": "Button to share trip invite code"
+  },
+  "inviteCode": "Invite Code",
+  "@inviteCode": {
+    "description": "Label for invite code"
+  },
+  "copyCode": "Copy Code",
+  "@copyCode": {
+    "description": "Button to copy code"
+  },
+  "codeCopied": "Code copied!",
+  "@codeCopied": {
+    "description": "Message when code is copied"
+  },
+  "joinTrip": "Join Trip",
+  "@joinTrip": {
+    "description": "Button/title for joining a trip"
+  },
+  "enterInviteCode": "Enter invite code",
+  "@enterInviteCode": {
+    "description": "Hint for invite code input"
+  },
+  "joinTripSuccess": "Successfully joined trip!",
+  "@joinTripSuccess": {
+    "description": "Success message when joining trip"
+  },
+  "invalidInviteCode": "Invalid invite code",
+  "@invalidInviteCode": {
+    "description": "Error when invite code is invalid"
+  },
+  "alreadyMember": "You're already a member of this trip",
+  "@alreadyMember": {
+    "description": "Error when already a trip member"
+  },
+  "sharedWithYou": "Shared with you",
+  "@sharedWithYou": {
+    "description": "Badge for shared trips"
+  },
+  "leaveTrip": "Leave Trip",
+  "@leaveTrip": {
+    "description": "Button to leave a trip"
+  },
+  "removeMember": "Remove Member",
+  "@removeMember": {
+    "description": "Button to remove a member"
+  },
+  "confirmLeaveTrip": "Are you sure you want to leave this trip?",
+  "@confirmLeaveTrip": {
+    "description": "Confirmation to leave trip"
+  },
+  "tripOwner": "Owner",
+  "@tripOwner": {
+    "description": "Label for trip owner"
+  },
+  "tripMember": "Member",
+  "@tripMember": {
+    "description": "Label for trip member"
+  },
+  "inviteFriendsToTrip": "Invite friends to collaborate on this trip!",
+  "@inviteFriendsToTrip": {
+    "description": "Prompt to invite friends when no members"
+  },
+  "noOtherMembers": "No other members yet",
+  "@noOtherMembers": {
+    "description": "Message when no other members on trip"
+  },
+  "shareCodeDescription": "Share this code with friends so they can join your trip and collaborate on planning!",
+  "@shareCodeDescription": {
+    "description": "Description for share code sheet"
+  },
+  "shareCodeInfo": "Anyone with this code can join your trip and add expenses, edit the itinerary, and more.",
+  "@shareCodeInfo": {
+    "description": "Info text about what shared members can do"
+  },
+  "joinTripTitle": "Join a Trip",
+  "@joinTripTitle": {
+    "description": "Title for join trip screen"
+  },
+  "joinTripDescription": "Enter the invite code from your friend to join their trip.",
+  "@joinTripDescription": {
+    "description": "Description for join trip screen"
+  },
+  "joining": "Joining...",
+  "@joining": {
+    "description": "Loading text while joining trip"
+  },
+  "joinTripHelp": "Ask your friend to share their trip invite code with you from the Trip Details screen.",
+  "@joinTripHelp": {
+    "description": "Help text on join trip screen"
+  },
+  "invalidCodeLength": "Code must be 8 characters",
+  "@invalidCodeLength": {
+    "description": "Error when code length is wrong"
+  },
+  "cannotJoinOwnTrip": "You can't join your own trip",
+  "@cannotJoinOwnTrip": {
+    "description": "Error when trying to join own trip"
+  },
+  "sharedTrip": "Shared",
+  "@sharedTrip": {
+    "description": "Badge label for shared trips"
   }
 }

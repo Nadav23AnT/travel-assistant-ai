@@ -1,6 +1,6 @@
 # TripBuddy - Architecture & Specification
 
-**Version:** 1.8.0
+**Version:** 1.10.0
 **Last Updated:** November 29, 2025
 **Related:** See `claude.md` for development workflow and coding standards.
 
@@ -1306,7 +1306,7 @@ Components:
 - [x] Create/edit trip flow (fully functional)
 - [x] Trip detail screen with tabs
 - [x] Smart Budget Suggestions on create trip
-- [ ] Trip sharing and members
+- [x] Trip sharing with invite codes
 
 ### Phase 3: AI Integration - COMPLETED
 **Goal:** Conversational trip planning
@@ -1793,6 +1793,38 @@ REVENUECAT_API_KEY=...
 
 ## Changelog
 
+### v1.10.0 (November 29, 2025)
+- **Shared Trips Feature - COMPLETE:**
+  - Users can share trips with friends via 8-character invite codes
+  - "Invite Friends" button on trip detail screen (owner only)
+  - Share sheet with copy code and native share functionality
+  - "Join Trip" button in trips list header
+  - Join trip screen with code input validation
+  - Trip members card showing all participants with avatars
+  - "Shared" badge on trips list for shared trips
+  - Owner badge (star icon) on trip member avatars
+- **Database Schema:**
+  - Added `invite_code` column to trips table
+  - Created `get_or_create_invite_code()` PostgreSQL function
+  - Created `join_trip_by_code()` PostgreSQL function with validation
+  - Created `get_trip_members()` PostgreSQL function
+  - RLS policies for trip members access
+- **Files Created:**
+  - `lib/data/models/trip_member_model.dart`
+  - `lib/services/trip_sharing_service.dart`
+  - `lib/presentation/providers/trip_sharing_provider.dart`
+  - `lib/presentation/widgets/trips/trip_members_card.dart`
+  - `lib/presentation/widgets/trips/share_trip_sheet.dart`
+  - `lib/presentation/screens/trips/join_trip_screen.dart`
+  - `supabase/migrations/20251129_shared_trips.sql`
+- **Files Updated:**
+  - `lib/data/models/trip_model.dart` (added `isOwner`, `isShared` getters)
+  - `lib/data/repositories/trips_repository.dart` (fetch current user ID)
+  - `lib/presentation/screens/trips/trip_detail_screen.dart` (members card, share action)
+  - `lib/presentation/screens/trips/trips_screen.dart` (shared badge, join button)
+  - `lib/config/routes.dart` (joinTrip route)
+  - `lib/l10n/app_en.arb`, `lib/l10n/app_he.arb` (trip sharing localization keys)
+
 ### v1.9.0 (November 29, 2025)
 - **Referral System - COMPLETE:**
   - Users get unique 8-character referral code in Profile → "Invite Friends"
@@ -2015,27 +2047,23 @@ REVENUECAT_API_KEY=...
 - [x] **Bug Fixes:**
   - Fixed "GlobalKey used multiple times" error in Expenses Summary.
 
-### Sprint 5: Shared Trips (Couples/Groups)
-- [ ] Add "Share Trip" button on trip detail screen
-- [ ] Two sharing options:
-  - Invite by email (sends invite notification)
-  - Generate shareable link/code
-- [ ] Members list view with role badges (owner, editor, viewer)
-- [ ] Create trip_invitations table for pending invites
-- [ ] Accept/decline invitation flow
-- [ ] Add share_code column to trips table
-- [ ] Join trip screen (enter code or deep link)
-- [ ] Create TripMembersRepository and Provider
-- [ ] Update userTripsProvider to include shared trips
+### Sprint 5: Shared Trips (Couples/Groups) - COMPLETED
+- [x] Add "Share Trip" button on trip detail screen
+- [x] Generate shareable invite code (8-character)
+- [x] Share sheet with copy code and native share
+- [x] Members list view with owner badge (star icon)
+- [x] Add invite_code column to trips table
+- [x] Join trip screen (enter code)
+- [x] Created TripSharingService and trip_sharing_provider
+- [x] Update trips list to show "Shared" badge for shared trips
+- [x] Join Trip button in trips list header
 
-### Sprint 5: Polish & Future
+### Sprint 6: Polish & Future
 - [ ] PDF export for journals
 - [ ] Premium subscription flow (RevenueCat)
 - [ ] Error handling improvements
 - [ ] Performance optimization
-- [ ] Performance optimization
 - [ ] Expense splitting and settlements
-- [ ] Trip sharing and members
 - [ ] App store submission (iOS & Android)
 
 ---

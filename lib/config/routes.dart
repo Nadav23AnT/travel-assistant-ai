@@ -9,6 +9,7 @@ import '../presentation/screens/home/home_screen.dart';
 import '../presentation/screens/trips/trips_screen.dart';
 import '../presentation/screens/trips/trip_detail_screen.dart';
 import '../presentation/screens/trips/create_trip_screen.dart';
+import '../presentation/screens/trips/join_trip_screen.dart';
 import '../presentation/screens/chat/chat_list_screen.dart';
 import '../presentation/screens/chat/chat_screen.dart';
 import '../presentation/screens/expenses/expenses_screen.dart';
@@ -44,6 +45,7 @@ class AppRoutes {
   static const String trips = '/trips';
   static const String tripDetail = '/trips/:id';
   static const String createTrip = '/trips/create';
+  static const String joinTrip = '/trips/join';
   static const String editTrip = '/trips/:id/edit';
   static const String chat = '/chat';
   static const String chatDetail = '/chat/:id';
@@ -176,10 +178,14 @@ class AppRoutes {
         ),
 
         // Detail routes (outside shell)
-        // IMPORTANT: createTrip must come BEFORE tripDetail to avoid :id matching "create"
+        // IMPORTANT: createTrip and joinTrip must come BEFORE tripDetail to avoid :id matching "create" or "join"
         GoRoute(
           path: createTrip,
           builder: (context, state) => const CreateTripScreen(),
+        ),
+        GoRoute(
+          path: joinTrip,
+          builder: (context, state) => const JoinTripScreen(),
         ),
         GoRoute(
           path: tripDetail,

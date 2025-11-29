@@ -799,4 +799,90 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get invalidReferralCode => 'Invalid referral code';
+
+  @override
+  String get tripMembers => 'Trip Members';
+
+  @override
+  String get shareInviteCode => 'Share Invite Code';
+
+  @override
+  String get inviteCode => 'Invite Code';
+
+  @override
+  String get copyCode => 'Copy Code';
+
+  @override
+  String get codeCopied => 'Code copied!';
+
+  @override
+  String get joinTrip => 'Join Trip';
+
+  @override
+  String get enterInviteCode => 'Enter invite code';
+
+  @override
+  String get joinTripSuccess => 'Successfully joined trip!';
+
+  @override
+  String get invalidInviteCode => 'Invalid invite code';
+
+  @override
+  String get alreadyMember => 'You\'re already a member of this trip';
+
+  @override
+  String get sharedWithYou => 'Shared with you';
+
+  @override
+  String get leaveTrip => 'Leave Trip';
+
+  @override
+  String get removeMember => 'Remove Member';
+
+  @override
+  String get confirmLeaveTrip => 'Are you sure you want to leave this trip?';
+
+  @override
+  String get tripOwner => 'Owner';
+
+  @override
+  String get tripMember => 'Member';
+
+  @override
+  String get inviteFriendsToTrip =>
+      'Invite friends to collaborate on this trip!';
+
+  @override
+  String get noOtherMembers => 'No other members yet';
+
+  @override
+  String get shareCodeDescription =>
+      'Share this code with friends so they can join your trip and collaborate on planning!';
+
+  @override
+  String get shareCodeInfo =>
+      'Anyone with this code can join your trip and add expenses, edit the itinerary, and more.';
+
+  @override
+  String get joinTripTitle => 'Join a Trip';
+
+  @override
+  String get joinTripDescription =>
+      'Enter the invite code from your friend to join their trip.';
+
+  @override
+  String get joining => 'Joining...';
+
+  @override
+  String get joinTripHelp =>
+      'Ask your friend to share their trip invite code with you from the Trip Details screen.';
+
+  @override
+  String get invalidCodeLength => 'Code must be 8 characters';
+
+  @override
+  String get cannotJoinOwnTrip => 'You can\'t join your own trip';
+
+  @override
+  String get sharedTrip => 'Shared';
 }

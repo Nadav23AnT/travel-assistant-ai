@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
 import '../../../data/models/trip_model.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../providers/trips_provider.dart';
 
 class TripsScreen extends ConsumerWidget {
@@ -17,11 +18,19 @@ class TripsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Trips'),
+        title: Text(AppLocalizations.of(context)!.myTrips),
         actions: [
+          // Join trip button
+          IconButton(
+            icon: const Icon(Icons.group_add),
+            onPressed: () => context.push(AppRoutes.joinTrip),
+            tooltip: AppLocalizations.of(context)!.joinTrip,
+          ),
+          // Create trip button
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () => context.push(AppRoutes.createTrip),
+            tooltip: AppLocalizations.of(context)!.createNewTrip,
           ),
         ],
       ),
@@ -144,6 +153,40 @@ class TripsScreen extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      // Shared badge
+                      if (trip.isShared) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentColor.withAlpha(26),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.group,
+                                size: 12,
+                                color: AppTheme.accentColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                AppLocalizations.of(context)!.sharedTrip,
+                                style: TextStyle(
+                                  color: AppTheme.accentColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      // Status badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,

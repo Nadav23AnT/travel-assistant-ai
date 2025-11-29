@@ -12,6 +12,8 @@ import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
+import '../../widgets/trips/trip_members_card.dart';
+import '../../widgets/trips/share_trip_sheet.dart';
 
 class TripDetailScreen extends ConsumerWidget {
   final String tripId;
@@ -94,6 +96,10 @@ class TripDetailScreen extends ConsumerWidget {
 
                     // Trip Info Card
                     _buildTripInfoCard(context, trip),
+                    const SizedBox(height: 20),
+
+                    // Trip Members Section
+                    _buildTripMembersSection(context, ref, trip),
                     const SizedBox(height: 20),
 
                     // AI Tips Section (placeholder for now)
@@ -580,6 +586,18 @@ class TripDetailScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildTripMembersSection(BuildContext context, WidgetRef ref, TripModel trip) {
+    return TripMembersCard(
+      tripId: tripId,
+      isOwner: trip.isOwner,
+      onShareTap: () => ShareTripSheet.show(
+        context,
+        tripId: tripId,
+        tripTitle: trip.displayTitle,
+      ),
+    );
+  }
+
   Widget _buildJournalSection(
     BuildContext context,
     TripModel trip,
@@ -875,9 +893,10 @@ class TripDetailScreen extends ConsumerWidget {
         );
         break;
       case 'share':
-        // TODO: Implement share
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Share coming soon')),
+        ShareTripSheet.show(
+          context,
+          tripId: tripId,
+          tripTitle: trip.displayTitle,
         );
         break;
       case 'delete':

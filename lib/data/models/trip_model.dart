@@ -20,6 +20,8 @@ class TripModel extends Equatable {
   final String status; // planning, active, completed, canceled
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? inviteCode; // For sharing trips with others
+  final bool isOwner; // Whether current user is the owner (false = shared trip)
 
   const TripModel({
     required this.id,
@@ -38,7 +40,12 @@ class TripModel extends Equatable {
     this.status = 'planning',
     required this.createdAt,
     required this.updatedAt,
+    this.inviteCode,
+    this.isOwner = true, // Default to true for backward compatibility
   });
+
+  /// Check if this is a shared trip (not owned by current user)
+  bool get isShared => !isOwner;
 
   /// Get the country name from the destination
   /// This converts cities like "Bangkok" to "Thailand"
@@ -67,7 +74,7 @@ class TripModel extends Equatable {
   /// Get the flag emoji for this trip's destination country
   String get flagEmoji => CountryCurrencyHelper.getFlagForDestination(destination);
 
-  factory TripModel.fromJson(Map<String, dynamic> json) {
+  factory TripModel.fromJson(Map<String, dynamic> json, {bool? isOwner}) {
     return TripModel(
       id: json['id'] as String,
       ownerId: json['owner_id'] as String,
@@ -95,6 +102,8 @@ class TripModel extends Equatable {
       status: json['status'] as String? ?? 'planning',
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      inviteCode: json['invite_code'] as String?,
+      isOwner: isOwner ?? json['is_owner'] as bool? ?? true,
     );
   }
 
@@ -116,6 +125,8 @@ class TripModel extends Equatable {
       'status': status,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'invite_code': inviteCode,
+      'is_owner': isOwner,
     };
   }
 
@@ -136,6 +147,8 @@ class TripModel extends Equatable {
     String? status,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? inviteCode,
+    bool? isOwner,
   }) {
     return TripModel(
       id: id ?? this.id,
@@ -154,6 +167,8 @@ class TripModel extends Equatable {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      inviteCode: inviteCode ?? this.inviteCode,
+      isOwner: isOwner ?? this.isOwner,
     );
   }
 
