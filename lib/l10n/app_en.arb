@@ -1083,5 +1083,64 @@
   "generatingJournals": "Creating your journal entries...",
   "@generatingJournals": {
     "description": "Loading message while generating journals"
+  },
+
+  "inviteFriends": "Invite Friends",
+  "@inviteFriends": {
+    "description": "Title for invite friends section"
+  },
+  "inviteFriendsSubtitle": "Get 50 free credits for each friend!",
+  "@inviteFriendsSubtitle": {
+    "description": "Subtitle explaining referral reward"
+  },
+  "yourReferralCode": "Your referral code",
+  "@yourReferralCode": {
+    "description": "Label for referral code"
+  },
+  "copy": "Copy",
+  "@copy": {
+    "description": "Copy button tooltip"
+  },
+  "copiedToClipboard": "Copied to clipboard",
+  "@copiedToClipboard": {
+    "description": "Message when code is copied"
+  },
+  "friendsInvited": "{count} friends invited",
+  "@friendsInvited": {
+    "description": "Count of friends invited",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsEarned": "{count} credits earned",
+  "@creditsEarned": {
+    "description": "Count of credits earned from referrals",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "shareInvite": "Share Invite",
+  "@shareInvite": {
+    "description": "Button to share referral invite"
+  },
+  "referralCode": "Referral Code",
+  "@referralCode": {
+    "description": "Label for referral code input"
+  },
+  "referralCodeHint": "Enter referral code (optional)",
+  "@referralCodeHint": {
+    "description": "Hint for referral code input"
+  },
+  "referralApplied": "Referral code applied! You both get 50 credits.",
+  "@referralApplied": {
+    "description": "Success message when referral is applied"
+  },
+  "invalidReferralCode": "Invalid referral code",
+  "@invalidReferralCode": {
+    "description": "Error when referral code is invalid"
   }
 }

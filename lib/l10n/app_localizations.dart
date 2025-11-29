@@ -1527,6 +1527,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Creating your journal entries...'**
   String get generatingJournals;
+
+  /// Title for invite friends section
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Friends'**
+  String get inviteFriends;
+
+  /// Subtitle explaining referral reward
+  ///
+  /// In en, this message translates to:
+  /// **'Get 50 free credits for each friend!'**
+  String get inviteFriendsSubtitle;
+
+  /// Label for referral code
+  ///
+  /// In en, this message translates to:
+  /// **'Your referral code'**
+  String get yourReferralCode;
+
+  /// Copy button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// Message when code is copied
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
+
+  /// Count of friends invited
+  ///
+  /// In en, this message translates to:
+  /// **'{count} friends invited'**
+  String friendsInvited(String count);
+
+  /// Count of credits earned from referrals
+  ///
+  /// In en, this message translates to:
+  /// **'{count} credits earned'**
+  String creditsEarned(String count);
+
+  /// Button to share referral invite
+  ///
+  /// In en, this message translates to:
+  /// **'Share Invite'**
+  String get shareInvite;
+
+  /// Label for referral code input
+  ///
+  /// In en, this message translates to:
+  /// **'Referral Code'**
+  String get referralCode;
+
+  /// Hint for referral code input
+  ///
+  /// In en, this message translates to:
+  /// **'Enter referral code (optional)'**
+  String get referralCodeHint;
+
+  /// Success message when referral is applied
+  ///
+  /// In en, this message translates to:
+  /// **'Referral code applied! You both get 50 credits.'**
+  String get referralApplied;
+
+  /// Error when referral code is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid referral code'**
+  String get invalidReferralCode;
 }
 
 class _AppLocalizationsDelegate

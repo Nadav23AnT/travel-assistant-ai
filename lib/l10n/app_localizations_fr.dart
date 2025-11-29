@@ -770,4 +770,45 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get generatingJournals => 'Creating your journal entries...';
+
+  @override
+  String get inviteFriends => 'Invite Friends';
+
+  @override
+  String get inviteFriendsSubtitle => 'Get 50 free credits for each friend!';
+
+  @override
+  String get yourReferralCode => 'Your referral code';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String friendsInvited(String count) {
+    return '$count friends invited';
+  }
+
+  @override
+  String creditsEarned(String count) {
+    return '$count credits earned';
+  }
+
+  @override
+  String get shareInvite => 'Share Invite';
+
+  @override
+  String get referralCode => 'Referral Code';
+
+  @override
+  String get referralCodeHint => 'Enter referral code (optional)';
+
+  @override
+  String get referralApplied =>
+      'Referral code applied! You both get 50 credits.';
+
+  @override
+  String get invalidReferralCode => 'Invalid referral code';
 }

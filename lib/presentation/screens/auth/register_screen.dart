@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/referral_service.dart';
 import '../../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -20,6 +22,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _referralCodeController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
@@ -32,6 +35,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 
@@ -60,6 +64,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
 
       if (!mounted) return;
+
+      // Apply referral code if provided
+      final referralCode = _referralCodeController.text.trim();
+      if (referralCode.isNotEmpty) {
+        final referralService = ReferralService();
+        final result = await referralService.applyReferralCode(referralCode);
+
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          if (result.success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.referralApplied),
+                backgroundColor: AppTheme.successColor,
+              ),
+            );
+          }
+          // Don't show error for invalid referral - just skip it
+        }
+      }
 
       // After registration, go directly to onboarding
       context.go(AppRoutes.onboardingLanguages);
@@ -228,6 +252,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+
+                // Referral code field (optional)
+                TextFormField(
+                  controller: _referralCodeController,
+                  textCapitalization: TextCapitalization.characters,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).referralCode,
+                    hintText: AppLocalizations.of(context).referralCodeHint,
+                    prefixIcon: const Icon(Icons.card_giftcard_outlined),
+                    suffixIcon: _referralCodeController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              setState(() => _referralCodeController.clear());
+                            },
+                          )
+                        : null,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                  // No validator - it's optional
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Have a friend\'s code? You\'ll both get 50 free credits!',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
                 ),
                 const SizedBox(height: 16),
 

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../config/routes.dart';
 import '../../../config/theme.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../services/referral_service.dart';
 import '../../../services/token_usage_service.dart';
 import '../../../utils/country_currency_helper.dart';
 import '../../providers/auth_provider.dart';
@@ -24,6 +27,12 @@ final tokenUsageProvider = FutureProvider.autoDispose<TokenCheckResult>((ref) as
 final appVersionProvider = FutureProvider<String>((ref) async {
   final info = await PackageInfo.fromPlatform();
   return '${info.version} (${info.buildNumber})';
+});
+
+/// Provider for referral stats
+final referralStatsProvider = FutureProvider.autoDispose<ReferralStats?>((ref) async {
+  final service = ReferralService();
+  return service.getReferralStats();
 });
 
 /// Provider for profile statistics
@@ -110,6 +119,10 @@ class ProfileScreen extends ConsumerWidget {
 
             // Token usage card
             _buildTokenUsageCard(context, ref),
+            const SizedBox(height: 16),
+
+            // Invite Friends card
+            _buildInviteFriendsCard(context, ref),
             const SizedBox(height: 16),
 
             // Menu items
@@ -603,6 +616,186 @@ class ProfileScreen extends ConsumerWidget {
               ),
         ),
       ],
+    );
+  }
+
+  Widget _buildInviteFriendsCard(BuildContext context, WidgetRef ref) {
+    final referralAsync = ref.watch(referralStatsProvider);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: referralAsync.when(
+            loading: () => const SizedBox(
+              height: 100,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => _buildInviteFriendsContent(context, ref, null),
+            data: (stats) => _buildInviteFriendsContent(context, ref, stats),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInviteFriendsContent(
+    BuildContext context,
+    WidgetRef ref,
+    ReferralStats? stats,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final referralCode = stats?.referralCode ?? '...';
+    final referralCount = stats?.referralCount ?? 0;
+    final creditsEarned = stats?.totalCreditsEarned ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.accentColor.withAlpha(26),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.card_giftcard,
+                color: AppTheme.accentColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.inviteFriends,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  Text(
+                    l10n.inviteFriendsSubtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Referral code box
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryLight.withAlpha(77),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.primaryColor.withAlpha(51)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.yourReferralCode,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      referralCode,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                            color: AppTheme.primaryColor,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: referralCode));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.copiedToClipboard),
+                      backgroundColor: AppTheme.successColor,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.copy, color: AppTheme.primaryColor),
+                tooltip: l10n.copy,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Stats row
+        if (referralCount > 0 || creditsEarned > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Icon(Icons.people_outline, size: 16, color: AppTheme.textSecondary),
+                const SizedBox(width: 4),
+                Text(
+                  l10n.friendsInvited(referralCount.toString()),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                ),
+                const SizedBox(width: 16),
+                Icon(Icons.stars, size: 16, color: AppTheme.accentColor),
+                const SizedBox(width: 4),
+                Text(
+                  l10n.creditsEarned(creditsEarned.toString()),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.accentColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ],
+            ),
+          ),
+
+        // Share button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _shareReferralCode(context, referralCode),
+            icon: const Icon(Icons.share),
+            label: Text(l10n.shareInvite),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _shareReferralCode(BuildContext context, String referralCode) {
+    final service = ReferralService();
+    final message = service.getShareMessage(referralCode);
+
+    Share.share(
+      message,
+      subject: 'Join me on TripBuddy!',
     );
   }
 
