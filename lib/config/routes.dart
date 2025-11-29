@@ -14,7 +14,9 @@ import '../presentation/screens/chat/chat_screen.dart';
 import '../presentation/screens/expenses/expenses_screen.dart';
 import '../presentation/screens/expenses/add_expense_screen.dart';
 import '../presentation/screens/profile/profile_screen.dart';
+import '../presentation/screens/profile/edit_profile_screen.dart';
 import '../presentation/screens/profile/settings_screen.dart';
+import '../presentation/screens/journal/journal_screen.dart';
 import '../presentation/screens/onboarding/language_selection_screen.dart';
 import '../presentation/screens/onboarding/currency_selection_screen.dart';
 import '../presentation/screens/onboarding/destination_selection_screen.dart';
@@ -48,7 +50,9 @@ class AppRoutes {
   static const String addExpense = '/expenses/add';
   static const String expenseDetail = '/expenses/:id';
   static const String profile = '/profile';
+  static const String editProfile = '/profile/edit';
   static const String settings = '/settings';
+  static const String journal = '/trips/:id/journal';
 
   // Navigation keys
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -189,6 +193,17 @@ class AppRoutes {
         GoRoute(
           path: settings,
           builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: editProfile,
+          builder: (context, state) => const EditProfileScreen(),
+        ),
+        GoRoute(
+          path: journal,
+          builder: (context, state) {
+            final tripId = state.pathParameters['id']!;
+            return JournalScreen(tripId: tripId);
+          },
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

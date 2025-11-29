@@ -12,7 +12,6 @@ import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
-import '../journal/journal_screen.dart';
 
 class TripDetailScreen extends ConsumerWidget {
   final String tripId;
@@ -588,11 +587,7 @@ class TripDetailScreen extends ConsumerWidget {
   ) {
     return Card(
       child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => JournalScreen(tripId: tripId),
-          ),
-        ),
+        onTap: () => context.push('/trips/$tripId/journal'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
