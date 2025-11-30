@@ -366,6 +366,33 @@ class AuthService {
   }
 
   // ============================================
+  // ADMIN ACCESS
+  // ============================================
+
+  /// Check if current user is an admin
+  /// Uses SECURITY DEFINER function to avoid RLS recursion
+  Future<bool> isAdmin() async {
+    if (!isAuthenticated) return false;
+
+    try {
+      // Use is_admin() RPC function which bypasses RLS
+      final response = await _supabase.rpc('is_admin');
+      return response == true;
+    } catch (e) {
+      debugPrint('Error checking admin status: $e');
+      return false;
+    }
+  }
+
+  /// Guard method that throws if user is not an admin
+  /// Use this in routes or operations that require admin access
+  Future<void> requireAdmin() async {
+    if (!await isAdmin()) {
+      throw AuthException('Admin access required', code: 'admin_required');
+    }
+  }
+
+  // ============================================
   // RESET USER DATA (FOR TESTING)
   // ============================================
 

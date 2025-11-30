@@ -20,6 +20,13 @@ import '../presentation/screens/profile/settings_screen.dart';
 import '../presentation/screens/journal/journal_screen.dart';
 import '../presentation/screens/legal/legal_document_screen.dart';
 import '../presentation/screens/onboarding/language_selection_screen.dart';
+import '../presentation/screens/admin/admin_dashboard_screen.dart';
+import '../presentation/screens/admin/admin_users_screen.dart';
+import '../presentation/screens/admin/admin_user_detail_screen.dart';
+import '../presentation/screens/admin/admin_support_screen.dart';
+import '../presentation/screens/admin/admin_support_chat_screen.dart';
+import '../presentation/screens/support/support_screen.dart';
+import '../presentation/screens/support/support_chat_screen.dart';
 import '../presentation/screens/onboarding/currency_selection_screen.dart';
 import '../presentation/screens/onboarding/destination_selection_screen.dart';
 import '../presentation/screens/onboarding/travel_dates_screen.dart';
@@ -61,6 +68,17 @@ class AppRoutes {
   static const String privacyPolicy = '/legal/privacy-policy';
   static const String termsOfService = '/legal/terms-of-service';
   static const String helpSupport = '/legal/help-support';
+
+  // Admin routes
+  static const String admin = '/admin';
+  static const String adminUsers = '/admin/users';
+  static const String adminUserDetail = '/admin/users/:id';
+  static const String adminSupport = '/admin/support';
+  static const String adminSupportChat = '/admin/support/:id';
+
+  // User support routes
+  static const String support = '/support';
+  static const String supportChat = '/support/:id';
 
   // Singleton router instance
   static GoRouter? _router;
@@ -242,6 +260,47 @@ class AppRoutes {
           builder: (context, state) => const LegalDocumentScreen(
             documentType: LegalDocumentType.helpSupport,
           ),
+        ),
+
+        // Admin routes
+        GoRoute(
+          path: admin,
+          builder: (context, state) => const AdminDashboardScreen(),
+        ),
+        GoRoute(
+          path: adminUsers,
+          builder: (context, state) => const AdminUsersScreen(),
+        ),
+        GoRoute(
+          path: adminUserDetail,
+          builder: (context, state) {
+            final userId = state.pathParameters['id']!;
+            return AdminUserDetailScreen(userId: userId);
+          },
+        ),
+        GoRoute(
+          path: adminSupport,
+          builder: (context, state) => const AdminSupportScreen(),
+        ),
+        GoRoute(
+          path: adminSupportChat,
+          builder: (context, state) {
+            final sessionId = state.pathParameters['id']!;
+            return AdminSupportChatScreen(sessionId: sessionId);
+          },
+        ),
+
+        // User support routes
+        GoRoute(
+          path: support,
+          builder: (context, state) => const SupportScreen(),
+        ),
+        GoRoute(
+          path: supportChat,
+          builder: (context, state) {
+            final sessionId = state.pathParameters['id']!;
+            return SupportChatScreen(sessionId: sessionId);
+          },
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
