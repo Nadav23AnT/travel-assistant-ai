@@ -91,19 +91,33 @@ When you request a feature or bug fix, Claude Code will:
 
 ### Branch Strategy
 
-#### Main Branch Protection
+#### Two Long-Lived Branches
+
+```
+main (production)     ← Stable releases for app store
+  └── test (beta)     ← Beta testing with real users
+        └── feature/* ← Development work
+```
+
+| Branch | Purpose | When to Use |
+|--------|---------|-------------|
+| `main` | Production releases | App store submissions, stable builds |
+| `test` | Beta testing | Testing new features with real users |
+| `feature/*` | Development | All new work starts here |
+
+#### Branch Protection Rules
 - **main** branch is **protected** and represents production-ready code
-- All changes MUST go through feature branches and pull requests
-- Direct commits to main are **STRICTLY PROHIBITED**
-- Main branch should always be in a deployable state
+- **test** branch is for beta testing with real users
+- All changes MUST go through feature branches
+- Direct commits to main/test are **STRICTLY PROHIBITED**
 
 #### Feature Branch Workflow
 
 **1. Before Starting Any Work:**
 ```bash
-# Always start from latest main
-git checkout main
-git pull origin main
+# Always start from test branch (for beta testing)
+git checkout test
+git pull origin test
 
 # Create a new feature branch
 git checkout -b feature/your-feature-name
@@ -175,15 +189,30 @@ git push origin feature/your-feature-name
 - Ensure CI/CD checks pass
 - Squash and merge (or rebase merge based on team preference)
 
-**6. After Merge:**
+**6. After Merge to Test:**
 ```bash
 # Delete the feature branch locally
-git checkout main
-git pull origin main
+git checkout test
+git pull origin test
 git branch -d feature/your-feature-name
 
 # Delete the remote branch (if not auto-deleted)
 git push origin --delete feature/your-feature-name
+```
+
+**7. Promoting Test to Production:**
+
+When beta testing is complete and features are stable:
+```bash
+# Merge test into main for production release
+git checkout main
+git pull origin main
+git merge test
+git push origin main
+
+# Now build for app store release
+flutter build apk --release
+flutter build ios --release
 ```
 
 ### Commit Message Guidelines
