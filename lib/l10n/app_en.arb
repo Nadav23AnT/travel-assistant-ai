@@ -1280,5 +1280,22 @@
   "exportFailed": "Export failed",
   "@exportFailed": {
     "description": "Error message when export fails"
-  }
+  },
+
+  "errorNetwork": "Network error. Please check your connection.",
+  "errorTimeout": "Request timed out. Please try again.",
+  "errorNoConnection": "No internet connection. Please check your network.",
+  "errorServer": "Server error. Please try again later.",
+  "errorRateLimited": "Too many requests. Please wait a moment.",
+  "errorInvalidCredentials": "Invalid email or password.",
+  "errorSessionExpired": "Your session has expired. Please sign in again.",
+  "errorEmailNotVerified": "Please verify your email address.",
+  "errorTokenLimit": "You have reached your daily AI usage limit.",
+  "errorForbidden": "You don't have permission to do this.",
+  "errorUnauthorized": "Please sign in to continue.",
+  "errorNotFound": "The requested item was not found.",
+  "errorGeneric": "Something went wrong. Please try again.",
+  "offline": "You're offline",
+  "offlineMessage": "Some features may be unavailable.",
+  "backOnline": "You're back online"
 }

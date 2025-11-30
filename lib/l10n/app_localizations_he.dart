@@ -903,4 +903,52 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get exportFailed => 'הייצוא נכשל';
+
+  @override
+  String get errorNetwork => 'שגיאת רשת. אנא בדוק את החיבור שלך.';
+
+  @override
+  String get errorTimeout => 'הבקשה נכשלה בגלל זמן המתנה. אנא נסה שוב.';
+
+  @override
+  String get errorNoConnection => 'אין חיבור לאינטרנט. אנא בדוק את הרשת שלך.';
+
+  @override
+  String get errorServer => 'שגיאת שרת. אנא נסה שוב מאוחר יותר.';
+
+  @override
+  String get errorRateLimited => 'יותר מדי בקשות. אנא המתן רגע.';
+
+  @override
+  String get errorInvalidCredentials => 'אימייל או סיסמה שגויים.';
+
+  @override
+  String get errorSessionExpired => 'פג תוקף ההתחברות. אנא התחבר שוב.';
+
+  @override
+  String get errorEmailNotVerified => 'אנא אמת את כתובת האימייל שלך.';
+
+  @override
+  String get errorTokenLimit => 'הגעת למגבלת השימוש היומית ב-AI.';
+
+  @override
+  String get errorForbidden => 'אין לך הרשאה לבצע פעולה זו.';
+
+  @override
+  String get errorUnauthorized => 'אנא התחבר כדי להמשיך.';
+
+  @override
+  String get errorNotFound => 'הפריט המבוקש לא נמצא.';
+
+  @override
+  String get errorGeneric => 'משהו השתבש. אנא נסה שוב.';
+
+  @override
+  String get offline => 'אתה במצב לא מקוון';
+
+  @override
+  String get offlineMessage => 'חלק מהתכונות עשויות להיות לא זמינות.';
+
+  @override
+  String get backOnline => 'אתה שוב מחובר';
 }

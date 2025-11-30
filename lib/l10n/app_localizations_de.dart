@@ -913,4 +913,54 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get exportFailed => 'Export failed';
+
+  @override
+  String get errorNetwork => 'Network error. Please check your connection.';
+
+  @override
+  String get errorTimeout => 'Request timed out. Please try again.';
+
+  @override
+  String get errorNoConnection =>
+      'No internet connection. Please check your network.';
+
+  @override
+  String get errorServer => 'Server error. Please try again later.';
+
+  @override
+  String get errorRateLimited => 'Too many requests. Please wait a moment.';
+
+  @override
+  String get errorInvalidCredentials => 'Invalid email or password.';
+
+  @override
+  String get errorSessionExpired =>
+      'Your session has expired. Please sign in again.';
+
+  @override
+  String get errorEmailNotVerified => 'Please verify your email address.';
+
+  @override
+  String get errorTokenLimit => 'You have reached your daily AI usage limit.';
+
+  @override
+  String get errorForbidden => 'You don\'t have permission to do this.';
+
+  @override
+  String get errorUnauthorized => 'Please sign in to continue.';
+
+  @override
+  String get errorNotFound => 'The requested item was not found.';
+
+  @override
+  String get errorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get offline => 'You\'re offline';
+
+  @override
+  String get offlineMessage => 'Some features may be unavailable.';
+
+  @override
+  String get backOnline => 'You\'re back online';
 }

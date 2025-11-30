@@ -256,5 +256,22 @@
   "exportText": "טקסט (.txt)",
   "exportMarkdown": "Markdown (.md)",
   "generatingPdf": "יוצר את היומן היפהפה שלך...",
-  "exportFailed": "הייצוא נכשל"
+  "exportFailed": "הייצוא נכשל",
+
+  "errorNetwork": "שגיאת רשת. אנא בדוק את החיבור שלך.",
+  "errorTimeout": "הבקשה נכשלה בגלל זמן המתנה. אנא נסה שוב.",
+  "errorNoConnection": "אין חיבור לאינטרנט. אנא בדוק את הרשת שלך.",
+  "errorServer": "שגיאת שרת. אנא נסה שוב מאוחר יותר.",
+  "errorRateLimited": "יותר מדי בקשות. אנא המתן רגע.",
+  "errorInvalidCredentials": "אימייל או סיסמה שגויים.",
+  "errorSessionExpired": "פג תוקף ההתחברות. אנא התחבר שוב.",
+  "errorEmailNotVerified": "אנא אמת את כתובת האימייל שלך.",
+  "errorTokenLimit": "הגעת למגבלת השימוש היומית ב-AI.",
+  "errorForbidden": "אין לך הרשאה לבצע פעולה זו.",
+  "errorUnauthorized": "אנא התחבר כדי להמשיך.",
+  "errorNotFound": "הפריט המבוקש לא נמצא.",
+  "errorGeneric": "משהו השתבש. אנא נסה שוב.",
+  "offline": "אתה במצב לא מקוון",
+  "offlineMessage": "חלק מהתכונות עשויות להיות לא זמינות.",
+  "backOnline": "אתה שוב מחובר"
 }
