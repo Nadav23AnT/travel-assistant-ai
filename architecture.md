@@ -1,7 +1,7 @@
 # Waylo - Architecture & Specification
 
-**Version:** 1.10.0
-**Last Updated:** November 29, 2025
+**Version:** 1.12.0
+**Last Updated:** November 30, 2025
 **Related:** See `claude.md` for development workflow and coding standards.
 
 ---
@@ -1639,6 +1639,13 @@ Personalize recommendations based on their preferences and location.
 | `lib/presentation/screens/trips/trips_screen.dart` | Complete | Trip list |
 | `lib/presentation/screens/home/home_screen.dart` | Complete | Dashboard with daily tips |
 | `lib/presentation/screens/profile/profile_screen.dart` | Complete | User profile |
+| `lib/presentation/screens/admin/admin_dashboard_screen.dart` | Complete | Admin dashboard with stats |
+| `lib/presentation/screens/admin/admin_users_screen.dart` | Complete | User management list |
+| `lib/presentation/screens/admin/admin_user_detail_screen.dart` | Complete | User detail/management |
+| `lib/presentation/screens/admin/admin_support_screen.dart` | Complete | Admin support tickets |
+| `lib/presentation/screens/admin/admin_support_chat_screen.dart` | Complete | Admin support chat |
+| `lib/presentation/screens/support/support_screen.dart` | Complete | User support tickets |
+| `lib/presentation/screens/support/support_chat_screen.dart` | Complete | User support chat |
 | **Providers** | | |
 | `lib/presentation/providers/expenses_provider.dart` | Complete | Dashboard providers |
 | `lib/presentation/providers/journal_provider.dart` | Complete | Journal state management |
@@ -1646,6 +1653,8 @@ Personalize recommendations based on their preferences and location.
 | `lib/presentation/providers/trips_provider.dart` | Complete | Trip state management |
 | `lib/presentation/providers/currency_provider.dart` | Complete | Currency conversion |
 | `lib/presentation/providers/day_tip_provider.dart` | Complete | Daily tips state |
+| `lib/presentation/providers/admin_provider.dart` | Complete | Admin dashboard state |
+| `lib/presentation/providers/support_provider.dart` | Complete | Support ticket state |
 | **Services** | | |
 | `lib/services/ai_service.dart` | Complete | AI generation (chat, journal, tips, budget) + token limits |
 | `lib/services/journal_auto_generator.dart` | Complete | Automatic journal generation on app open |
@@ -1659,6 +1668,8 @@ Personalize recommendations based on their preferences and location.
 | `lib/data/repositories/trips_repository.dart` | Complete | Full CRUD for trips |
 | `lib/data/repositories/chat_repository.dart` | Complete | Chat session management |
 | `lib/data/repositories/token_usage_repository.dart` | Complete | Token usage CRUD + limit checking |
+| `lib/data/repositories/admin_repository.dart` | Complete | Admin CRUD with SECURITY DEFINER |
+| `lib/data/repositories/support_repository.dart` | Complete | Support tickets CRUD |
 | **Models** | | |
 | `lib/data/models/expense_model.dart` | Complete | Expense data model |
 | `lib/data/models/expense_stats.dart` | Complete | Stats for dashboard |
@@ -1666,6 +1677,8 @@ Personalize recommendations based on their preferences and location.
 | `lib/data/models/trip_model.dart` | Complete | Trip data model |
 | `lib/data/models/day_tip_model.dart` | Complete | Daily tip model |
 | `lib/data/models/travel_context.dart` | Complete | AI context model |
+| `lib/data/models/admin_models.dart` | Complete | Admin stats, user, chart data models |
+| `lib/data/models/support_models.dart` | Complete | Support ticket and message models |
 | **Widgets** | | |
 | `lib/presentation/widgets/chat/expense_confirmation_card.dart` | Complete | Expense save from chat |
 | `lib/presentation/widgets/chat/place_recommendation_card.dart` | Complete | AI place recommendations |
@@ -1675,6 +1688,7 @@ Personalize recommendations based on their preferences and location.
 | `lib/presentation/widgets/trip/smart_budget_suggestions_card.dart` | Complete | Budget suggestions |
 | `lib/presentation/widgets/charts/expense_pie_chart.dart` | Complete | Category breakdown |
 | `lib/presentation/widgets/charts/spending_line_chart.dart` | Complete | Spending over time |
+| `lib/presentation/widgets/admin/admin_charts.dart` | Complete | Admin analytics charts |
 | **Config** | | |
 | `lib/config/theme.dart` | Reference | Colors, categoryColors |
 | `lib/config/routes.dart` | Complete | App routing |
@@ -1792,6 +1806,78 @@ REVENUECAT_API_KEY=...
 ---
 
 ## Changelog
+
+### v1.12.0 (November 30, 2025)
+- **Trip Cards Redesign - COMPLETE:**
+  - Enhanced trip cards with expense tracking summary
+  - Modern card design with better visual hierarchy
+  - Budget progress indicator on cards
+  - Quick access to trip expenses
+- **Profile Page Redesign - COMPLETE:**
+  - Compact, modern UI for profile screen
+  - Improved visual layout with better spacing
+  - Cleaner presentation of user stats and settings
+- **Expenses History - COMPLETE:**
+  - Added expenses history section in trip detail
+  - Edit functionality for existing expenses
+  - Delete functionality with confirmation
+  - Improved expense list display
+- **AI Provider Routing Refactor - COMPLETE:**
+  - Feature-based AI provider routing system
+  - Cleaner separation of AI functionality by feature
+  - Improved code organization for AI services
+- **App Rebranding:**
+  - Rebranded from TripBuddy to Waylo
+  - Updated all branding references
+  - New comprehensive README
+
+### v1.11.0 (November 30, 2025)
+- **Admin Dashboard - COMPLETE:**
+  - Full admin panel for system management accessible only to admin users
+  - Dashboard with real-time system stats (users, trips, messages, tokens, revenue)
+  - User management with search, filters, pagination
+  - User detail screen with plan management and data deletion
+  - Interactive charts: User Growth (line), Token Usage (bar), Peak Hours (bar)
+  - Support ticket system for users to submit issues
+  - Admin support management with ticket status and messaging
+- **Database Schema:**
+  - Created `is_admin` column on profiles table
+  - Created `support_tickets` table with status tracking
+  - Created `support_messages` table for ticket conversations
+  - PostgreSQL SECURITY DEFINER functions for admin access:
+    - `is_admin()` - Check current user admin status
+    - `get_admin_system_stats()` - Dashboard statistics
+    - `admin_get_all_users()` - Paginated user list
+    - `admin_get_user_by_id()` - User details
+    - `admin_update_user_plan()` - Change user plan
+    - `admin_reset_user_tokens()` - Reset daily tokens
+    - `admin_delete_user_data()` - Delete user data by type
+    - `admin_set_user_admin_status()` - Grant/revoke admin
+    - `get_admin_user_growth_trend()` - 30-day user growth
+    - `get_admin_token_usage_trend()` - 14-day token usage
+    - `get_admin_peak_usage_hours()` - 7-day peak hours
+- **Files Created:**
+  - `lib/data/models/admin_models.dart` (SystemStatsModel, AdminUserModel, UserGrowthPoint, TokenUsagePoint, PeakHoursPoint)
+  - `lib/data/models/support_models.dart` (SupportTicket, SupportMessage)
+  - `lib/data/repositories/admin_repository.dart`
+  - `lib/data/repositories/support_repository.dart`
+  - `lib/presentation/providers/admin_provider.dart`
+  - `lib/presentation/providers/support_provider.dart`
+  - `lib/presentation/screens/admin/admin_dashboard_screen.dart`
+  - `lib/presentation/screens/admin/admin_users_screen.dart`
+  - `lib/presentation/screens/admin/admin_user_detail_screen.dart`
+  - `lib/presentation/screens/admin/admin_support_screen.dart`
+  - `lib/presentation/screens/admin/admin_support_chat_screen.dart`
+  - `lib/presentation/screens/support/support_screen.dart`
+  - `lib/presentation/screens/support/support_chat_screen.dart`
+  - `lib/presentation/widgets/admin/admin_charts.dart` (UserGrowthChart, TokenUsageChart, PeakHoursChart, ChartCard)
+  - `supabase/migrations/20251130000000_admin_setup.sql`
+  - `supabase/migrations/20251130000001_support_system.sql`
+  - `supabase/migrations/20251130000002_enhanced_admin_stats.sql`
+- **Files Updated:**
+  - `lib/services/auth_service.dart` (isAdmin check)
+  - `lib/config/routes.dart` (admin routes, support routes)
+  - `lib/presentation/screens/profile/profile_screen.dart` (Support & Admin access)
 
 ### v1.10.0 (November 29, 2025)
 - **Shared Trips Feature - COMPLETE:**
@@ -2065,6 +2151,28 @@ REVENUECAT_API_KEY=...
 - [x] Performance optimization ✅
 - [ ] Expense splitting and settlements
 - [ ] App store submission (iOS & Android)
+
+### Sprint 7: Admin Dashboard - COMPLETED
+- [x] Admin authentication (is_admin column on profiles)
+- [x] System stats dashboard (users, trips, messages, tokens, revenue)
+- [x] Interactive analytics charts:
+  - User Growth Chart (14-day line chart)
+  - Token Usage Chart (14-day bar chart)
+  - Peak Activity Hours Chart (24-hour bar chart)
+- [x] User management:
+  - Paginated user list with search and filters
+  - User detail screen with activity stats
+  - Plan management (upgrade/downgrade users)
+  - Token usage reset
+  - Data deletion by type (trips, chats, journals, expenses)
+  - Admin status management (grant/revoke)
+- [x] Support ticket system:
+  - User support screen (create tickets)
+  - Support chat for ticket conversations
+  - Admin support management (view all tickets)
+  - Status updates (open, in_progress, resolved, closed)
+- [x] SECURITY DEFINER PostgreSQL functions (bypass RLS for admin)
+- [x] fl_chart integration for dashboard visualizations
 
 ---
 

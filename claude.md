@@ -439,6 +439,48 @@ Keep worktree directory names aligned with branch names for clarity:
 - Branch: `fix/auth-redirect-loop` → Worktree: `.trees/fix-auth` or `.trees/auth-fix`
 - Branch: `hotfix/critical-bug` → Worktree: `.trees/hotfix`
 
+### Claude Code Worktree Workflow (MANDATORY)
+
+**When the user requests a new feature, Claude Code MUST:**
+
+1. **Create a worktree in `.trees/`** for the feature:
+   ```bash
+   # From the main repository directory
+   cd /home/nadavchen/travel-ai
+   git branch feature/<feature-name> test
+   git worktree add .trees/<FeatureName> feature/<feature-name>
+   ```
+
+2. **Update the worktree** with latest changes from base branch before starting work:
+   ```bash
+   cd .trees/<FeatureName>
+   git fetch origin
+   git merge origin/test --no-edit
+   ```
+
+3. **Work exclusively within the worktree directory** (`/home/nadavchen/travel-ai/.trees/<FeatureName>/`)
+   - All file edits, reads, and bash commands should target this directory
+   - Never modify files in the main repository when working on a feature
+
+4. **Commit and push from the worktree** when work is complete:
+   ```bash
+   cd .trees/<FeatureName>
+   git add .
+   git commit -m "feat: description of changes"
+   git push origin feature/<feature-name>
+   ```
+
+**Worktree Naming Convention:**
+- Use PascalCase for worktree folder names (e.g., `ExpensesHistory`, `TripSharing`)
+- Use kebab-case for branch names (e.g., `feature/expenses-history`, `feature/trip-sharing`)
+
+**Example:**
+- Feature: "Expenses History"
+- Worktree: `.trees/ExpensesHistory`
+- Branch: `feature/expenses-history`
+
+---
+
 ### Benefits for Multi-Agent Development
 
 When running multiple Claude Code agents:
