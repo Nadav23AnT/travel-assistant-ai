@@ -1003,4 +1003,39 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get journalReminderDescription =>
       'Your trip has ended! Tap here to create a beautiful travel journal.';
+
+  @override
+  String get expenseHistory => 'Expense History';
+
+  @override
+  String get expensesLabel => 'expenses';
+
+  @override
+  String get noExpenseHistory => 'No Expense History';
+
+  @override
+  String get noExpenseHistoryDescription =>
+      'Your recorded expenses will appear here.';
+
+  @override
+  String get deleteExpense => 'Delete Expense';
+
+  @override
+  String get deleteExpenseConfirmation =>
+      'Are you sure you want to delete this expense? This action cannot be undone.';
+
+  @override
+  String get editExpense => 'Edit Expense';
+
+  @override
+  String get expenseUpdatedSuccess => 'Expense updated successfully!';
+
+  @override
+  String get failedToUpdateExpense => 'Failed to update expense';
+
+  @override
+  String get expenseDeletedSuccess => 'Expense deleted successfully!';
+
+  @override
+  String get failedToDeleteExpense => 'Failed to delete expense';
 }

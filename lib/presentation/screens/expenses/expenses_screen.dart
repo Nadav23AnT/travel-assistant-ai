@@ -12,6 +12,7 @@ import '../../widgets/charts/expense_pie_chart.dart';
 import '../../widgets/charts/spending_line_chart.dart';
 import '../../widgets/expenses/category_card.dart';
 import '../../widgets/expenses/category_detail_sheet.dart';
+import '../../widgets/expenses/expenses_history_section.dart';
 import '../../widgets/expenses/summary_stat_card.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
@@ -137,6 +138,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 // Spending Over Time Section
                 SliverToBoxAdapter(
                   child: _buildSpendingOverTimeSection(data),
+                ),
+
+                // Expense History Section
+                SliverToBoxAdapter(
+                  child: ExpensesHistorySection(
+                    expenses: data.expenses,
+                    displayCurrency: data.displayCurrency,
+                    convertedAmounts: _buildConvertedAmountsMap(data),
+                  ),
                 ),
 
                 // Bottom padding
@@ -518,5 +528,28 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         ),
       ),
     );
+  }
+
+  /// Build a map of expense ID to converted amount for currency display
+  Map<String, double>? _buildConvertedAmountsMap(ExpensesDashboardData data) {
+    final displayCurrency = data.displayCurrency;
+    final rates = ref.read(exchangeRatesProvider);
+
+    // If no rates or all expenses are in display currency, return null
+    if (rates.rates.isEmpty) return null;
+
+    final convertedAmounts = <String, double>{};
+    for (final expense in data.expenses) {
+      if (expense.currency != displayCurrency) {
+        final converted = ref.read(exchangeRatesProvider.notifier).convert(
+              expense.amount,
+              expense.currency,
+              displayCurrency,
+            );
+        convertedAmounts[expense.id] = converted;
+      }
+    }
+
+    return convertedAmounts.isNotEmpty ? convertedAmounts : null;
   }
 }
