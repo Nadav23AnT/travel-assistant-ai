@@ -1,12 +1,13 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/env.dart';
 import '../data/models/day_tip_model.dart';
 import '../data/models/journal_model.dart';
 import '../data/models/travel_context.dart';
+import 'ai/ai_provider_interface.dart';
+import 'ai/ai_router.dart';
 import 'token_usage_service.dart';
 
 class AIException implements Exception {
@@ -18,6 +19,14 @@ class AIException implements Exception {
 
   @override
   String toString() => message;
+
+  /// Create from AIProviderException
+  factory AIException.fromProviderException(AIProviderException e) {
+    return AIException(
+      e.message,
+      statusCode: e.statusCode,
+    );
+  }
 }
 
 class ChatMessage {
@@ -161,24 +170,17 @@ class AIResponse {
   bool get hasPlaces => places.isNotEmpty;
 }
 
+/// Main AI Service that routes requests to the appropriate provider
+/// based on feature configuration.
 class AIService {
-  final Dio _dio;
-  final String _apiKey;
+  final AIRouter _router;
   final TokenUsageService _tokenUsageService;
 
-  static const String _baseUrl = 'https://api.openai.com/v1';
-  static const String _defaultModel = 'gpt-4o-mini';
-
-  AIService({Dio? dio, String? apiKey, TokenUsageService? tokenUsageService})
-      : _dio = dio ?? Dio(),
-        _apiKey = apiKey ?? Env.openaiApiKey,
-        _tokenUsageService = tokenUsageService ?? TokenUsageService() {
-    _dio.options.baseUrl = _baseUrl;
-    _dio.options.headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_apiKey',
-    };
-  }
+  AIService({
+    AIRouter? router,
+    TokenUsageService? tokenUsageService,
+  })  : _router = router ?? AIRouter(),
+        _tokenUsageService = tokenUsageService ?? TokenUsageService();
 
   /// Check credit limit before making an AI request
   /// Throws AIException with isTokenLimitExceeded=true if limit exceeded
@@ -210,23 +212,13 @@ class AIService {
     }
   }
 
-  /// Extract total tokens from OpenAI API response
-  int _extractTokensUsed(Map<String, dynamic> responseData) {
-    try {
-      final usage = responseData['usage'] as Map<String, dynamic>?;
-      if (usage != null) {
-        return (usage['total_tokens'] as int?) ?? 0;
-      }
-    } catch (e) {
-      debugPrint('Failed to extract token usage: $e');
-    }
-    return 0;
-  }
-
   /// Get current token usage status for display
   Future<TokenCheckResult> getTokenUsageStatus() async {
     return _tokenUsageService.checkBeforeRequest();
   }
+
+  /// Check if any AI feature is configured
+  bool get isConfigured => Env.hasOpenAI || Env.hasOpenRouter || Env.hasGoogleAI;
 
   /// System prompt for the travel assistant - Travel Chat Companion
   String buildSystemPrompt({TravelContext? context}) {
@@ -235,19 +227,19 @@ class AIService {
     final languageName = context?.appLanguageDisplayName ?? 'English';
     final languageInstruction = languageCode != 'en' ? '''
 
-🌐 LANGUAGE REQUIREMENT:
+LANGUAGE REQUIREMENT:
 IMPORTANT: You MUST respond in $languageName ($languageCode). All your messages, recommendations, and responses should be written in $languageName. This is the user's preferred language.
 ''' : '';
 
     final contextSection = context != null ? '''
 
-📍 CURRENT TRIP CONTEXT:
+CURRENT TRIP CONTEXT:
 ${context.toContextString()}
 ''' : '';
 
     final locationGuidance = context?.destination != null ? '''
 
-🗺️ LOCATION RECOMMENDATIONS:
+LOCATION RECOMMENDATIONS:
 When suggesting places in ${context!.destination}:
 1. ALWAYS provide the full name and general location/neighborhood
 2. Include a brief description of why you recommend it
@@ -268,21 +260,21 @@ FORMAT for place recommendations:
     return '''
 You are Waylo, a warm, friendly, and proactive AI travel companion. You help travelers document their trip, share experiences, manage expenses, plan activities, and create a meaningful daily travel journal.
 $languageInstruction$contextSection
-🎯 YOUR CORE PERSONALITY:
+YOUR CORE PERSONALITY:
 - Warm, helpful, and conversational - NEVER robotic
 - You guide the user naturally through their travel day
 - You ask thoughtful follow-up questions about their experiences
 - You balance trip planning, journaling, and expenses naturally
 - You NEVER start conversations focusing only on expenses
 
-🧠 BEHAVIORAL RULES:
-1. When user talks about experiences → Ask follow-up questions, show genuine interest
-2. When user mentions spending → Help categorize, then smoothly ask about the experience ("What was that like?")
-3. When user shares feelings → Be empathetic and encourage them to share more
-4. After ANY expense mention → Always follow up with a travel question ("And how was the food?" or "What did you see there?")
-5. When user asks for recommendations → First understand their needs (time of day, mood, budget), then suggest specific places
+BEHAVIORAL RULES:
+1. When user talks about experiences -> Ask follow-up questions, show genuine interest
+2. When user mentions spending -> Help categorize, then smoothly ask about the experience ("What was that like?")
+3. When user shares feelings -> Be empathetic and encourage them to share more
+4. After ANY expense mention -> Always follow up with a travel question ("And how was the food?" or "What did you see there?")
+5. When user asks for recommendations -> First understand their needs (time of day, mood, budget), then suggest specific places
 $locationGuidance
-📒 TRAVEL JOURNAL FOCUS:
+TRAVEL JOURNAL FOCUS:
 Your PRIMARY goal is helping users capture their travel memories:
 - Ask about what they saw, felt, tasted, experienced
 - Encourage them to describe memorable moments
@@ -290,21 +282,21 @@ Your PRIMARY goal is helping users capture their travel memories:
 - Remind them to share stories, not just facts
 - Prompt: "Want me to add this to today's journal?"
 
-💡 CONVERSATION STARTERS (use naturally):
+CONVERSATION STARTERS (use naturally):
 - "What are you planning to do today?"
 - "Tell me about your day so far!"
 - "Any interesting moments or discoveries?"
 - "What's been the best part of your trip?"
 - "Seen anything surprising or unexpected?"
 
-💱 EXPENSE HANDLING:
+EXPENSE HANDLING:
 When expenses come up:
 - Record them helpfully
 - ALWAYS follow with a travel/experience question
 - Never make the conversation feel like accounting
-- Example: "Got it - ฿500 for dinner! How was the food? Any dishes you'd recommend?"
+- Example: "Got it - 500 baht for dinner! How was the food? Any dishes you'd recommend?"
 
-🎨 TONE GUIDELINES:
+TONE GUIDELINES:
 - Keep responses concise and warm
 - Use occasional emojis sparingly (1-2 max)
 - Be curious and engaged
@@ -318,20 +310,19 @@ Remember: Help travelers feel guided, organized, and supported - not just tracke
   /// Legacy system prompt getter (for backwards compatibility)
   String get systemPrompt => buildSystemPrompt();
 
-  /// Send a message and get a response from OpenAI
+  /// Send a message and get a response
+  /// Uses AI_CHAT feature configuration
   Future<String> sendMessage({
     required String message,
     List<ChatMessage>? history,
-    String? model,
+    String? model, // Deprecated - use .env configuration instead
   }) async {
-    if (_apiKey.isEmpty) {
-      throw AIException('OpenAI API key not configured');
-    }
-
     // Check token limit before making request
     await _checkTokenLimit();
 
     try {
+      final provider = _router.getProviderForFeature(AIFeature.aiChat);
+
       // Build messages array with system prompt and history
       final messages = <Map<String, dynamic>>[
         ChatMessage.system(systemPrompt).toJson(),
@@ -345,61 +336,35 @@ Remember: Help travelers feel guided, organized, and supported - not just tracke
       // Add the new user message
       messages.add(ChatMessage.user(message).toJson());
 
-      final response = await _dio.post(
-        '/chat/completions',
-        data: {
-          'model': model ?? _defaultModel,
-          'messages': messages,
-          'temperature': 0.7,
-          'max_tokens': 1024,
-        },
+      final response = await provider.complete(
+        messages: messages,
+        temperature: 0.7,
+        maxTokens: 1024,
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final choices = data['choices'] as List;
-        if (choices.isNotEmpty) {
-          // Record token usage after successful response
-          final tokensUsed = _extractTokensUsed(data);
-          await _recordTokenUsage(tokensUsed);
+      // Record token usage after successful response
+      await _recordTokenUsage(response.tokensUsed);
 
-          final content = choices[0]['message']['content'] as String;
-          return content.trim();
-        }
-        throw AIException('No response from AI');
-      } else {
-        throw AIException(
-          'API request failed',
-          statusCode: response.statusCode,
-        );
-      }
-    } on DioException catch (e) {
+      return response.content;
+    } on AIProviderException catch (e) {
       debugPrint('AI Service Error: ${e.message}');
-      if (e.response?.statusCode == 401) {
-        throw AIException('Invalid API key');
-      } else if (e.response?.statusCode == 429) {
-        throw AIException('Rate limit exceeded. Please try again later.');
-      } else if (e.response?.statusCode == 500) {
-        throw AIException('OpenAI service error. Please try again.');
-      }
-      throw AIException(e.message ?? 'Network error');
+      throw AIException.fromProviderException(e);
     } catch (e) {
       if (e is AIException) rethrow;
       throw AIException('Failed to get AI response: $e');
     }
   }
 
-  /// Stream a response from OpenAI (for future use)
+  /// Stream a response (for future use)
+  /// Uses AI_CHAT feature configuration
   Stream<String> streamMessage({
     required String message,
     List<ChatMessage>? history,
-    String? model,
+    String? model, // Deprecated - use .env configuration instead
   }) async* {
-    if (_apiKey.isEmpty) {
-      throw AIException('OpenAI API key not configured');
-    }
-
     try {
+      final provider = _router.getProviderForFeature(AIFeature.aiChat);
+
       final messages = <Map<String, dynamic>>[
         ChatMessage.system(systemPrompt).toJson(),
       ];
@@ -410,72 +375,28 @@ Remember: Help travelers feel guided, organized, and supported - not just tracke
 
       messages.add(ChatMessage.user(message).toJson());
 
-      final response = await _dio.post(
-        '/chat/completions',
-        data: {
-          'model': model ?? _defaultModel,
-          'messages': messages,
-          'temperature': 0.7,
-          'max_tokens': 1024,
-          'stream': true,
-        },
-        options: Options(
-          responseType: ResponseType.stream,
-        ),
+      yield* provider.streamComplete(
+        messages: messages,
+        temperature: 0.7,
+        maxTokens: 1024,
       );
-
-      final stream = response.data.stream as Stream<List<int>>;
-      String buffer = '';
-
-      await for (final chunk in stream) {
-        buffer += String.fromCharCodes(chunk);
-        final lines = buffer.split('\n');
-        buffer = lines.last;
-
-        for (int i = 0; i < lines.length - 1; i++) {
-          final line = lines[i].trim();
-          if (line.startsWith('data: ') && line != 'data: [DONE]') {
-            try {
-              final jsonStr = line.substring(6);
-              final data = _parseJson(jsonStr);
-              final content = data['choices']?[0]?['delta']?['content'];
-              if (content != null && content.isNotEmpty) {
-                yield content;
-              }
-            } catch (_) {
-              // Skip malformed JSON
-            }
-          }
-        }
-      }
-    } on DioException catch (e) {
-      throw AIException(e.message ?? 'Stream error');
+    } on AIProviderException catch (e) {
+      throw AIException.fromProviderException(e);
     }
   }
-
-  Map<String, dynamic> _parseJson(String jsonStr) {
-    try {
-      return Map<String, dynamic>.from(jsonDecode(jsonStr) as Map);
-    } catch (_) {
-      return {};
-    }
-  }
-
-  /// Check if OpenAI is configured
-  bool get isConfigured => _apiKey.isNotEmpty;
 
   /// Build expense detection prompt with context
   String buildExpenseDetectionPrompt({TravelContext? context}) {
     final contextSection = context != null ? '''
 
-📍 CURRENT TRIP CONTEXT:
+CURRENT TRIP CONTEXT:
 ${context.toContextString()}
 ''' : '';
 
     final destination = context?.destination;
     final locationSection = destination != null ? '''
 
-🗺️ PLACE RECOMMENDATIONS FOR $destination:
+PLACE RECOMMENDATIONS FOR $destination:
 When user asks for recommendations or where to go:
 1. Ask clarifying questions first (what are you in the mood for? budget? time of day?)
 2. Suggest 2-3 specific places with details
@@ -496,13 +417,13 @@ Categories for places: restaurant, cafe, bar, attraction, museum, temple, market
     return '''
 You are Waylo, a warm and friendly AI travel companion who helps document travel experiences AND track expenses.
 $contextSection
-🎯 YOUR PRIMARY FOCUS: EXPERIENCES FIRST!
+YOUR PRIMARY FOCUS: EXPERIENCES FIRST!
 - When user shares ANYTHING, show genuine interest in their experience
 - Ask follow-up questions about what they saw, felt, tasted
 - Help them capture travel memories, not just transactions
 - NEVER make conversations feel like expense tracking
 $locationSection
-💱 EXPENSE HANDLING (Secondary):
+EXPENSE HANDLING (Secondary):
 When a user mentions spending money:
 1. Acknowledge it briefly and warmly
 2. Extract expense details silently
@@ -511,7 +432,7 @@ When a user mentions spending money:
 
 Example responses:
 - User: "Spent 500 baht on dinner"
-- Good: "Got it! 🍜 How was the food? Any dishes that stood out? I'd love to add this to your journal!"
+- Good: "Got it! How was the food? Any dishes that stood out? I'd love to add this to your journal!"
 - Bad: "I've recorded your 500 THB food expense."
 
 Categories: transport, accommodation, food, activities, shopping, other
@@ -523,7 +444,7 @@ If expense detected, include at END of your message:
 
 Currency detection:
 - Default to trip's local currency or USD
-- Symbols: \$ = USD, € = EUR, £ = GBP, ₪ = ILS, ¥ = JPY, ฿ = THB
+- Symbols: \$ = USD, EUR, GBP, ILS = ILS, JPY = JPY, THB = THB
 - Accept codes: "50 EUR", "100 ILS", "500 THB"
 
 Category detection:
@@ -534,7 +455,7 @@ Category detection:
 - shopping: souvenirs, clothes, gifts, market, store, shop
 - other: anything else
 
-📒 JOURNAL MINDSET:
+JOURNAL MINDSET:
 After every interaction, think: "What memorable detail can I help capture?"
 Ask things like:
 - "What was the highlight?"
@@ -550,20 +471,19 @@ If no expense in message, respond as a curious travel buddy interested in their 
   String get expenseDetectionPrompt => buildExpenseDetectionPrompt();
 
   /// Send a message with expense detection and place recommendations
+  /// Uses AI_CHAT feature configuration
   Future<AIResponse> sendMessageWithExpenseDetection({
     required String message,
     List<ChatMessage>? history,
     TravelContext? context,
-    String? model,
+    String? model, // Deprecated - use .env configuration instead
   }) async {
-    if (_apiKey.isEmpty) {
-      throw AIException('OpenAI API key not configured');
-    }
-
     // Check token limit before making request
     await _checkTokenLimit();
 
     try {
+      final provider = _router.getProviderForFeature(AIFeature.aiChat);
+
       final systemPrompt = buildExpenseDetectionPrompt(context: context);
       final messages = <Map<String, dynamic>>[
         ChatMessage.system(systemPrompt).toJson(),
@@ -575,44 +495,19 @@ If no expense in message, respond as a curious travel buddy interested in their 
 
       messages.add(ChatMessage.user(message).toJson());
 
-      final response = await _dio.post(
-        '/chat/completions',
-        data: {
-          'model': model ?? _defaultModel,
-          'messages': messages,
-          'temperature': 0.7,
-          'max_tokens': 1500, // Increased for place recommendations
-        },
+      final response = await provider.complete(
+        messages: messages,
+        temperature: 0.7,
+        maxTokens: 1500, // Increased for place recommendations
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final choices = data['choices'] as List;
-        if (choices.isNotEmpty) {
-          // Record token usage after successful response
-          final tokensUsed = _extractTokensUsed(data);
-          await _recordTokenUsage(tokensUsed);
+      // Record token usage after successful response
+      await _recordTokenUsage(response.tokensUsed);
 
-          final content = choices[0]['message']['content'] as String;
-          return _parseAIResponse(content);
-        }
-        throw AIException('No response from AI');
-      } else {
-        throw AIException(
-          'API request failed',
-          statusCode: response.statusCode,
-        );
-      }
-    } on DioException catch (e) {
+      return _parseAIResponse(response.content);
+    } on AIProviderException catch (e) {
       debugPrint('AI Service Error: ${e.message}');
-      if (e.response?.statusCode == 401) {
-        throw AIException('Invalid API key');
-      } else if (e.response?.statusCode == 429) {
-        throw AIException('Rate limit exceeded. Please try again later.');
-      } else if (e.response?.statusCode == 500) {
-        throw AIException('OpenAI service error. Please try again.');
-      }
-      throw AIException(e.message ?? 'Network error');
+      throw AIException.fromProviderException(e);
     } catch (e) {
       if (e is AIException) rethrow;
       throw AIException('Failed to get AI response: $e');
@@ -701,21 +596,21 @@ If no expense in message, respond as a curious travel buddy interested in their 
   String get journalGenerationPrompt => '''
 You are a creative travel journal writer capturing the SOUL of someone's travel day. Your goal is to create a beautiful, personal journal entry that the traveler will treasure forever.
 
-🎯 PRIMARY FOCUS: EXPERIENCES & EMOTIONS
+PRIMARY FOCUS: EXPERIENCES & EMOTIONS
 Transform chat conversations into vivid travel memories:
 - Focus on what they SAW, FELT, TASTED, HEARD, DISCOVERED
 - Capture the atmosphere and emotions
 - Include sensory details that bring the day to life
 - Make it feel like reading a best friend's travel diary
 
-📝 CREATE A JOURNAL ENTRY WITH:
+CREATE A JOURNAL ENTRY WITH:
 1. An evocative title (max 6 words) - capture the day's essence/theme
 2. A personal narrative (150-300 words) written in first person
 3. The overall mood that best describes the day
 4. 2-4 highlights - the most memorable moments
 5. Locations visited or mentioned
 
-✍️ WRITING STYLE:
+WRITING STYLE:
 - First person ("I", "we", "my")
 - Warm, personal, and reflective
 - Rich sensory details (the smell of street food, the sound of waves, the colors of the market)
@@ -723,7 +618,7 @@ Transform chat conversations into vivid travel memories:
 - Storytelling flow - not a list of activities
 - Make it feel like a genuine memory they'll want to re-read
 
-💡 WHAT TO EMPHASIZE:
+WHAT TO EMPHASIZE:
 - Memorable interactions (with locals, other travelers)
 - Unexpected discoveries and surprises
 - Moments of beauty or wonder
@@ -732,7 +627,7 @@ Transform chat conversations into vivid travel memories:
 - Cultural observations
 - Food experiences described vividly
 
-🚫 WHAT TO AVOID:
+WHAT TO AVOID:
 - Dry lists of activities
 - Over-focusing on prices or expenses
 - Generic descriptions
@@ -753,21 +648,20 @@ Do not include any text outside the JSON object.
 ''';
 
   /// Generate a journal entry from chat messages and day activities
+  /// Uses JOURNAL_SUMMARY feature configuration
   Future<GeneratedJournalContent> generateJournalEntry({
     required List<ChatMessage> chatMessages,
     required DateTime date,
     String? tripDestination,
     List<ParsedExpense>? expenses,
-    String? model,
+    String? model, // Deprecated - use .env configuration instead
   }) async {
-    if (_apiKey.isEmpty) {
-      throw AIException('OpenAI API key not configured');
-    }
-
     // Check token limit before making request
     await _checkTokenLimit();
 
     try {
+      final provider = _router.getProviderForFeature(AIFeature.journalSummary);
+
       // Build context from chat messages
       final chatContext = chatMessages.isNotEmpty
           ? chatMessages.map((m) => '${m.role}: ${m.content}').join('\n')
@@ -803,42 +697,19 @@ Please create a journal entry for this day.
         ChatMessage.user(userPrompt).toJson(),
       ];
 
-      final response = await _dio.post(
-        '/chat/completions',
-        data: {
-          'model': model ?? _defaultModel,
-          'messages': messages,
-          'temperature': 0.8,
-          'max_tokens': 1024,
-        },
+      final response = await provider.complete(
+        messages: messages,
+        temperature: 0.8,
+        maxTokens: 1024,
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final choices = data['choices'] as List;
-        if (choices.isNotEmpty) {
-          // Record token usage after successful response
-          final tokensUsed = _extractTokensUsed(data);
-          await _recordTokenUsage(tokensUsed);
+      // Record token usage after successful response
+      await _recordTokenUsage(response.tokensUsed);
 
-          final content = choices[0]['message']['content'] as String;
-          return _parseJournalResponse(content);
-        }
-        throw AIException('No response from AI');
-      } else {
-        throw AIException(
-          'API request failed',
-          statusCode: response.statusCode,
-        );
-      }
-    } on DioException catch (e) {
+      return _parseJournalResponse(response.content);
+    } on AIProviderException catch (e) {
       debugPrint('AI Service Error: ${e.message}');
-      if (e.response?.statusCode == 401) {
-        throw AIException('Invalid API key');
-      } else if (e.response?.statusCode == 429) {
-        throw AIException('Rate limit exceeded. Please try again later.');
-      }
-      throw AIException(e.message ?? 'Network error');
+      throw AIException.fromProviderException(e);
     } catch (e) {
       if (e is AIException) rethrow;
       throw AIException('Failed to generate journal entry: $e');
@@ -846,22 +717,20 @@ Please create a journal entry for this day.
   }
 
   /// Generate a short, descriptive title for a chat conversation
-  /// Optionally includes trip destination and language for better context
+  /// Uses CHAT_TITLE feature configuration
   Future<String> generateChatTitle({
     required String userMessage,
     String? assistantResponse,
     String? tripDestination,
     String? language,
-    String? model,
+    String? model, // Deprecated - use .env configuration instead
   }) async {
-    if (_apiKey.isEmpty) {
-      throw AIException('OpenAI API key not configured');
-    }
-
     // Check token limit before making request
     await _checkTokenLimit();
 
     try {
+      final provider = _router.getProviderForFeature(AIFeature.chatTitle);
+
       final languageInstruction = language != null && language != 'en'
           ? 'Generate the title in the same language as the user message (detected: $language).'
           : '';
@@ -892,43 +761,29 @@ Rules:
 Respond with ONLY the title, nothing else.
 ''';
 
-      final response = await _dio.post(
-        '/chat/completions',
-        data: {
-          'model': model ?? _defaultModel,
-          'messages': [ChatMessage.user(prompt).toJson()],
-          'temperature': 0.7,
-          'max_tokens': 50,
-        },
+      final messages = <Map<String, dynamic>>[
+        ChatMessage.user(prompt).toJson(),
+      ];
+
+      final response = await provider.complete(
+        messages: messages,
+        temperature: 0.7,
+        maxTokens: 50,
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final choices = data['choices'] as List;
-        if (choices.isNotEmpty) {
-          // Record token usage after successful response
-          final tokensUsed = _extractTokensUsed(data);
-          await _recordTokenUsage(tokensUsed);
+      // Record token usage after successful response
+      await _recordTokenUsage(response.tokensUsed);
 
-          final content = choices[0]['message']['content'] as String;
-          // Clean up the title - remove quotes, trim, and ensure it's not too long
-          var title = content.trim().replaceAll('"', '').replaceAll("'", '');
+      // Clean up the title - remove quotes, trim, and ensure it's not too long
+      var title = response.content.trim().replaceAll('"', '').replaceAll("'", '');
 
-          // Truncate if somehow still too long
-          if (title.length > 50) {
-            title = '${title.substring(0, 47)}...';
-          }
-
-          return title;
-        }
-        throw AIException('No response from AI');
-      } else {
-        throw AIException(
-          'API request failed',
-          statusCode: response.statusCode,
-        );
+      // Truncate if somehow still too long
+      if (title.length > 50) {
+        title = '${title.substring(0, 47)}...';
       }
-    } on DioException catch (e) {
+
+      return title;
+    } on AIProviderException catch (e) {
       debugPrint('AI Service Error generating title: ${e.message}');
       // Return a context-aware default title on error
       if (tripDestination != null) {
@@ -976,14 +831,11 @@ Respond with ONLY the title, nothing else.
   }
 
   /// Generate a welcome message for a new trip with local tips
+  /// Uses TRIP_WELCOME feature configuration
   Future<String> generateTripWelcome({
     required TravelContext context,
-    String? model,
+    String? model, // Deprecated - use .env configuration instead
   }) async {
-    if (_apiKey.isEmpty) {
-      throw AIException('OpenAI API key not configured');
-    }
-
     if (context.destination == null) {
       return "Welcome to Waylo! I'm here to help you plan and document your travels. What would you like to explore?";
     }
@@ -992,6 +844,8 @@ Respond with ONLY the title, nothing else.
     await _checkTokenLimit();
 
     try {
+      final provider = _router.getProviderForFeature(AIFeature.tripWelcome);
+
       final prompt = '''
 Generate a warm, helpful welcome message for someone traveling to ${context.destination}.
 
@@ -1012,34 +866,21 @@ Keep it concise (under 200 words).
 Do NOT include any JSON blocks or markers.
 ''';
 
-      final response = await _dio.post(
-        '/chat/completions',
-        data: {
-          'model': model ?? _defaultModel,
-          'messages': [ChatMessage.user(prompt).toJson()],
-          'temperature': 0.8,
-          'max_tokens': 500,
-        },
+      final messages = <Map<String, dynamic>>[
+        ChatMessage.user(prompt).toJson(),
+      ];
+
+      final response = await provider.complete(
+        messages: messages,
+        temperature: 0.8,
+        maxTokens: 500,
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final choices = data['choices'] as List;
-        if (choices.isNotEmpty) {
-          // Record token usage after successful response
-          final tokensUsed = _extractTokensUsed(data);
-          await _recordTokenUsage(tokensUsed);
+      // Record token usage after successful response
+      await _recordTokenUsage(response.tokensUsed);
 
-          return (choices[0]['message']['content'] as String).trim();
-        }
-        throw AIException('No response from AI');
-      } else {
-        throw AIException(
-          'API request failed',
-          statusCode: response.statusCode,
-        );
-      }
-    } on DioException catch (e) {
+      return response.content;
+    } on AIProviderException catch (e) {
       debugPrint('AI Service Error generating welcome: ${e.message}');
       // Return a basic welcome on error
       return "Welcome to ${context.destination}! I'm Waylo, your travel companion. I'm here to help you discover amazing places, document your experiences, and track expenses. What would you like to explore first?";
@@ -1050,21 +891,20 @@ Do NOT include any JSON blocks or markers.
   }
 
   /// Generate location-specific recommendations
+  /// Uses RECOMMENDATIONS feature configuration
   Future<AIResponse> getRecommendations({
     required String query,
     required TravelContext context,
-    String? model,
+    String? model, // Deprecated - use .env configuration instead
   }) async {
-    if (_apiKey.isEmpty) {
-      throw AIException('OpenAI API key not configured');
-    }
-
     // Check token limit before making request
     await _checkTokenLimit();
 
     final destination = context.destination ?? 'your destination';
 
     try {
+      final provider = _router.getProviderForFeature(AIFeature.recommendations);
+
       final prompt = '''
 The user is in $destination and asks: "$query"
 
@@ -1085,40 +925,24 @@ Include place data at the end for Google Maps integration:
 ###END_PLACES_DATA###
 ''';
 
-      final response = await _dio.post(
-        '/chat/completions',
-        data: {
-          'model': model ?? _defaultModel,
-          'messages': [
-            ChatMessage.system(buildSystemPrompt(context: context)).toJson(),
-            ChatMessage.user(prompt).toJson(),
-          ],
-          'temperature': 0.8,
-          'max_tokens': 1500,
-        },
+      final messages = <Map<String, dynamic>>[
+        ChatMessage.system(buildSystemPrompt(context: context)).toJson(),
+        ChatMessage.user(prompt).toJson(),
+      ];
+
+      final response = await provider.complete(
+        messages: messages,
+        temperature: 0.8,
+        maxTokens: 1500,
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final choices = data['choices'] as List;
-        if (choices.isNotEmpty) {
-          // Record token usage after successful response
-          final tokensUsed = _extractTokensUsed(data);
-          await _recordTokenUsage(tokensUsed);
+      // Record token usage after successful response
+      await _recordTokenUsage(response.tokensUsed);
 
-          final content = choices[0]['message']['content'] as String;
-          return _parseAIResponse(content);
-        }
-        throw AIException('No response from AI');
-      } else {
-        throw AIException(
-          'API request failed',
-          statusCode: response.statusCode,
-        );
-      }
-    } on DioException catch (e) {
+      return _parseAIResponse(response.content);
+    } on AIProviderException catch (e) {
       debugPrint('AI Service Error: ${e.message}');
-      throw AIException(e.message ?? 'Network error');
+      throw AIException.fromProviderException(e);
     } catch (e) {
       if (e is AIException) rethrow;
       throw AIException('Failed to get recommendations: $e');
@@ -1169,54 +993,37 @@ Do not include any text outside the JSON object.
   }
 
   /// Generate 3 daily practical tips for a destination
+  /// Uses DAILY_TIP feature configuration
   Future<List<GeneratedTipContent>> generateDayTips({
     required String destination,
     required List<String> categories,
     String language = 'English',
-    String? model,
+    String? model, // Deprecated - use .env configuration instead
   }) async {
-    if (_apiKey.isEmpty) {
-      throw AIException('OpenAI API key not configured');
-    }
-
     // Check token limit before making request
     await _checkTokenLimit();
 
     try {
+      final provider = _router.getProviderForFeature(AIFeature.dailyTip);
+
       final systemPrompt = _buildDayTipPrompt(destination, categories, language);
 
-      final response = await _dio.post(
-        '/chat/completions',
-        data: {
-          'model': model ?? _defaultModel,
-          'messages': [
-            ChatMessage.system(systemPrompt).toJson(),
-            ChatMessage.user('Generate 3 tips for $destination in categories: ${categories.join(', ')}.').toJson(),
-          ],
-          'temperature': 0.9,
-          'max_tokens': 600,
-        },
+      final messages = <Map<String, dynamic>>[
+        ChatMessage.system(systemPrompt).toJson(),
+        ChatMessage.user('Generate 3 tips for $destination in categories: ${categories.join(', ')}.').toJson(),
+      ];
+
+      final response = await provider.complete(
+        messages: messages,
+        temperature: 0.9,
+        maxTokens: 600,
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final choices = data['choices'] as List;
-        if (choices.isNotEmpty) {
-          // Record token usage after successful response
-          final tokensUsed = _extractTokensUsed(data);
-          await _recordTokenUsage(tokensUsed);
+      // Record token usage after successful response
+      await _recordTokenUsage(response.tokensUsed);
 
-          final content = choices[0]['message']['content'] as String;
-          return _parseDayTipsResponse(content, categories);
-        }
-        throw AIException('No response from AI');
-      } else {
-        throw AIException(
-          'API request failed',
-          statusCode: response.statusCode,
-        );
-      }
-    } on DioException catch (e) {
+      return _parseDayTipsResponse(response.content, categories);
+    } on AIProviderException catch (e) {
       debugPrint('AI Service Error generating day tips: ${e.message}');
       // Return default tips on error
       return categories.map((c) => GeneratedTipContent(
@@ -1266,20 +1073,19 @@ Do not include any text outside the JSON object.
   }
 
   /// Generate an AI budget estimate for a trip
+  /// Uses BUDGET_ESTIMATE feature configuration
   Future<BudgetEstimate> generateBudgetEstimate({
     required String destination,
     required int tripDays,
     required String currency,
-    String? model,
+    String? model, // Deprecated - use .env configuration instead
   }) async {
-    if (_apiKey.isEmpty) {
-      throw AIException('OpenAI API key not configured');
-    }
-
     // Check token limit before making request
     await _checkTokenLimit();
 
     try {
+      final provider = _router.getProviderForFeature(AIFeature.budgetEstimate);
+
       final systemPrompt = '''
 You are a travel budget expert with extensive knowledge of travel costs worldwide.
 
@@ -1321,38 +1127,22 @@ Respond ONLY in this exact JSON format:
 }
 ''';
 
-      final response = await _dio.post(
-        '/chat/completions',
-        data: {
-          'model': model ?? _defaultModel,
-          'messages': [
-            ChatMessage.system(systemPrompt).toJson(),
-            ChatMessage.user('Generate a $tripDays-day budget for $destination in $currency.').toJson(),
-          ],
-          'temperature': 0.3,
-          'max_tokens': 300,
-        },
+      final messages = <Map<String, dynamic>>[
+        ChatMessage.system(systemPrompt).toJson(),
+        ChatMessage.user('Generate a $tripDays-day budget for $destination in $currency.').toJson(),
+      ];
+
+      final response = await provider.complete(
+        messages: messages,
+        temperature: 0.3,
+        maxTokens: 300,
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final choices = data['choices'] as List;
-        if (choices.isNotEmpty) {
-          // Record token usage after successful response
-          final tokensUsed = _extractTokensUsed(data);
-          await _recordTokenUsage(tokensUsed);
+      // Record token usage after successful response
+      await _recordTokenUsage(response.tokensUsed);
 
-          final content = choices[0]['message']['content'] as String;
-          return _parseBudgetResponse(content, tripDays, currency);
-        }
-        throw AIException('No response from AI');
-      } else {
-        throw AIException(
-          'API request failed',
-          statusCode: response.statusCode,
-        );
-      }
-    } on DioException catch (e) {
+      return _parseBudgetResponse(response.content, tripDays, currency);
+    } on AIProviderException catch (e) {
       debugPrint('AI Service Error generating budget: ${e.message}');
       rethrow;
     } catch (e) {
@@ -1392,6 +1182,14 @@ Respond ONLY in this exact JSON format:
       debugPrint('Raw content: $content');
       rethrow;
     }
+  }
+
+  /// Get the AI router for direct provider access
+  AIRouter get router => _router;
+
+  /// Debug: Print AI configuration
+  void debugPrintConfiguration() {
+    _router.debugPrintConfiguration();
   }
 }
 
