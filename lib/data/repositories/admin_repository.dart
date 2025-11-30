@@ -162,4 +162,47 @@ class AdminRepository {
       rethrow;
     }
   }
+
+  // ============================================
+  // Trend Data Methods for Charts
+  // ============================================
+
+  /// Get user growth trend for the last 30 days
+  Future<List<UserGrowthPoint>> getUserGrowthTrend() async {
+    try {
+      final response = await _supabase.rpc('get_admin_user_growth_trend');
+      return (response as List)
+          .map((json) => UserGrowthPoint.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting user growth trend: $e');
+      rethrow;
+    }
+  }
+
+  /// Get token usage trend for the last 14 days
+  Future<List<TokenUsagePoint>> getTokenUsageTrend() async {
+    try {
+      final response = await _supabase.rpc('get_admin_token_usage_trend');
+      return (response as List)
+          .map((json) => TokenUsagePoint.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting token usage trend: $e');
+      rethrow;
+    }
+  }
+
+  /// Get peak usage hours for the last 7 days
+  Future<List<PeakHoursPoint>> getPeakUsageHours() async {
+    try {
+      final response = await _supabase.rpc('get_admin_peak_usage_hours');
+      return (response as List)
+          .map((json) => PeakHoursPoint.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting peak usage hours: $e');
+      rethrow;
+    }
+  }
 }

@@ -5,12 +5,21 @@ import 'package:go_router/go_router.dart';
 import '../../../config/theme.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/support_provider.dart';
-import '../../widgets/admin/admin_stat_card.dart';
+import '../../widgets/admin/admin_charts.dart';
 import 'admin_scaffold.dart';
 
-/// Main admin dashboard screen with system statistics
+/// Main admin dashboard screen with comprehensive system statistics
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
+
+  void _refreshAll(WidgetRef ref) {
+    ref.invalidate(systemStatsProvider);
+    ref.invalidate(userCountByPlanProvider);
+    ref.invalidate(openTicketsCountProvider);
+    ref.invalidate(userGrowthTrendProvider);
+    ref.invalidate(tokenUsageTrendProvider);
+    ref.invalidate(peakUsageHoursProvider);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,115 +34,154 @@ class AdminDashboardScreen extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.refresh),
           tooltip: 'Refresh',
-          onPressed: () {
-            ref.invalidate(systemStatsProvider);
-            ref.invalidate(userCountByPlanProvider);
-            ref.invalidate(openTicketsCountProvider);
-          },
+          onPressed: () => _refreshAll(ref),
         ),
       ],
       child: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(systemStatsProvider);
-          ref.invalidate(userCountByPlanProvider);
-          ref.invalidate(openTicketsCountProvider);
-        },
+        onRefresh: () async => _refreshAll(ref),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome section
-              _buildWelcomeSection(context),
-              const SizedBox(height: 24),
-
-              // Main stats grid
-              Text(
-                'Overview',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 12),
-              stats.when(
-                data: (data) => _buildStatsGrid(context, ref, data),
-                loading: () => _buildLoadingGrid(),
-                error: (e, _) => _buildErrorCard(context, e.toString()),
-              ),
-              const SizedBox(height: 24),
-
-              // User breakdown
-              Text(
-                'Users',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 12),
-              userCounts.when(
-                data: (data) => _buildUserBreakdown(context, ref, data),
-                loading: () => const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ),
-                error: (e, _) => _buildErrorCard(context, e.toString()),
-              ),
-              const SizedBox(height: 24),
-
-              // Quick actions
-              Text(
-                'Quick Actions',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 12),
-              _buildQuickActions(context, ref, openTickets),
-              const SizedBox(height: 24),
-            ],
+          child: stats.when(
+            data: (data) => _buildDashboardContent(context, ref, data, userCounts, openTickets),
+            loading: () => _buildLoadingState(),
+            error: (e, _) => _buildErrorCard(context, e.toString()),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildWelcomeSection(BuildContext context) {
+  Widget _buildDashboardContent(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic stats,
+    AsyncValue<Map<String, int>> userCounts,
+    AsyncValue<int> openTickets,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Real-time section
+        _buildSectionHeader(context, 'Real-time', Icons.bolt, Colors.amber),
+        const SizedBox(height: 8),
+        _buildRealTimeSection(context, stats),
+        const SizedBox(height: 20),
+
+        // Overview section (compact cards)
+        _buildSectionHeader(context, 'Overview', Icons.dashboard, AppTheme.primaryColor),
+        const SizedBox(height: 8),
+        _buildOverviewGrid(context, stats),
+        const SizedBox(height: 20),
+
+        // Usage Stats section
+        _buildSectionHeader(context, 'Token Usage', Icons.token, Colors.purple),
+        const SizedBox(height: 8),
+        _buildUsageSection(context, stats),
+        const SizedBox(height: 20),
+
+        // Growth section
+        _buildSectionHeader(context, 'Growth', Icons.trending_up, AppTheme.successColor),
+        const SizedBox(height: 8),
+        _buildGrowthSection(context, stats),
+        const SizedBox(height: 20),
+
+        // Engagement section
+        _buildSectionHeader(context, 'Engagement', Icons.groups, Colors.teal),
+        const SizedBox(height: 8),
+        _buildEngagementSection(context, stats),
+        const SizedBox(height: 20),
+
+        // Charts section
+        _buildChartsSection(context, ref),
+        const SizedBox(height: 20),
+
+        // Users section
+        _buildSectionHeader(context, 'Users', Icons.people, AppTheme.primaryColor),
+        const SizedBox(height: 8),
+        userCounts.when(
+          data: (data) => _buildUserBreakdown(context, ref, data),
+          loading: () => const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ),
+          error: (e, _) => _buildErrorCard(context, e.toString()),
+        ),
+        const SizedBox(height: 20),
+
+        // Quick actions
+        _buildSectionHeader(context, 'Quick Actions', Icons.flash_on, AppTheme.warningColor),
+        const SizedBox(height: 8),
+        _buildQuickActions(context, ref, openTickets),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(BuildContext context, String title, IconData icon, Color color) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRealTimeSection(BuildContext context, dynamic stats) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withAlpha(26),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.admin_panel_settings,
-                color: AppTheme.primaryColor,
-                size: 32,
+            // Live users indicator
+            Expanded(
+              child: _buildLiveIndicator(
+                context,
+                'Live Now',
+                stats.liveUsers,
+                Colors.green,
+                isDark,
               ),
             ),
-            const SizedBox(width: 16),
+            Container(
+              width: 1,
+              height: 50,
+              color: theme.dividerColor,
+            ),
+            // Active today
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome to Admin Dashboard',
-                    style: theme.textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Monitor your app, manage users, and handle support requests.',
-                    style: TextStyle(
-                      color: isDark
-                          ? AppTheme.darkTextSecondary
-                          : AppTheme.textSecondary,
-                    ),
-                  ),
-                ],
+              child: _buildLiveIndicator(
+                context,
+                'Active Today',
+                stats.activeUsersToday,
+                Colors.blue,
+                isDark,
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 50,
+              color: theme.dividerColor,
+            ),
+            // Open tickets
+            Expanded(
+              child: _buildLiveIndicator(
+                context,
+                'Open Tickets',
+                stats.openSupportTickets,
+                stats.openSupportTickets > 0 ? Colors.orange : Colors.grey,
+                isDark,
               ),
             ),
           ],
@@ -142,47 +190,105 @@ class AdminDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsGrid(BuildContext context, WidgetRef ref, dynamic stats) {
+  Widget _buildLiveIndicator(
+    BuildContext context,
+    String label,
+    int value,
+    Color color,
+    bool isDark,
+  ) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (label == 'Live Now')
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(right: 6),
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withAlpha(128),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+            Text(
+              '$value',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? AppTheme.darkTextSecondary : AppTheme.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOverviewGrid(BuildContext context, dynamic stats) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
-        // Lower ratio = taller cards to prevent overflow
-        final childAspectRatio = constraints.maxWidth > 800 ? 1.1 : 1.2;
+        final isWide = constraints.maxWidth > 600;
+        final crossAxisCount = isWide ? 6 : 3;
 
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: crossAxisCount,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: childAspectRatio,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 1.0,
           children: [
-            AdminStatCard(
-              title: 'Total Users',
+            _MiniStatCard(
+              label: 'Users',
               value: '${stats.totalUsers}',
               icon: Icons.people,
               color: AppTheme.primaryColor,
-              subtitle: '${stats.usersToday} today',
-              onTap: () => context.go('/admin/users'),
             ),
-            AdminStatCard(
-              title: 'Total Trips',
+            _MiniStatCard(
+              label: 'Trips',
               value: '${stats.totalTrips}',
               icon: Icons.flight_takeoff,
               color: AppTheme.successColor,
-              subtitle: '${stats.activeTrips} active',
             ),
-            AdminStatCard(
-              title: 'Total Expenses',
+            _MiniStatCard(
+              label: 'Active',
+              value: '${stats.activeTrips}',
+              icon: Icons.explore,
+              color: Colors.teal,
+            ),
+            _MiniStatCard(
+              label: 'Expenses',
               value: '${stats.totalExpenses}',
-              icon: Icons.receipt_long,
+              icon: Icons.receipt,
               color: AppTheme.warningColor,
             ),
-            AdminStatCard(
-              title: 'Chat Sessions',
+            _MiniStatCard(
+              label: 'Chats',
               value: '${stats.totalChatSessions}',
               icon: Icons.chat,
               color: Colors.purple,
+            ),
+            _MiniStatCard(
+              label: 'Premium',
+              value: '${stats.premiumUsers}',
+              icon: Icons.star,
+              color: Colors.amber,
             ),
           ],
         );
@@ -190,23 +296,245 @@ class AdminDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLoadingGrid() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.2,
-      children: List.generate(
-        4,
-        (_) => const AdminStatCard(
-          title: 'Loading...',
-          value: '-',
-          icon: Icons.hourglass_empty,
-          isLoading: true,
+  Widget _buildUsageSection(BuildContext context, dynamic stats) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _StatItem(
+                    label: 'Tokens Today',
+                    value: _formatNumber(stats.totalTokensToday),
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Tokens This Week',
+                    value: _formatNumber(stats.totalTokensWeek),
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatItem(
+                    label: 'Avg/User Today',
+                    value: _formatNumber(stats.avgTokensPerUser),
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Requests Today',
+                    value: _formatNumber(stats.totalRequestsToday),
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildGrowthSection(BuildContext context, dynamic stats) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _StatItem(
+                    label: 'New Today',
+                    value: '+${stats.usersToday}',
+                    isDark: isDark,
+                    valueColor: AppTheme.successColor,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'This Week',
+                    value: '+${stats.usersThisWeek}',
+                    isDark: isDark,
+                    valueColor: AppTheme.successColor,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'This Month',
+                    value: '+${stats.usersThisMonth}',
+                    isDark: isDark,
+                    valueColor: AppTheme.successColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatItem(
+                    label: 'Trips Today',
+                    value: '${stats.tripsCreatedToday}',
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Trips This Week',
+                    value: '${stats.tripsCreatedWeek}',
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Expenses Today',
+                    value: '${stats.expensesLoggedToday}',
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEngagementSection(BuildContext context, dynamic stats) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _StatItem(
+                    label: 'Active Today',
+                    value: '${stats.activeUsersToday}',
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Active This Week',
+                    value: '${stats.activeUsersWeek}',
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Active This Month',
+                    value: '${stats.activeUsersMonth}',
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatItem(
+                    label: 'Messages Today',
+                    value: '${stats.chatMessagesToday}',
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Avg Msgs/Session',
+                    value: '${stats.avgMessagesPerSession}',
+                    isDark: isDark,
+                  ),
+                ),
+                Expanded(
+                  child: _StatItem(
+                    label: 'Expense Amount',
+                    value: '\$${stats.totalExpenseAmountToday.toStringAsFixed(0)}',
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChartsSection(BuildContext context, WidgetRef ref) {
+    final userGrowth = ref.watch(userGrowthTrendProvider);
+    final tokenUsage = ref.watch(tokenUsageTrendProvider);
+    final peakHours = ref.watch(peakUsageHoursProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(context, 'Trends', Icons.show_chart, Colors.indigo),
+        const SizedBox(height: 8),
+        // User growth chart
+        ChartCard(
+          title: 'User Growth (14 days)',
+          icon: Icons.trending_up,
+          iconColor: AppTheme.primaryColor,
+          isLoading: userGrowth.isLoading,
+          error: userGrowth.hasError ? userGrowth.error.toString() : null,
+          child: userGrowth.when(
+            data: (data) => UserGrowthChart(data: data),
+            loading: () => const SizedBox(),
+            error: (_, __) => const SizedBox(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Token usage chart
+        ChartCard(
+          title: 'Token Usage (14 days)',
+          icon: Icons.token,
+          iconColor: Colors.purple,
+          isLoading: tokenUsage.isLoading,
+          error: tokenUsage.hasError ? tokenUsage.error.toString() : null,
+          child: tokenUsage.when(
+            data: (data) => TokenUsageChart(data: data),
+            loading: () => const SizedBox(),
+            error: (_, __) => const SizedBox(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Peak hours chart
+        ChartCard(
+          title: 'Activity by Hour (7 days)',
+          icon: Icons.schedule,
+          iconColor: Colors.orange,
+          isLoading: peakHours.isLoading,
+          error: peakHours.hasError ? peakHours.error.toString() : null,
+          child: peakHours.when(
+            data: (data) => PeakHoursChart(data: data),
+            loading: () => const SizedBox(),
+            error: (_, __) => const SizedBox(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -222,7 +550,7 @@ class AdminDashboardScreen extends ConsumerWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -231,7 +559,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: _buildUserTypeColumn(
                     context,
-                    'Free Users',
+                    'Free',
                     free,
                     Icons.person_outline,
                     AppTheme.textSecondary,
@@ -239,13 +567,13 @@ class AdminDashboardScreen extends ConsumerWidget {
                 ),
                 Container(
                   width: 1,
-                  height: 60,
+                  height: 50,
                   color: Theme.of(context).dividerColor,
                 ),
                 Expanded(
                   child: _buildUserTypeColumn(
                     context,
-                    'Premium Users',
+                    'Premium',
                     premium,
                     Icons.star,
                     AppTheme.warningColor,
@@ -253,21 +581,21 @@ class AdminDashboardScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: premiumPercent / 100,
                 backgroundColor: Colors.grey.shade200,
-                valueColor: AlwaysStoppedAnimation<Color>(
+                valueColor: const AlwaysStoppedAnimation<Color>(
                   AppTheme.warningColor,
                 ),
-                minHeight: 8,
+                minHeight: 6,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
-              '${premiumPercent.toStringAsFixed(1)}% premium conversion rate',
+              '${premiumPercent.toStringAsFixed(1)}% conversion rate',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -285,11 +613,11 @@ class AdminDashboardScreen extends ConsumerWidget {
   ) {
     return Column(
       children: [
-        Icon(icon, color: color, size: 28),
-        const SizedBox(height: 8),
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
         Text(
           '$count',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
         ),
@@ -315,16 +643,25 @@ class AdminDashboardScreen extends ConsumerWidget {
             onTap: () => context.go('/admin/users'),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         Expanded(
           child: _QuickActionCard(
             icon: Icons.support_agent,
-            label: 'Support Tickets',
+            label: 'Support',
             badge: openTickets.valueOrNull ?? 0,
             onTap: () => context.go('/admin/support'),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(48),
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 
@@ -348,8 +685,110 @@ class AdminDashboardScreen extends ConsumerWidget {
       ),
     );
   }
+
+  String _formatNumber(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}K';
+    }
+    return '$number';
+  }
 }
 
+/// Compact mini stat card for overview grid
+class _MiniStatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _MiniStatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.color = AppTheme.primaryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDark ? AppTheme.darkTextPrimary : AppTheme.textPrimary,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: isDark ? AppTheme.darkTextSecondary : AppTheme.textSecondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Stat item for section cards
+class _StatItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isDark;
+  final Color? valueColor;
+
+  const _StatItem({
+    required this.label,
+    required this.value,
+    required this.isDark,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: valueColor ?? (isDark ? AppTheme.darkTextPrimary : AppTheme.textPrimary),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: isDark ? AppTheme.darkTextSecondary : AppTheme.textSecondary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+}
+
+/// Quick action card
 class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -373,7 +812,7 @@ class _QuickActionCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               Badge(
@@ -382,15 +821,16 @@ class _QuickActionCard extends StatelessWidget {
                 child: Icon(
                   icon,
                   color: AppTheme.primaryColor,
-                  size: 28,
+                  size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
+                    fontSize: 13,
                     color: isDark
                         ? AppTheme.darkTextPrimary
                         : AppTheme.textPrimary,
@@ -399,7 +839,7 @@ class _QuickActionCard extends StatelessWidget {
               ),
               Icon(
                 Icons.arrow_forward_ios,
-                size: 16,
+                size: 14,
                 color: isDark
                     ? AppTheme.darkTextSecondary
                     : AppTheme.textSecondary,

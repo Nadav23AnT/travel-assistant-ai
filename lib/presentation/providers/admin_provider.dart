@@ -250,3 +250,25 @@ final adminOperationsProvider =
   final repository = ref.watch(adminRepositoryProvider);
   return AdminOperationsNotifier(repository, ref);
 });
+
+// ============================================
+// Trend Data Providers for Charts
+// ============================================
+
+/// User growth trend for the last 30 days
+final userGrowthTrendProvider = FutureProvider<List<UserGrowthPoint>>((ref) async {
+  final repository = ref.watch(adminRepositoryProvider);
+  return await repository.getUserGrowthTrend();
+});
+
+/// Token usage trend for the last 14 days
+final tokenUsageTrendProvider = FutureProvider<List<TokenUsagePoint>>((ref) async {
+  final repository = ref.watch(adminRepositoryProvider);
+  return await repository.getTokenUsageTrend();
+});
+
+/// Peak usage hours for the last 7 days
+final peakUsageHoursProvider = FutureProvider<List<PeakHoursPoint>>((ref) async {
+  final repository = ref.watch(adminRepositoryProvider);
+  return await repository.getPeakUsageHours();
+});

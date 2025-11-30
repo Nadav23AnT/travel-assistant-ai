@@ -314,14 +314,41 @@ class SupportMessageModel {
 
 /// System statistics model for admin dashboard
 class SystemStatsModel {
+  // Basic counts
   final int totalUsers;
   final int totalTrips;
   final int activeTrips;
   final int totalExpenses;
   final int totalChatSessions;
   final int openSupportTickets;
+
+  // Growth stats
   final int usersToday;
+  final int usersThisWeek;
+  final int usersThisMonth;
   final int premiumUsers;
+
+  // Active users
+  final int activeUsersToday;
+  final int activeUsersWeek;
+  final int activeUsersMonth;
+  final int liveUsers;
+
+  // Token usage
+  final int totalTokensToday;
+  final int totalTokensWeek;
+  final int avgTokensPerUser;
+  final int totalRequestsToday;
+
+  // Trip & expense stats
+  final int tripsCreatedToday;
+  final int tripsCreatedWeek;
+  final int expensesLoggedToday;
+  final double totalExpenseAmountToday;
+
+  // Chat engagement
+  final int chatMessagesToday;
+  final int avgMessagesPerSession;
 
   const SystemStatsModel({
     required this.totalUsers,
@@ -331,7 +358,23 @@ class SystemStatsModel {
     required this.totalChatSessions,
     required this.openSupportTickets,
     required this.usersToday,
+    this.usersThisWeek = 0,
+    this.usersThisMonth = 0,
     required this.premiumUsers,
+    this.activeUsersToday = 0,
+    this.activeUsersWeek = 0,
+    this.activeUsersMonth = 0,
+    this.liveUsers = 0,
+    this.totalTokensToday = 0,
+    this.totalTokensWeek = 0,
+    this.avgTokensPerUser = 0,
+    this.totalRequestsToday = 0,
+    this.tripsCreatedToday = 0,
+    this.tripsCreatedWeek = 0,
+    this.expensesLoggedToday = 0,
+    this.totalExpenseAmountToday = 0,
+    this.chatMessagesToday = 0,
+    this.avgMessagesPerSession = 0,
   });
 
   factory SystemStatsModel.fromJson(Map<String, dynamic> json) {
@@ -343,7 +386,23 @@ class SystemStatsModel {
       totalChatSessions: json['total_chat_sessions'] as int? ?? 0,
       openSupportTickets: json['open_support_tickets'] as int? ?? 0,
       usersToday: json['users_today'] as int? ?? 0,
+      usersThisWeek: json['users_this_week'] as int? ?? 0,
+      usersThisMonth: json['users_this_month'] as int? ?? 0,
       premiumUsers: json['premium_users'] as int? ?? 0,
+      activeUsersToday: json['active_users_today'] as int? ?? 0,
+      activeUsersWeek: json['active_users_week'] as int? ?? 0,
+      activeUsersMonth: json['active_users_month'] as int? ?? 0,
+      liveUsers: json['live_users'] as int? ?? 0,
+      totalTokensToday: json['total_tokens_today'] as int? ?? 0,
+      totalTokensWeek: json['total_tokens_week'] as int? ?? 0,
+      avgTokensPerUser: json['avg_tokens_per_user'] as int? ?? 0,
+      totalRequestsToday: json['total_requests_today'] as int? ?? 0,
+      tripsCreatedToday: json['trips_created_today'] as int? ?? 0,
+      tripsCreatedWeek: json['trips_created_week'] as int? ?? 0,
+      expensesLoggedToday: json['expenses_logged_today'] as int? ?? 0,
+      totalExpenseAmountToday: (json['total_expense_amount_today'] as num?)?.toDouble() ?? 0,
+      chatMessagesToday: json['chat_messages_today'] as int? ?? 0,
+      avgMessagesPerSession: json['avg_messages_per_session'] as int? ?? 0,
     );
   }
 
@@ -354,6 +413,10 @@ class SystemStatsModel {
   /// Percentage of active trips
   double get activeTripsPercentage =>
       totalTrips > 0 ? (activeTrips / totalTrips) * 100 : 0;
+
+  /// Retention rate (active users / total users)
+  double get retentionRate =>
+      totalUsers > 0 ? (activeUsersMonth / totalUsers) * 100 : 0;
 }
 
 /// Support ticket status enum
@@ -458,5 +521,79 @@ enum UserDataType {
       case UserDataType.all:
         return 'All Data';
     }
+  }
+}
+
+// ============================================
+// Trend Data Models for Charts
+// ============================================
+
+/// User growth data point for charts
+class UserGrowthPoint {
+  final DateTime date;
+  final int newUsers;
+  final int cumulativeUsers;
+
+  const UserGrowthPoint({
+    required this.date,
+    required this.newUsers,
+    required this.cumulativeUsers,
+  });
+
+  factory UserGrowthPoint.fromJson(Map<String, dynamic> json) {
+    return UserGrowthPoint(
+      date: DateTime.parse(json['date'] as String),
+      newUsers: json['new_users'] as int? ?? 0,
+      cumulativeUsers: json['cumulative_users'] as int? ?? 0,
+    );
+  }
+}
+
+/// Token usage data point for charts
+class TokenUsagePoint {
+  final DateTime date;
+  final int totalTokens;
+  final int totalRequests;
+  final int uniqueUsers;
+
+  const TokenUsagePoint({
+    required this.date,
+    required this.totalTokens,
+    required this.totalRequests,
+    required this.uniqueUsers,
+  });
+
+  factory TokenUsagePoint.fromJson(Map<String, dynamic> json) {
+    return TokenUsagePoint(
+      date: DateTime.parse(json['date'] as String),
+      totalTokens: json['total_tokens'] as int? ?? 0,
+      totalRequests: json['total_requests'] as int? ?? 0,
+      uniqueUsers: json['unique_users'] as int? ?? 0,
+    );
+  }
+}
+
+/// Peak hours data point for charts
+class PeakHoursPoint {
+  final int hour;
+  final int messageCount;
+
+  const PeakHoursPoint({
+    required this.hour,
+    required this.messageCount,
+  });
+
+  factory PeakHoursPoint.fromJson(Map<String, dynamic> json) {
+    return PeakHoursPoint(
+      hour: json['hour'] as int? ?? 0,
+      messageCount: json['message_count'] as int? ?? 0,
+    );
+  }
+
+  String get hourLabel {
+    if (hour == 0) return '12 AM';
+    if (hour == 12) return '12 PM';
+    if (hour < 12) return '$hour AM';
+    return '${hour - 12} PM';
   }
 }
