@@ -2059,7 +2059,7 @@ REVENUECAT_API_KEY=...
 - [x] Join Trip button in trips list header
 
 ### Sprint 6: Polish & Future
-- [ ] PDF export for journals
+- [x] PDF export for journals ✅
 - [ ] Premium subscription flow (RevenueCat)
 - [ ] Error handling improvements
 - [ ] Performance optimization
