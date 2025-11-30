@@ -1251,5 +1251,34 @@
   "sharedTrip": "Shared",
   "@sharedTrip": {
     "description": "Badge label for shared trips"
+  },
+
+  "exportJournal": "Export Journal",
+  "@exportJournal": {
+    "description": "Title for export journal dialog"
+  },
+  "chooseExportFormat": "Choose export format:",
+  "@chooseExportFormat": {
+    "description": "Prompt to choose export format"
+  },
+  "exportPdf": "PDF Journal",
+  "@exportPdf": {
+    "description": "PDF export option"
+  },
+  "exportText": "Text (.txt)",
+  "@exportText": {
+    "description": "Text export option"
+  },
+  "exportMarkdown": "Markdown (.md)",
+  "@exportMarkdown": {
+    "description": "Markdown export option"
+  },
+  "generatingPdf": "Generating your beautiful journal...",
+  "@generatingPdf": {
+    "description": "Loading message while generating PDF"
+  },
+  "exportFailed": "Export failed",
+  "@exportFailed": {
+    "description": "Error message when export fails"
   }
 }

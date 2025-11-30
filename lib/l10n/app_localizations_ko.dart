@@ -878,4 +878,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sharedTrip => 'Shared';
+
+  @override
+  String get exportJournal => 'Export Journal';
+
+  @override
+  String get chooseExportFormat => 'Choose export format:';
+
+  @override
+  String get exportPdf => 'PDF Journal';
+
+  @override
+  String get exportText => 'Text (.txt)';
+
+  @override
+  String get exportMarkdown => 'Markdown (.md)';
+
+  @override
+  String get generatingPdf => 'Generating your beautiful journal...';
+
+  @override
+  String get exportFailed => 'Export failed';
 }

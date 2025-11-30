@@ -1761,6 +1761,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared'**
   String get sharedTrip;
+
+  /// Title for export journal dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Export Journal'**
+  String get exportJournal;
+
+  /// Prompt to choose export format
+  ///
+  /// In en, this message translates to:
+  /// **'Choose export format:'**
+  String get chooseExportFormat;
+
+  /// PDF export option
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Journal'**
+  String get exportPdf;
+
+  /// Text export option
+  ///
+  /// In en, this message translates to:
+  /// **'Text (.txt)'**
+  String get exportText;
+
+  /// Markdown export option
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown (.md)'**
+  String get exportMarkdown;
+
+  /// Loading message while generating PDF
+  ///
+  /// In en, this message translates to:
+  /// **'Generating your beautiful journal...'**
+  String get generatingPdf;
+
+  /// Error message when export fails
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed'**
+  String get exportFailed;
 }
 
 class _AppLocalizationsDelegate

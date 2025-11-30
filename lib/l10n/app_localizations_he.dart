@@ -882,4 +882,25 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get sharedTrip => 'משותף';
+
+  @override
+  String get exportJournal => 'ייצא יומן';
+
+  @override
+  String get chooseExportFormat => 'בחר פורמט ייצוא:';
+
+  @override
+  String get exportPdf => 'יומן PDF';
+
+  @override
+  String get exportText => 'טקסט (.txt)';
+
+  @override
+  String get exportMarkdown => 'Markdown (.md)';
+
+  @override
+  String get generatingPdf => 'יוצר את היומן היפהפה שלך...';
+
+  @override
+  String get exportFailed => 'הייצוא נכשל';
 }

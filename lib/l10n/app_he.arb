@@ -248,5 +248,13 @@
   "invalidCodeLength": "הקוד חייב להכיל 8 תווים",
   "cannotJoinOwnTrip": "לא ניתן להצטרף לטיול שלך עצמך",
   "inviteFriends": "הזמן חברים",
-  "sharedTrip": "משותף"
+  "sharedTrip": "משותף",
+
+  "exportJournal": "ייצא יומן",
+  "chooseExportFormat": "בחר פורמט ייצוא:",
+  "exportPdf": "יומן PDF",
+  "exportText": "טקסט (.txt)",
+  "exportMarkdown": "Markdown (.md)",
+  "generatingPdf": "יוצר את היומן היפהפה שלך...",
+  "exportFailed": "הייצוא נכשל"
 }

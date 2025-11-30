@@ -9,6 +9,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../../config/theme.dart';
 import '../../../data/models/journal_model.dart';
 import '../../../data/models/trip_model.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/journal_pdf_service.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
 import 'journal_entry_screen.dart';
@@ -197,26 +199,39 @@ class JournalScreen extends ConsumerWidget {
   ) async {
     if (trip == null || entries.isEmpty) return;
 
-    // Show format selection dialog
+    final l10n = AppLocalizations.of(context);
+
+    // Show format selection dialog with PDF option
     final format = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Export Journal'),
-        content: const Text('Choose export format:'),
+        title: Text(l10n.exportJournal),
+        content: Text(l10n.chooseExportFormat),
         actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.pop(context, 'pdf'),
+            icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
+            label: Text(l10n.exportPdf),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'txt'),
-            child: const Text('Text (.txt)'),
+            child: Text(l10n.exportText),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'md'),
-            child: const Text('Markdown (.md)'),
+            child: Text(l10n.exportMarkdown),
           ),
         ],
       ),
     );
 
     if (format == null) return;
+
+    // Handle PDF export separately
+    if (format == 'pdf') {
+      await _exportPdf(context, trip, entries, l10n);
+      return;
+    }
 
     try {
       // Generate journal content
@@ -296,7 +311,68 @@ class JournalScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to export: $e'),
+            content: Text('${l10n.exportFailed}: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Export journal as beautiful PDF
+  Future<void> _exportPdf(
+    BuildContext context,
+    TripModel trip,
+    List<JournalModel> entries,
+    AppLocalizations l10n,
+  ) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 20),
+            Expanded(child: Text(l10n.generatingPdf)),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      // Generate PDF
+      final pdfService = JournalPdfService();
+      final pdfBytes = await pdfService.generatePdf(
+        trip: trip,
+        entries: entries,
+      );
+
+      // Save to temporary file
+      final directory = await getTemporaryDirectory();
+      final journalTitle = trip.title.isNotEmpty ? trip.title : trip.displayDestination;
+      final fileName = '${journalTitle}_journal'.replaceAll(' ', '_').toLowerCase();
+      final file = File('${directory.path}/$fileName.pdf');
+      await file.writeAsBytes(pdfBytes);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Share the PDF
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: '$journalTitle Travel Journal',
+      );
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${l10n.exportFailed}: $e'),
             backgroundColor: AppTheme.errorColor,
           ),
         );
