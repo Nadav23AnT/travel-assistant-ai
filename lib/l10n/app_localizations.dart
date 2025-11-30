@@ -1971,6 +1971,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your trip has ended! Tap here to create a beautiful travel journal.'**
   String get journalReminderDescription;
+
+  /// Expense history section title
+  ///
+  /// In en, this message translates to:
+  /// **'Expense History'**
+  String get expenseHistory;
+
+  /// Expenses label (plural)
+  ///
+  /// In en, this message translates to:
+  /// **'expenses'**
+  String get expensesLabel;
+
+  /// No expense history title
+  ///
+  /// In en, this message translates to:
+  /// **'No Expense History'**
+  String get noExpenseHistory;
+
+  /// No expense history description
+  ///
+  /// In en, this message translates to:
+  /// **'Your recorded expenses will appear here.'**
+  String get noExpenseHistoryDescription;
+
+  /// Delete expense dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Expense'**
+  String get deleteExpense;
+
+  /// Delete expense confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this expense? This action cannot be undone.'**
+  String get deleteExpenseConfirmation;
+
+  /// Edit expense dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Expense'**
+  String get editExpense;
+
+  /// Expense updated success message
+  ///
+  /// In en, this message translates to:
+  /// **'Expense updated successfully!'**
+  String get expenseUpdatedSuccess;
+
+  /// Expense update failure message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update expense'**
+  String get failedToUpdateExpense;
+
+  /// Expense deleted success message
+  ///
+  /// In en, this message translates to:
+  /// **'Expense deleted successfully!'**
+  String get expenseDeletedSuccess;
+
+  /// Expense delete failure message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete expense'**
+  String get failedToDeleteExpense;
 }
 
 class _AppLocalizationsDelegate

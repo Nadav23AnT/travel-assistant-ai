@@ -1346,5 +1346,50 @@
   "journalReminderDescription": "Your trip has ended! Tap here to create a beautiful travel journal.",
   "@journalReminderDescription": {
     "description": "Journal reminder description"
+  },
+
+  "expenseHistory": "Expense History",
+  "@expenseHistory": {
+    "description": "Expense history section title"
+  },
+  "expensesLabel": "expenses",
+  "@expensesLabel": {
+    "description": "Expenses label (plural)"
+  },
+  "noExpenseHistory": "No Expense History",
+  "@noExpenseHistory": {
+    "description": "No expense history title"
+  },
+  "noExpenseHistoryDescription": "Your recorded expenses will appear here.",
+  "@noExpenseHistoryDescription": {
+    "description": "No expense history description"
+  },
+  "deleteExpense": "Delete Expense",
+  "@deleteExpense": {
+    "description": "Delete expense dialog title"
+  },
+  "deleteExpenseConfirmation": "Are you sure you want to delete this expense? This action cannot be undone.",
+  "@deleteExpenseConfirmation": {
+    "description": "Delete expense confirmation message"
+  },
+  "editExpense": "Edit Expense",
+  "@editExpense": {
+    "description": "Edit expense dialog title"
+  },
+  "expenseUpdatedSuccess": "Expense updated successfully!",
+  "@expenseUpdatedSuccess": {
+    "description": "Expense updated success message"
+  },
+  "failedToUpdateExpense": "Failed to update expense",
+  "@failedToUpdateExpense": {
+    "description": "Expense update failure message"
+  },
+  "expenseDeletedSuccess": "Expense deleted successfully!",
+  "@expenseDeletedSuccess": {
+    "description": "Expense deleted success message"
+  },
+  "failedToDeleteExpense": "Failed to delete expense",
+  "@failedToDeleteExpense": {
+    "description": "Expense delete failure message"
   }
 }
