@@ -1297,5 +1297,54 @@
   "errorGeneric": "Something went wrong. Please try again.",
   "offline": "You're offline",
   "offlineMessage": "Some features may be unavailable.",
-  "backOnline": "You're back online"
+  "backOnline": "You're back online",
+
+  "ongoing": "Ongoing",
+  "@ongoing": {
+    "description": "Status for active trips"
+  },
+  "planning": "Planning",
+  "@planning": {
+    "description": "Status for upcoming trips"
+  },
+  "expensesSummary": "Expenses Summary",
+  "@expensesSummary": {
+    "description": "Section header for expenses summary"
+  },
+  "totalSpent": "Total Spent",
+  "@totalSpent": {
+    "description": "Label for total spent stat"
+  },
+  "dailyAverage": "Daily Avg",
+  "@dailyAverage": {
+    "description": "Label for daily average stat"
+  },
+  "remainingBudget": "Remaining",
+  "@remainingBudget": {
+    "description": "Label for remaining budget stat"
+  },
+  "topCategory": "Top Category",
+  "@topCategory": {
+    "description": "Label for top spending category"
+  },
+  "none": "None",
+  "@none": {
+    "description": "None label"
+  },
+  "showMore": "Show More",
+  "@showMore": {
+    "description": "Button to expand details"
+  },
+  "showLess": "Show Less",
+  "@showLess": {
+    "description": "Button to collapse details"
+  },
+  "journalReminder": "Create Your Journal",
+  "@journalReminder": {
+    "description": "Journal reminder title"
+  },
+  "journalReminderDescription": "Your trip has ended! Tap here to create a beautiful travel journal.",
+  "@journalReminderDescription": {
+    "description": "Journal reminder description"
+  }
 }

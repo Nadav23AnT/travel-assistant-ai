@@ -963,4 +963,41 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get backOnline => 'You\'re back online';
+
+  @override
+  String get ongoing => 'Ongoing';
+
+  @override
+  String get planning => 'Planning';
+
+  @override
+  String get expensesSummary => 'Expenses Summary';
+
+  @override
+  String get totalSpent => 'Total Spent';
+
+  @override
+  String get dailyAverage => 'Daily Avg';
+
+  @override
+  String get remainingBudget => 'Remaining';
+
+  @override
+  String get topCategory => 'Top Category';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get showMore => 'Show More';
+
+  @override
+  String get showLess => 'Show Less';
+
+  @override
+  String get journalReminder => 'Create Your Journal';
+
+  @override
+  String get journalReminderDescription =>
+      'Your trip has ended! Tap here to create a beautiful travel journal.';
 }

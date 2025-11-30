@@ -273,5 +273,18 @@
   "errorGeneric": "משהו השתבש. אנא נסה שוב.",
   "offline": "אתה במצב לא מקוון",
   "offlineMessage": "חלק מהתכונות עשויות להיות לא זמינות.",
-  "backOnline": "אתה שוב מחובר"
+  "backOnline": "אתה שוב מחובר",
+
+  "ongoing": "פעיל",
+  "planning": "בתכנון",
+  "expensesSummary": "סיכום הוצאות",
+  "totalSpent": "סה\"כ הוצאות",
+  "dailyAverage": "ממוצע יומי",
+  "remainingBudget": "נותר",
+  "topCategory": "קטגוריה מובילה",
+  "none": "אין",
+  "showMore": "הצג עוד",
+  "showLess": "הצג פחות",
+  "journalReminder": "צור יומן מסע",
+  "journalReminderDescription": "הטיול שלך הסתיים! הקש כאן ליצירת יומן מסע יפהפה."
 }

@@ -1899,6 +1899,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'re back online'**
   String get backOnline;
+
+  /// Status for active trips
+  ///
+  /// In en, this message translates to:
+  /// **'Ongoing'**
+  String get ongoing;
+
+  /// Status for upcoming trips
+  ///
+  /// In en, this message translates to:
+  /// **'Planning'**
+  String get planning;
+
+  /// Section header for expenses summary
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses Summary'**
+  String get expensesSummary;
+
+  /// Label for total spent stat
+  ///
+  /// In en, this message translates to:
+  /// **'Total Spent'**
+  String get totalSpent;
+
+  /// Label for daily average stat
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Avg'**
+  String get dailyAverage;
+
+  /// Label for remaining budget stat
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get remainingBudget;
+
+  /// Label for top spending category
+  ///
+  /// In en, this message translates to:
+  /// **'Top Category'**
+  String get topCategory;
+
+  /// None label
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// Button to expand details
+  ///
+  /// In en, this message translates to:
+  /// **'Show More'**
+  String get showMore;
+
+  /// Button to collapse details
+  ///
+  /// In en, this message translates to:
+  /// **'Show Less'**
+  String get showLess;
+
+  /// Journal reminder title
+  ///
+  /// In en, this message translates to:
+  /// **'Create Your Journal'**
+  String get journalReminder;
+
+  /// Journal reminder description
+  ///
+  /// In en, this message translates to:
+  /// **'Your trip has ended! Tap here to create a beautiful travel journal.'**
+  String get journalReminderDescription;
 }
 
 class _AppLocalizationsDelegate

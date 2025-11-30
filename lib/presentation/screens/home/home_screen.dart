@@ -68,7 +68,7 @@ class HomeScreen extends ConsumerWidget {
                 loading: () => const _TripCardLoading(),
                 error: (error, stack) => _buildNoActiveTripCard(context),
                 data: (trip) => trip != null
-                    ? _buildActiveTripCard(context, trip)
+                    ? _buildActiveTripCard(context, ref, trip)
                     : _buildNoActiveTripCard(context),
               ),
               const SizedBox(height: 24),
@@ -239,7 +239,7 @@ class HomeScreen extends ConsumerWidget {
     }
   }
 
-  Widget _buildActiveTripCard(BuildContext context, TripModel trip) {
+  Widget _buildActiveTripCard(BuildContext context, WidgetRef ref, TripModel trip) {
     final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('MMM d');
     final dateRange = trip.startDate != null && trip.endDate != null
@@ -247,6 +247,8 @@ class HomeScreen extends ConsumerWidget {
         : l10n.datesNotSet;
 
     final daysInfo = _getTripDaysInfo(context, trip);
+    final expensesAsync = ref.watch(tripExpensesProvider(trip.id));
+    final homeCurrency = ref.watch(userHomeCurrencyProvider);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -361,51 +363,68 @@ class HomeScreen extends ConsumerWidget {
             // Trip details
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
+              child: Column(
                 children: [
-                  // Dates
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.dates,
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                          ),
+                  Row(
+                    children: [
+                      // Dates
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.dates,
+                              style: TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              dateRange,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          dateRange,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      ),
+                      // Days info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              daysInfo.label,
+                              style: TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              daysInfo.value,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: daysInfo.color,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  // Days info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          daysInfo.label,
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          daysInfo.value,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: daysInfo.color,
-                          ),
-                        ),
-                      ],
+                  // Expense indicator
+                  const SizedBox(height: 12),
+                  expensesAsync.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (error, stack) => const SizedBox.shrink(),
+                    data: (expenses) => _buildExpenseIndicator(
+                      context,
+                      ref,
+                      trip,
+                      expenses,
+                      homeCurrency,
                     ),
                   ),
                 ],
@@ -413,6 +432,148 @@ class HomeScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildExpenseIndicator(
+    BuildContext context,
+    WidgetRef ref,
+    TripModel trip,
+    List<ExpenseModel> expenses,
+    String homeCurrency,
+  ) {
+    final l10n = AppLocalizations.of(context);
+
+    if (expenses.isEmpty && trip.budget == null) {
+      return const SizedBox.shrink();
+    }
+
+    // Calculate total spent
+    double totalSpent = 0;
+    for (final expense in expenses) {
+      if (expense.currency == trip.budgetCurrency) {
+        totalSpent += expense.amount;
+      } else {
+        // Convert to trip's budget currency
+        final converted = ref.read(exchangeRatesProvider.notifier).convert(
+              expense.amount,
+              expense.currency,
+              trip.budgetCurrency,
+            );
+        totalSpent += converted;
+      }
+    }
+
+    // Calculate remaining budget
+    double? remaining;
+    double? budgetProgress;
+    if (trip.budget != null && trip.budget! > 0) {
+      remaining = trip.budget! - totalSpent;
+      budgetProgress = (totalSpent / trip.budget!).clamp(0.0, 1.0);
+    }
+
+    final currencySymbol = trip.currencySymbol;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(128),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Total spent
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet,
+                      size: 16,
+                      color: AppTheme.primaryColor,
+                    ),
+                    const SizedBox(width: 6),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.totalSpent,
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          '$currencySymbol${totalSpent.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Remaining budget
+              if (remaining != null)
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.savings,
+                        size: 16,
+                        color: remaining >= 0 ? AppTheme.successColor : AppTheme.errorColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.remainingBudget,
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 10,
+                            ),
+                          ),
+                          Text(
+                            '$currencySymbol${remaining.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: remaining >= 0 ? AppTheme.successColor : AppTheme.errorColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          // Budget progress bar
+          if (budgetProgress != null) ...[
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: budgetProgress,
+                minHeight: 4,
+                backgroundColor: AppTheme.textSecondary.withAlpha(51),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  budgetProgress > 0.9
+                      ? AppTheme.errorColor
+                      : budgetProgress > 0.7
+                          ? AppTheme.warningColor
+                          : AppTheme.successColor,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

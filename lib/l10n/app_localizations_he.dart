@@ -951,4 +951,41 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get backOnline => 'אתה שוב מחובר';
+
+  @override
+  String get ongoing => 'פעיל';
+
+  @override
+  String get planning => 'בתכנון';
+
+  @override
+  String get expensesSummary => 'סיכום הוצאות';
+
+  @override
+  String get totalSpent => 'סה\"כ הוצאות';
+
+  @override
+  String get dailyAverage => 'ממוצע יומי';
+
+  @override
+  String get remainingBudget => 'נותר';
+
+  @override
+  String get topCategory => 'קטגוריה מובילה';
+
+  @override
+  String get none => 'אין';
+
+  @override
+  String get showMore => 'הצג עוד';
+
+  @override
+  String get showLess => 'הצג פחות';
+
+  @override
+  String get journalReminder => 'צור יומן מסע';
+
+  @override
+  String get journalReminderDescription =>
+      'הטיול שלך הסתיים! הקש כאן ליצירת יומן מסע יפהפה.';
 }
