@@ -206,13 +206,13 @@ class TripSharingService {
 
   /// Generate shareable message with invite code
   String getShareMessage(String inviteCode, String tripTitle) {
-    return '''Join my trip "$tripTitle" on TripBuddy!
+    return '''Join my trip "$tripTitle" on Waylo!
 
 Enter this code in the app: $inviteCode
 
 Together we can plan, track expenses, and create memories!
 
-Download TripBuddy: https://tripbuddy.app''';
+Download Waylo: https://waylo.app''';
   }
 
   /// Check if current user is owner of the trip

@@ -1,7 +1,7 @@
-# TravelAI (TripBuddy) Project Overview
+# TravelAI (Waylo) Project Overview
 
 ## 1. Project Identity
-**Project Name:** TripBuddy (Directory: `travel-ai`)
+**Project Name:** Waylo (Directory: `travel-ai`)
 **Purpose:** An AI-powered travel assistant mobile application designed to help users plan trips, manage itineraries, and track expenses.
 **Core Value:** Combines conversational AI for planning with practical tools for itinerary management and expense splitting.
 

@@ -7,17 +7,17 @@
 
 ## 1. Acceptance of Terms
 
-Welcome to **FinAI Travel** (also referred to as "TripBuddy," "the App," "we," "us," or "our").
+Welcome to **Waylo** (also referred to as "Waylo," "the App," "we," "us," or "our").
 
-By downloading, installing, accessing, or using FinAI Travel, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the App.
+By downloading, installing, accessing, or using Waylo, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the App.
 
-**These Terms constitute a legally binding agreement** between you ("User," "you," or "your") and FinAI Travel.
+**These Terms constitute a legally binding agreement** between you ("User," "you," or "your") and Waylo.
 
 ---
 
 ## 2. Description of Service
 
-FinAI Travel is a mobile application designed to assist with travel planning and management. Our services include:
+Waylo is a mobile application designed to assist with travel planning and management. Our services include:
 
 - **Trip Planning**: Create and organize travel itineraries
 - **Expense Tracking**: Record and categorize travel expenses with multi-currency support
@@ -35,7 +35,7 @@ Some features may require a paid subscription (see Section 9: Premium Features).
 ## 3. User Accounts and Registration
 
 ### 3.1 Account Creation
-To use FinAI Travel, you must:
+To use Waylo, you must:
 - Provide accurate and complete registration information (name, email, country)
 - Be at least 16 years of age
 - Maintain the security and confidentiality of your account credentials
@@ -59,7 +59,7 @@ We reserve the right to suspend or terminate accounts that violate these Terms o
 
 ### 4.1 Nature of AI-Generated Content
 
-FinAI Travel uses artificial intelligence (AI) to provide travel recommendations, answer questions, and generate insights. **You acknowledge and agree that:**
+Waylo uses artificial intelligence (AI) to provide travel recommendations, answer questions, and generate insights. **You acknowledge and agree that:**
 
 - **AI May Make Mistakes**: AI-generated responses may contain errors, inaccuracies, or outdated information
 - **Not Professional Advice**: AI responses are for informational purposes only and do not constitute professional travel advice, financial advice, legal advice, or medical advice
@@ -89,7 +89,7 @@ We are not liable for any losses or damages resulting from:
 ## 5. User Responsibilities and Acceptable Use
 
 ### 5.1 Lawful Use
-You agree to use FinAI Travel only for lawful purposes and in compliance with:
+You agree to use Waylo only for lawful purposes and in compliance with:
 - All applicable local, national, and international laws
 - These Terms of Service
 - Our Privacy Policy
@@ -141,13 +141,13 @@ You agree **NOT** to:
 ## 7. Intellectual Property Rights
 
 ### 7.1 Our Intellectual Property
-All content, features, and functionality of FinAI Travel, including but not limited to:
+All content, features, and functionality of Waylo, including but not limited to:
 - Software code and architecture
 - Design, graphics, and user interface
 - Text, images, logos, and trademarks
 - AI models and algorithms
 
-...are owned by FinAI Travel or our licensors and are protected by copyright, trademark, and other intellectual property laws.
+...are owned by Waylo or our licensors and are protected by copyright, trademark, and other intellectual property laws.
 
 ### 7.2 Limited License
 We grant you a limited, non-exclusive, non-transferable, revocable license to use the App for personal, non-commercial purposes, subject to these Terms.
@@ -162,7 +162,7 @@ We do not claim ownership of your personal travel data.
 ## 8. Disclaimers and Warranties
 
 ### 8.1 "As-Is" Service
-FinAI Travel is provided **"AS IS" and "AS AVAILABLE"** without warranties of any kind, either express or implied, including but not limited to:
+Waylo is provided **"AS IS" and "AS AVAILABLE"** without warranties of any kind, either express or implied, including but not limited to:
 - Merchantability
 - Fitness for a particular purpose
 - Non-infringement
@@ -226,7 +226,7 @@ In no event shall our total liability to you for all claims arising from or rela
 
 ### 9.6 User Responsibility
 **You acknowledge that:**
-- You use FinAI Travel at your own risk
+- You use Waylo at your own risk
 - You are responsible for all decisions made based on App information
 - You should verify critical information with official and professional sources
 - We are a planning and tracking tool, not a substitute for professional judgment
@@ -236,7 +236,7 @@ In no event shall our total liability to you for all claims arising from or rela
 ## 10. Premium Features and Subscriptions
 
 ### 10.1 Subscription Plans
-FinAI Travel offers premium features through paid subscriptions, which may include:
+Waylo offers premium features through paid subscriptions, which may include:
 - **Unlimited AI chat messages** (free tier may have daily limits)
 - **Advanced trip statistics and analytics**
 - **Trip journal export** (PDF, CSV formats)
@@ -255,7 +255,7 @@ FinAI Travel offers premium features through paid subscriptions, which may inclu
 - You may cancel your subscription at any time through your device's subscription settings
 - Cancellation takes effect at the end of the current billing period
 - **No refunds** are provided for partial subscription periods, except where required by law
-- If you believe you were charged incorrectly, contact support@finaitravel.com within 30 days
+- If you believe you were charged incorrectly, contact support@waylo.app within 30 days
 
 ### 10.4 Free Trials
 - Free trials (if offered) are available only to new users
@@ -318,7 +318,7 @@ We reserve the right to:
 
 Your privacy is important to us. Our collection, use, and protection of your personal information is governed by our **[Privacy Policy](privacy_policy.md)**.
 
-By using FinAI Travel, you also agree to our Privacy Policy.
+By using Waylo, you also agree to our Privacy Policy.
 
 Key points:
 - We collect data necessary to provide our services
@@ -336,7 +336,7 @@ For full details, please review our Privacy Policy.
 These Terms are governed by and construed in accordance with the laws of [GOVERNING_LAW_JURISDICTION], without regard to conflict of law principles.
 
 ### 14.2 Dispute Resolution
-**Informal Resolution**: Before pursuing formal legal action, please contact us at support@finaitravel.com to attempt to resolve the issue informally.
+**Informal Resolution**: Before pursuing formal legal action, please contact us at support@waylo.app to attempt to resolve the issue informally.
 
 **Arbitration/Mediation** (if applicable in your jurisdiction): Disputes may be subject to binding arbitration or mediation as permitted by local law.
 
@@ -353,7 +353,7 @@ Nothing in this section limits your rights as a consumer under mandatory local l
 ## 15. Miscellaneous
 
 ### 15.1 Entire Agreement
-These Terms, together with our Privacy Policy, constitute the entire agreement between you and FinAI Travel regarding your use of the App.
+These Terms, together with our Privacy Policy, constitute the entire agreement between you and Waylo regarding your use of the App.
 
 ### 15.2 Severability
 If any provision of these Terms is found to be invalid or unenforceable, the remaining provisions will remain in full force and effect.
@@ -369,7 +369,7 @@ We are not liable for any failure or delay in performance due to circumstances b
 
 ### 15.6 Contact for Legal Notices
 For legal notices, contact us at:
-**support@finaitravel.com**
+**support@waylo.app**
 Subject line: "Legal Notice"
 
 ---
@@ -378,7 +378,9 @@ Subject line: "Legal Notice"
 
 If you have questions about these Terms of Service:
 
-**Email**: support@finaitravel.com
+**Email**: support@waylo.app
+
+**Developer**: Nadav Chen, Developer, Founder & CEO
 
 **Support**: Available through in-app Live Chat or Settings → Help & Support
 
@@ -388,7 +390,7 @@ If you have questions about these Terms of Service:
 
 ## 17. Acknowledgment
 
-**By using FinAI Travel, you acknowledge that:**
+**By using Waylo, you acknowledge that:**
 
 1. You have read and understood these Terms of Service
 2. You agree to be bound by these Terms
@@ -396,7 +398,12 @@ If you have questions about these Terms of Service:
 4. You are solely responsible for travel and financial decisions
 5. You will use the App lawfully and in accordance with these Terms
 
-**Thank you for choosing FinAI Travel. We're excited to help you plan and manage your travels!**
+**Thank you for choosing Waylo. We're excited to help you plan and manage your travels!**
+
+---
+
+**Waylo**
+**Developed by Nadav Chen**
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Last Updated**: [Current Date]
 
-Welcome to FinAI Travel support! We're here to help you get the most out of your travel planning experience.
+Welcome to Waylo support! We're here to help you get the most out of your travel planning experience.
 
 ---
 
@@ -20,7 +20,7 @@ Our chat support may be AI-assisted to provide you with quick answers, but compl
 
 ### Email Support
 For non-urgent matters or detailed inquiries, you can reach us at:
-**support@finaitravel.com**
+**support@waylo.app**
 
 We typically respond within 24-48 hours during business days.
 
@@ -135,7 +135,7 @@ For more details, see our [Privacy Policy](privacy_policy.md).
 ## Frequently Asked Questions
 
 ### How do I delete my account?
-Go to Settings → Account → Delete Account, or contact support@finaitravel.com for assistance.
+Go to Settings → Account → Delete Account, or contact support@waylo.app for assistance.
 
 ### How do I export my data?
 Navigate to Settings → Privacy → Export My Data. You'll receive a download link via email within 48 hours.
@@ -150,7 +150,7 @@ Yes. We use industry-standard encryption and never store sensitive payment infor
 Some features work offline, but AI chat, currency conversion, and sync require an internet connection.
 
 ### What languages does the app support?
-FinAI Travel supports multiple languages including English, Spanish, French, German, Hebrew, Arabic, Japanese, Korean, Chinese, Italian, Portuguese, and Russian.
+Waylo supports multiple languages including English, Spanish, French, German, Hebrew, Arabic, Japanese, Korean, Chinese, Italian, Portuguese, and Russian.
 
 ---
 
@@ -159,7 +159,7 @@ FinAI Travel supports multiple languages including English, Spanish, French, Ger
 If you can't find what you're looking for:
 
 1. **Start a Live Chat** in the app
-2. **Email us** at support@finaitravel.com
+2. **Email us** at support@waylo.app
 3. **Check our documentation** at Settings → Help & Support
 
 We're committed to making your travel planning experience as smooth as possible!

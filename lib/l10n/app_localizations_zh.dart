@@ -9,7 +9,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'TripBuddy';
+  String get appTitle => 'Waylo';
 
   @override
   String get home => '首页';
@@ -54,7 +54,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get viewAll => '查看全部';
 
   @override
-  String get startConversation => '开始与TripBuddy聊天！';
+  String get startConversation => '开始与Waylo聊天！';
 
   @override
   String get newChat => '新聊天';
@@ -402,7 +402,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get refreshTip => '刷新提示';
 
   @override
-  String get onboardingWelcome => '欢迎使用TripBuddy';
+  String get onboardingWelcome => '欢迎使用Waylo';
 
   @override
   String get onboardingLanguageTitle => '选择你的语言';
@@ -475,7 +475,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatWelcomeDescription =>
-      '我是TripBuddy，你的旅行伙伴！我在这里帮助你记录冒险、计划活动，并创建美丽的旅行日记。';
+      '我是Waylo，你的旅行伙伴！我在这里帮助你记录冒险、计划活动，并创建美丽的旅行日记。';
 
   @override
   String get chatWhatToDo => '你想做什么？';

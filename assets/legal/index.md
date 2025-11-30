@@ -1,15 +1,15 @@
 # Legal Documentation
 
-**FinAI Travel** - Legal and Compliance Documents
+**Waylo** - Legal and Compliance Documents
 
-Welcome to the legal documentation for FinAI Travel (TripBuddy). This section contains all important legal policies and support information.
+Welcome to the legal documentation for Waylo (Waylo). This section contains all important legal policies and support information.
 
 ---
 
 ## Available Documents
 
 ### [Help & Support](help_support.md)
-Get assistance with using FinAI Travel. Learn how to contact our support team, troubleshoot common issues, and understand how we handle support inquiries.
+Get assistance with using Waylo. Learn how to contact our support team, troubleshoot common issues, and understand how we handle support inquiries.
 
 **Topics Covered:**
 - Live chat support
@@ -38,7 +38,7 @@ Understand how we collect, use, protect, and share your personal information.
 ---
 
 ### [Terms of Service](terms_of_service.md)
-The legal agreement governing your use of FinAI Travel.
+The legal agreement governing your use of Waylo.
 
 **Topics Covered:**
 - Service description and features
@@ -58,7 +58,7 @@ The legal agreement governing your use of FinAI Travel.
 
 **Need Help?**
 - [Contact Support](help_support.md#how-to-contact-support)
-- Email: support@finaitravel.com
+- Email: support@waylo.app
 - In-app Live Chat: Settings → Help & Support
 
 **Privacy Concerns?**
@@ -76,7 +76,7 @@ The legal agreement governing your use of FinAI Travel.
 ## Important Notices
 
 ### AI Disclaimer
-FinAI Travel uses artificial intelligence to provide travel recommendations and insights. AI-generated content may contain errors and should not be relied upon as professional advice. Always verify critical information with official sources. [Learn more](terms_of_service.md#ai-disclaimer-and-limitations)
+Waylo uses artificial intelligence to provide travel recommendations and insights. AI-generated content may contain errors and should not be relied upon as professional advice. Always verify critical information with official sources. [Learn more](terms_of_service.md#ai-disclaimer-and-limitations)
 
 ### Not Professional Advice
 The App provides general travel planning assistance and is not a substitute for professional financial, legal, medical, or travel advice.
@@ -85,7 +85,7 @@ The App provides general travel planning assistance and is not a substitute for 
 We are committed to protecting your privacy. We never sell your personal information to third parties. [Privacy Policy](privacy_policy.md)
 
 ### Age Requirement
-FinAI Travel is intended for users aged 16 and older.
+Waylo is intended for users aged 16 and older.
 
 ---
 
@@ -96,22 +96,22 @@ These legal documents may be updated from time to time. When material changes oc
 - Email to your registered address
 - Updated "Last Updated" dates on each document
 
-**Your continued use of FinAI Travel after changes constitutes acceptance of the updated terms.**
+**Your continued use of Waylo after changes constitutes acceptance of the updated terms.**
 
 ---
 
 ## Contact Information
 
-**General Support**: support@finaitravel.com
+**General Support**: support@waylo.app
 
-**Privacy Inquiries**: support@finaitravel.com (Subject: "ATTN: Privacy")
+**Privacy Inquiries**: support@waylo.app (Subject: "ATTN: Privacy")
 
-**Legal Notices**: support@finaitravel.com (Subject: "Legal Notice")
+**Legal Notices**: support@waylo.app (Subject: "Legal Notice")
 
 **Response Time**: We aim to respond within 24-48 hours for most inquiries, up to 30 days for data rights requests as required by law.
 
 ---
 
-**Thank you for using FinAI Travel!**
+**Thank you for using Waylo!**
 
 We're committed to transparency, user privacy, and providing you with the best travel planning experience possible.

@@ -1,7 +1,7 @@
 # Gemini Code - Development Assistant Instructions
 
 **Purpose:** This file contains generic, reusable instructions for how Gemini Code should work across all projects.
-**Project-Specific Documentation:** See `architecture.md` for TripBuddy-specific architecture, features, database schema, and roadmap.
+**Project-Specific Documentation:** See `architecture.md` for Waylo-specific architecture, features, database schema, and roadmap.
 
 ---
 

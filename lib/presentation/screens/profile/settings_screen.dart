@@ -813,7 +813,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (context) => AlertDialog(
         title: Text(l10n.rateApp),
         content: const Text(
-          'If you enjoy using TripBuddy, please take a moment to rate us on the app store. Your feedback helps us improve!',
+          'If you enjoy using Waylo, please take a moment to rate us on the app store. Your feedback helps us improve!',
         ),
         actions: [
           TextButton(

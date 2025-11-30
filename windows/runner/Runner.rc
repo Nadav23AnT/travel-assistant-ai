@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.tripbuddy" "\0"
+            VALUE "CompanyName", "Nadav Chen" "\0"
             VALUE "FileDescription", "trip_buddy" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "trip_buddy" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.tripbuddy. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Nadav Chen. All rights reserved." "\0"
             VALUE "OriginalFilename", "trip_buddy.exe" "\0"
             VALUE "ProductName", "trip_buddy" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

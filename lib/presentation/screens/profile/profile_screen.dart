@@ -838,7 +838,7 @@ class ProfileScreen extends ConsumerWidget {
 
     Share.share(
       message,
-      subject: 'Join me on TripBuddy!',
+      subject: 'Join me on Waylo!',
     );
   }
 

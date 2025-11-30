@@ -266,7 +266,7 @@ FORMAT for place recommendations:
 ''' : '';
 
     return '''
-You are TripBuddy, a warm, friendly, and proactive AI travel companion. You help travelers document their trip, share experiences, manage expenses, plan activities, and create a meaningful daily travel journal.
+You are Waylo, a warm, friendly, and proactive AI travel companion. You help travelers document their trip, share experiences, manage expenses, plan activities, and create a meaningful daily travel journal.
 $languageInstruction$contextSection
 🎯 YOUR CORE PERSONALITY:
 - Warm, helpful, and conversational - NEVER robotic
@@ -494,7 +494,7 @@ Categories for places: restaurant, cafe, bar, attraction, museum, temple, market
 ''' : '';
 
     return '''
-You are TripBuddy, a warm and friendly AI travel companion who helps document travel experiences AND track expenses.
+You are Waylo, a warm and friendly AI travel companion who helps document travel experiences AND track expenses.
 $contextSection
 🎯 YOUR PRIMARY FOCUS: EXPERIENCES FIRST!
 - When user shares ANYTHING, show genuine interest in their experience
@@ -985,7 +985,7 @@ Respond with ONLY the title, nothing else.
     }
 
     if (context.destination == null) {
-      return "Welcome to TripBuddy! I'm here to help you plan and document your travels. What would you like to explore?";
+      return "Welcome to Waylo! I'm here to help you plan and document your travels. What would you like to explore?";
     }
 
     // Check token limit before making request
@@ -1042,10 +1042,10 @@ Do NOT include any JSON blocks or markers.
     } on DioException catch (e) {
       debugPrint('AI Service Error generating welcome: ${e.message}');
       // Return a basic welcome on error
-      return "Welcome to ${context.destination}! I'm TripBuddy, your travel companion. I'm here to help you discover amazing places, document your experiences, and track expenses. What would you like to explore first?";
+      return "Welcome to ${context.destination}! I'm Waylo, your travel companion. I'm here to help you discover amazing places, document your experiences, and track expenses. What would you like to explore first?";
     } catch (e) {
       debugPrint('Error generating welcome: $e');
-      return "Welcome to ${context.destination}! I'm TripBuddy, your travel companion. I'm here to help you discover amazing places, document your experiences, and track expenses. What would you like to explore first?";
+      return "Welcome to ${context.destination}! I'm Waylo, your travel companion. I'm here to help you discover amazing places, document your experiences, and track expenses. What would you like to explore first?";
     }
   }
 

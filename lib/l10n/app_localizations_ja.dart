@@ -9,7 +9,7 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
-  String get appTitle => 'TripBuddy';
+  String get appTitle => 'Waylo';
 
   @override
   String get home => 'ホーム';
@@ -54,7 +54,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get viewAll => 'すべて表示';
 
   @override
-  String get startConversation => 'TripBuddyと会話を始めましょう！';
+  String get startConversation => 'Wayloと会話を始めましょう！';
 
   @override
   String get newChat => '新しいチャット';
@@ -403,7 +403,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get refreshTip => 'ヒントを更新';
 
   @override
-  String get onboardingWelcome => 'TripBuddyへようこそ';
+  String get onboardingWelcome => 'Wayloへようこそ';
 
   @override
   String get onboardingLanguageTitle => '言語を選んでください';
@@ -476,7 +476,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get chatWelcomeDescription =>
-      '私はTripBuddy、あなたの旅のお供です！冒険を記録したり、アクティビティを計画したり、美しい旅行日記を作成するお手伝いをします。';
+      '私はWaylo、あなたの旅のお供です！冒険を記録したり、アクティビティを計画したり、美しい旅行日記を作成するお手伝いをします。';
 
   @override
   String get chatWhatToDo => '何をしたいですか？';

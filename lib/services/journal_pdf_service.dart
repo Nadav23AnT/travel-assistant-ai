@@ -25,8 +25,8 @@ class JournalPdfService {
   }) async {
     final pdf = pw.Document(
       title: '${trip.displayTitle} - Travel Journal',
-      author: 'TripBuddy',
-      creator: 'TripBuddy Travel Companion',
+      author: 'Waylo',
+      creator: 'Waylo Travel Companion',
     );
 
     // Load cover image if available
@@ -208,7 +208,7 @@ class JournalPdfService {
                     ),
                     pw.SizedBox(height: 5),
                     pw.Text(
-                      'Created with TripBuddy',
+                      'Created with Waylo',
                       style: pw.TextStyle(
                         fontSize: 10,
                         color: _textSecondary,
@@ -606,7 +606,7 @@ class JournalPdfService {
               child: pw.Column(
                 children: [
                   pw.Text(
-                    'Thank you for traveling with TripBuddy!',
+                    'Thank you for traveling with Waylo!',
                     style: pw.TextStyle(
                       fontSize: 12,
                       color: _textSecondary,

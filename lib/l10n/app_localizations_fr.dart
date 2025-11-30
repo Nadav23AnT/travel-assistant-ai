@@ -9,7 +9,7 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
-  String get appTitle => 'TripBuddy';
+  String get appTitle => 'Waylo';
 
   @override
   String get home => 'Accueil';
@@ -55,7 +55,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get viewAll => 'Voir Tout';
 
   @override
-  String get startConversation => 'Commencez une conversation avec TripBuddy!';
+  String get startConversation => 'Commencez une conversation avec Waylo!';
 
   @override
   String get newChat => 'Nouveau Chat';
@@ -407,7 +407,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get refreshTip => 'Actualiser le Conseil';
 
   @override
-  String get onboardingWelcome => 'Bienvenue sur TripBuddy';
+  String get onboardingWelcome => 'Bienvenue sur Waylo';
 
   @override
   String get onboardingLanguageTitle => 'Choisissez Votre Langue';
@@ -483,7 +483,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatWelcomeDescription =>
-      'Je suis TripBuddy, votre compagnon de voyage! Je suis la pour vous aider a documenter vos aventures, planifier des activites et creer un beau journal de voyage.';
+      'Je suis Waylo, votre compagnon de voyage! Je suis la pour vous aider a documenter vos aventures, planifier des activites et creer un beau journal de voyage.';
 
   @override
   String get chatWhatToDo => 'Que souhaitez-vous faire?';

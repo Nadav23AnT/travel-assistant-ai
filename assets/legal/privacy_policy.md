@@ -7,7 +7,7 @@
 
 ## 1. Introduction
 
-Welcome to **FinAI Travel** (also known as TripBuddy). We are committed to protecting your privacy and being transparent about how we collect, use, and safeguard your personal information.
+Welcome to **Waylo**. We are committed to protecting your privacy and being transparent about how we collect, use, and safeguard your personal information.
 
 This Privacy Policy explains:
 - What data we collect and why
@@ -16,7 +16,7 @@ This Privacy Policy explains:
 - Your rights and choices
 - How to contact us
 
-By using FinAI Travel, you agree to the practices described in this Privacy Policy.
+By using Waylo, you agree to the practices described in this Privacy Policy.
 
 ---
 
@@ -205,7 +205,7 @@ Depending on your location, you have the following rights:
 - Download your trip data, expenses, and chat history in CSV or JSON format
 
 ### 5.7 How to Exercise Your Rights
-Contact us at: **support@finaitravel.com**
+Contact us at: **support@waylo.app**
 
 We will respond to your request within 30 days (or as required by applicable law).
 
@@ -253,13 +253,13 @@ We retain your information only as long as necessary:
 **Backups**
 - Data in backups may persist for up to 90 days after deletion
 
-You can request specific retention information by contacting support@finaitravel.com.
+You can request specific retention information by contacting support@waylo.app.
 
 ---
 
 ## 8. International Data Transfers
 
-FinAI Travel operates globally. Your data may be transferred to and stored in countries outside your own, including:
+Waylo operates globally. Your data may be transferred to and stored in countries outside your own, including:
 - United States (Supabase, OpenAI/Anthropic servers)
 - European Union (for EU-based users, depending on server location)
 
@@ -268,17 +268,17 @@ FinAI Travel operates globally. Your data may be transferred to and stored in co
 - Standard Contractual Clauses (SCCs) or equivalent mechanisms are used where required
 - Data adequacy decisions recognized by regulatory authorities
 
-If you are in the EU/EEA and have concerns about data transfers, contact us at support@finaitravel.com.
+If you are in the EU/EEA and have concerns about data transfers, contact us at support@waylo.app.
 
 ---
 
 ## 9. Children's Privacy
 
-FinAI Travel is **not intended for users under the age of 16**.
+Waylo is **not intended for users under the age of 16**.
 
 We do not knowingly collect personal information from children. If we discover that a child under 16 has provided us with personal data, we will delete it immediately.
 
-**If you are a parent or guardian** and believe your child has used our app, please contact us at support@finaitravel.com so we can remove the data.
+**If you are a parent or guardian** and believe your child has used our app, please contact us at support@waylo.app so we can remove the data.
 
 ---
 
@@ -313,7 +313,7 @@ We may update this Privacy Policy from time to time to reflect:
 - Email notification to your registered address
 - Updated "Last Updated" date at the top of this policy
 
-**Your Continued Use** of FinAI Travel after changes constitutes acceptance of the updated policy. We encourage you to review this policy periodically.
+**Your Continued Use** of Waylo after changes constitutes acceptance of the updated policy. We encourage you to review this policy periodically.
 
 ---
 
@@ -326,7 +326,7 @@ If you are a California resident, you have additional rights under the Californi
 - **Right to Opt-Out**: We do not sell personal information (so no opt-out needed)
 - **Non-Discrimination**: We will not discriminate against you for exercising your rights
 
-To exercise these rights, contact support@finaitravel.com.
+To exercise these rights, contact support@waylo.app.
 
 ---
 
@@ -334,7 +334,9 @@ To exercise these rights, contact support@finaitravel.com.
 
 If you have questions, concerns, or requests regarding this Privacy Policy or your data:
 
-**Email**: support@finaitravel.com
+**Email**: support@waylo.app
+
+**Developer**: Nadav Chen, Developer, Founder & CEO
 
 **Data Protection Inquiries**: For GDPR or other privacy regulation questions, please specify "ATTN: Privacy" in your subject line.
 
@@ -350,4 +352,4 @@ For EU/EEA users, this policy complies with the General Data Protection Regulati
 
 ---
 
-**Thank you for trusting FinAI Travel with your travel planning. Your privacy matters to us.**
+**Thank you for trusting Waylo with your travel planning. Your privacy matters to us.**

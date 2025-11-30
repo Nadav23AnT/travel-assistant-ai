@@ -121,7 +121,7 @@ abstract class AppLocalizations {
   /// The app name
   ///
   /// In en, this message translates to:
-  /// **'TripBuddy'**
+  /// **'Waylo'**
   String get appTitle;
 
   /// Home navigation label
@@ -211,7 +211,7 @@ abstract class AppLocalizations {
   /// Prompt to start chatting
   ///
   /// In en, this message translates to:
-  /// **'Start a conversation with TripBuddy!'**
+  /// **'Start a conversation with Waylo!'**
   String get startConversation;
 
   /// Button to start new chat
@@ -889,7 +889,7 @@ abstract class AppLocalizations {
   /// Onboarding welcome title
   ///
   /// In en, this message translates to:
-  /// **'Welcome to TripBuddy'**
+  /// **'Welcome to Waylo'**
   String get onboardingWelcome;
 
   /// Language selection title
@@ -1033,7 +1033,7 @@ abstract class AppLocalizations {
   /// Chat welcome description
   ///
   /// In en, this message translates to:
-  /// **'I\'m TripBuddy, your travel companion! I\'m here to help you document your adventures, plan activities, and create a beautiful travel journal.'**
+  /// **'I\'m Waylo, your travel companion! I\'m here to help you document your adventures, plan activities, and create a beautiful travel journal.'**
   String get chatWelcomeDescription;
 
   /// Chat action prompt

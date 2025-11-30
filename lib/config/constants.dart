@@ -2,7 +2,7 @@ class AppConstants {
   AppConstants._();
 
   // App Info
-  static const String appName = 'TripBuddy';
+  static const String appName = 'Waylo';
   static const String appVersion = '1.0.0';
 
   // AI Providers

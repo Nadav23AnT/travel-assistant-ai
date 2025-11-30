@@ -9,7 +9,7 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get appTitle => 'TripBuddy';
+  String get appTitle => 'Waylo';
 
   @override
   String get home => '홈';
@@ -54,7 +54,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get viewAll => '전체 보기';
 
   @override
-  String get startConversation => 'TripBuddy와 대화를 시작하세요!';
+  String get startConversation => 'Waylo와 대화를 시작하세요!';
 
   @override
   String get newChat => '새 채팅';
@@ -404,7 +404,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get refreshTip => '팁 새로고침';
 
   @override
-  String get onboardingWelcome => 'TripBuddy에 오신 것을 환영합니다';
+  String get onboardingWelcome => 'Waylo에 오신 것을 환영합니다';
 
   @override
   String get onboardingLanguageTitle => '언어를 선택하세요';
@@ -477,7 +477,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chatWelcomeDescription =>
-      '저는 TripBuddy, 당신의 여행 동반자입니다! 모험을 기록하고, 활동을 계획하고, 아름다운 여행 일기를 만드는 것을 도와드립니다.';
+      '저는 Waylo, 당신의 여행 동반자입니다! 모험을 기록하고, 활동을 계획하고, 아름다운 여행 일기를 만드는 것을 도와드립니다.';
 
   @override
   String get chatWhatToDo => '무엇을 하고 싶으세요?';

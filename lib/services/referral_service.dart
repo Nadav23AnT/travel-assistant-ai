@@ -152,12 +152,12 @@ class ReferralService {
 
   /// Generate the share message for inviting friends
   String getShareMessage(String referralCode) {
-    return '''Hey! I've been using TripBuddy - an amazing AI travel companion app that helps plan trips, track expenses, and creates beautiful travel journals automatically.
+    return '''Hey! I've been using Waylo - an amazing AI travel companion app that helps plan trips, track expenses, and creates beautiful travel journals automatically.
 
 Use my referral code: $referralCode
 
 We'll both get 50 free AI credits when you sign up!
 
-Download: https://tripbuddy.app''';
+Download: https://waylo.app''';
   }
 }

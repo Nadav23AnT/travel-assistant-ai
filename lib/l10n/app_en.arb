@@ -2,7 +2,7 @@
   "@@locale": "en",
   "@@last_modified": "2024-11-26",
 
-  "appTitle": "TripBuddy",
+  "appTitle": "Waylo",
   "@appTitle": {
     "description": "The app name"
   },
@@ -68,7 +68,7 @@
     "description": "Link to view all items"
   },
 
-  "startConversation": "Start a conversation with TripBuddy!",
+  "startConversation": "Start a conversation with Waylo!",
   "@startConversation": {
     "description": "Prompt to start chatting"
   },
@@ -579,7 +579,7 @@
     "description": "Refresh tip button"
   },
 
-  "onboardingWelcome": "Welcome to TripBuddy",
+  "onboardingWelcome": "Welcome to Waylo",
   "@onboardingWelcome": {
     "description": "Onboarding welcome title"
   },
@@ -677,7 +677,7 @@
   "@chatWelcomeTitle": {
     "description": "Chat welcome title"
   },
-  "chatWelcomeDescription": "I'm TripBuddy, your travel companion! I'm here to help you document your adventures, plan activities, and create a beautiful travel journal.",
+  "chatWelcomeDescription": "I'm Waylo, your travel companion! I'm here to help you document your adventures, plan activities, and create a beautiful travel journal.",
   "@chatWelcomeDescription": {
     "description": "Chat welcome description"
   },

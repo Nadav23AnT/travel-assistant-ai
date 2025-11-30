@@ -1,4 +1,4 @@
-# TripBuddy - Architecture & Specification
+# Waylo - Architecture & Specification
 
 **Version:** 1.10.0
 **Last Updated:** November 29, 2025
@@ -8,9 +8,9 @@
 
 ## 1. App Overview
 
-### What is TripBuddy?
+### What is Waylo?
 
-TripBuddy is an AI-powered travel assistant mobile app that combines intelligent trip planning with expense tracking. It helps users plan trips through conversational AI, get personalized recommendations, and manage travel expenses including cost splitting with travel companions.
+Waylo is an AI-powered travel assistant mobile app that combines intelligent trip planning with expense tracking. It helps users plan trips through conversational AI, get personalized recommendations, and manage travel expenses including cost splitting with travel companions.
 
 ### Target Users
 
@@ -691,7 +691,7 @@ Usage:
 +----------------------------------+
 |                                  |
 |                                  |
-|          [TripBuddy Logo]        |
+|          [Waylo Logo]        |
 |                                  |
 |        Your AI Travel Buddy      |
 |                                  |
@@ -1586,7 +1586,7 @@ CREATE TABLE journal_entries (
 
 **Enhanced system prompt:**
 ```
-You are TripBuddy. The user speaks: {languages}. They are in {destination}
+You are Waylo. The user speaks: {languages}. They are in {destination}
 from {startDate} to {endDate} with a budget of {budget}.
 Personalize recommendations based on their preferences and location.
 ```

@@ -767,7 +767,7 @@ class TripDetailScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Chat with TripBuddy to get personalized recommendations for ${trip.displayDestination}!',
+                      'Chat with Waylo to get personalized recommendations for ${trip.displayDestination}!',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
@@ -780,7 +780,7 @@ class TripDetailScreen extends ConsumerWidget {
               child: OutlinedButton.icon(
                 onPressed: () => context.push('/chat/new'),
                 icon: const Icon(Icons.chat_outlined),
-                label: const Text('Ask TripBuddy'),
+                label: const Text('Ask Waylo'),
               ),
             ),
           ],

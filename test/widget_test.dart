@@ -7,11 +7,11 @@ void main() {
   testWidgets('App renders splash screen', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
-        child: TripBuddyApp(),
+        child: WayloApp(),
       ),
     );
 
-    // Verify that the app renders with TripBuddy branding
-    expect(find.text('TripBuddy'), findsOneWidget);
+    // Verify that the app renders with Waylo branding
+    expect(find.text('Waylo'), findsOneWidget);
   });
 }

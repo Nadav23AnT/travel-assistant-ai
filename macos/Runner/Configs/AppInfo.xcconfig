@@ -11,4 +11,4 @@ PRODUCT_NAME = trip_buddy
 PRODUCT_BUNDLE_IDENTIFIER = com.tripbuddy.tripBuddy
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.tripbuddy. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 Nadav Chen. All rights reserved.
