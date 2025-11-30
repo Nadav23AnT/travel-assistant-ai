@@ -107,7 +107,7 @@ class TripMembersCard extends ConsumerWidget {
 
   Widget _buildMembersList(BuildContext context, List<TripMemberModel> members, ThemeData theme) {
     return SizedBox(
-      height: 80,
+      height: 90,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: members.length,
