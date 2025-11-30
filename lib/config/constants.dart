@@ -5,8 +5,10 @@ class AppConstants {
   static const String appName = 'TripBuddy';
   static const String appVersion = '1.0.0';
 
-  // AI Providers
+  // AI Providers (Deprecated - use AIFeature configuration in env.dart instead)
+  @Deprecated('Use AIFeature configuration in env.dart with per-feature provider/model')
   static const String defaultAiProvider = 'openai';
+  @Deprecated('Use AIFeature configuration in env.dart with per-feature provider/model')
   static const String defaultAiModel = 'gpt-4';
 
   // Pagination
