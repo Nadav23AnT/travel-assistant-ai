@@ -2061,8 +2061,8 @@ REVENUECAT_API_KEY=...
 ### Sprint 6: Polish & Future
 - [x] PDF export for journals ✅
 - [ ] Premium subscription flow (RevenueCat)
-- [ ] Error handling improvements
-- [ ] Performance optimization
+- [x] Error handling improvements ✅
+- [x] Performance optimization ✅
 - [ ] Expense splitting and settlements
 - [ ] App store submission (iOS & Android)
 
