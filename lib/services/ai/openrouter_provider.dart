@@ -25,8 +25,8 @@ class OpenRouterProvider implements AIProviderInterface {
     _dio.options.headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $_apiKey',
-      'HTTP-Referer': 'https://tripbuddy.app', // Required by OpenRouter
-      'X-Title': 'TripBuddy', // Optional but recommended
+      'HTTP-Referer': 'https://waylo.app', // Required by OpenRouter
+      'X-Title': 'Waylo', // Optional but recommended
     };
   }
 
