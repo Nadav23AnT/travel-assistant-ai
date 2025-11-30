@@ -586,6 +586,24 @@ abstract class AppLocalizations {
   /// **'Active Trip'**
   String get activeTrip;
 
+  /// Other trips section header
+  ///
+  /// In en, this message translates to:
+  /// **'Other Trips'**
+  String get otherTrips;
+
+  /// Title when no trips exist
+  ///
+  /// In en, this message translates to:
+  /// **'No Trips Yet'**
+  String get noTripsYet;
+
+  /// Description when no trips exist
+  ///
+  /// In en, this message translates to:
+  /// **'Start planning your next adventure\nby creating a new trip.'**
+  String get noTripsDescription;
+
   /// Profile screen title
   ///
   /// In en, this message translates to:
@@ -2037,6 +2055,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to delete expense'**
   String get failedToDeleteExpense;
+
+  /// Pin chat action
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get pin;
+
+  /// Unpin chat action
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get unpin;
+
+  /// Chat deleted success message
+  ///
+  /// In en, this message translates to:
+  /// **'Chat deleted'**
+  String get chatDeleted;
 }
 
 class _AppLocalizationsDelegate

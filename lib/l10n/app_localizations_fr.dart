@@ -254,6 +254,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get activeTrip => 'Voyage Actif';
 
   @override
+  String get otherTrips => 'Other Trips';
+
+  @override
+  String get noTripsYet => 'No Trips Yet';
+
+  @override
+  String get noTripsDescription =>
+      'Start planning your next adventure\nby creating a new trip.';
+
+  @override
   String get profile => 'Profil';
 
   @override
@@ -1040,4 +1050,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get failedToDeleteExpense => 'Failed to delete expense';
+
+  @override
+  String get pin => 'Pin';
+
+  @override
+  String get unpin => 'Unpin';
+
+  @override
+  String get chatDeleted => 'Chat deleted';
 }

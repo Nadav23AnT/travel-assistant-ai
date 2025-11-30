@@ -251,6 +251,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get activeTrip => 'アクティブな旅行';
 
   @override
+  String get otherTrips => 'Other Trips';
+
+  @override
+  String get noTripsYet => 'No Trips Yet';
+
+  @override
+  String get noTripsDescription =>
+      'Start planning your next adventure\nby creating a new trip.';
+
+  @override
   String get profile => 'プロフィール';
 
   @override
@@ -1020,4 +1030,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get failedToDeleteExpense => 'Failed to delete expense';
+
+  @override
+  String get pin => 'Pin';
+
+  @override
+  String get unpin => 'Unpin';
+
+  @override
+  String get chatDeleted => 'Chat deleted';
 }

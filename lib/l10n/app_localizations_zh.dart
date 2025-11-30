@@ -251,6 +251,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get activeTrip => '活跃行程';
 
   @override
+  String get otherTrips => 'Other Trips';
+
+  @override
+  String get noTripsYet => 'No Trips Yet';
+
+  @override
+  String get noTripsDescription =>
+      'Start planning your next adventure\nby creating a new trip.';
+
+  @override
   String get profile => '个人资料';
 
   @override
@@ -1018,4 +1028,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get failedToDeleteExpense => 'Failed to delete expense';
+
+  @override
+  String get pin => 'Pin';
+
+  @override
+  String get unpin => 'Unpin';
+
+  @override
+  String get chatDeleted => 'Chat deleted';
 }

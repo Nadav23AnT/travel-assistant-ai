@@ -363,6 +363,18 @@
   "@activeTrip": {
     "description": "Active trip label"
   },
+  "otherTrips": "Other Trips",
+  "@otherTrips": {
+    "description": "Other trips section header"
+  },
+  "noTripsYet": "No Trips Yet",
+  "@noTripsYet": {
+    "description": "Title when no trips exist"
+  },
+  "noTripsDescription": "Start planning your next adventure\nby creating a new trip.",
+  "@noTripsDescription": {
+    "description": "Description when no trips exist"
+  },
 
   "profile": "Profile",
   "@profile": {
@@ -1391,5 +1403,18 @@
   "failedToDeleteExpense": "Failed to delete expense",
   "@failedToDeleteExpense": {
     "description": "Expense delete failure message"
+  },
+
+  "pin": "Pin",
+  "@pin": {
+    "description": "Pin chat action"
+  },
+  "unpin": "Unpin",
+  "@unpin": {
+    "description": "Unpin chat action"
+  },
+  "chatDeleted": "Chat deleted",
+  "@chatDeleted": {
+    "description": "Chat deleted success message"
   }
 }
