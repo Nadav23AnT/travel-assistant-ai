@@ -12,9 +12,11 @@ import '../../../l10n/app_localizations.dart';
 import '../../../services/referral_service.dart';
 import '../../../services/token_usage_service.dart';
 import '../../../utils/country_currency_helper.dart';
+import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/expenses_provider.dart';
 import '../../providers/locale_provider.dart';
+import '../../providers/support_provider.dart';
 import '../../providers/trips_provider.dart';
 
 /// Provider for token usage status (auto-refresh)
@@ -131,6 +133,9 @@ class ProfileScreen extends ConsumerWidget {
               child: Divider(height: 1),
             ),
 
+            // Admin Dashboard (only for admins)
+            _buildAdminSection(context, ref),
+
             // Menu items (compact)
             _buildMenuItem(
               context,
@@ -138,6 +143,7 @@ class ProfileScreen extends ConsumerWidget {
               title: l10n.settings,
               onTap: () => context.push(AppRoutes.settings),
             ),
+            _buildSupportMenuItem(context, ref),
             _buildMenuItem(
               context,
               icon: Icons.help_outline,
@@ -856,6 +862,103 @@ class ProfileScreen extends ConsumerWidget {
       title: Text(title, style: const TextStyle(fontSize: 13)),
       trailing: const Icon(Icons.chevron_right, color: AppTheme.textHint, size: 18),
       onTap: onTap,
+    );
+  }
+
+  /// Build admin section (only shown if user is admin)
+  Widget _buildAdminSection(BuildContext context, WidgetRef ref) {
+    final isAdminAsync = ref.watch(isAdminProvider);
+
+    return isAdminAsync.when(
+      data: (isAdmin) {
+        if (!isAdmin) return const SizedBox.shrink();
+
+        return Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.errorColor.withAlpha(13),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppTheme.errorColor.withAlpha(38),
+                  width: 1,
+                ),
+              ),
+              child: InkWell(
+                onTap: () => context.go(AppRoutes.admin),
+                borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppTheme.errorColor.withAlpha(26),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.admin_panel_settings,
+                        color: AppTheme.errorColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Admin Dashboard',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'Manage users, view stats, handle support',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: AppTheme.errorColor,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  /// Build support menu item with unread badge
+  Widget _buildSupportMenuItem(BuildContext context, WidgetRef ref) {
+    final unreadAsync = ref.watch(userUnreadCountProvider);
+
+    return ListTile(
+      dense: true,
+      visualDensity: VisualDensity.compact,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      leading: Badge(
+        isLabelVisible: (unreadAsync.valueOrNull ?? 0) > 0,
+        label: Text('${unreadAsync.valueOrNull ?? 0}'),
+        child: const Icon(Icons.support_agent, color: AppTheme.textSecondary, size: 20),
+      ),
+      title: const Text('Contact Support', style: TextStyle(fontSize: 13)),
+      trailing: const Icon(Icons.chevron_right, color: AppTheme.textHint, size: 18),
+      onTap: () => context.go(AppRoutes.support),
     );
   }
 
