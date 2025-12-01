@@ -308,9 +308,7 @@ class TripDetailScreen extends ConsumerWidget {
                   label: 'Edit Trip',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Edit trip coming soon')),
-                    );
+                    showEditTripDialog(context, trip);
                   },
                   isDark: isDark,
                 ),
@@ -332,9 +330,7 @@ class TripDetailScreen extends ConsumerWidget {
                   label: 'Delete Trip',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Delete coming soon')),
-                    );
+                    showDeleteTripDialog(context, trip);
                   },
                   isDark: isDark,
                   isDestructive: true,

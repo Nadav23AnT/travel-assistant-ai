@@ -13,6 +13,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../services/referral_service.dart';
 import '../../../services/token_usage_service.dart';
 import '../../../utils/country_currency_helper.dart';
+import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/expenses_provider.dart';
 import '../../providers/locale_provider.dart';
@@ -153,6 +154,9 @@ class ProfileScreen extends ConsumerWidget {
             // Invite Friends
             _GlassInviteFriendsCard(ref: ref, isDark: isDark, l10n: l10n),
             const SizedBox(height: 16),
+
+            // Admin Dashboard (only shown for admins)
+            _GlassAdminSection(ref: ref, isDark: isDark),
 
             // Menu items
             _GlassMenuItem(
@@ -1255,6 +1259,112 @@ class _GlassInviteFriendsCard extends StatelessWidget {
     Share.share(
       message,
       subject: 'Join me on Waylo!',
+    );
+  }
+}
+
+class _GlassAdminSection extends ConsumerWidget {
+  final WidgetRef ref;
+  final bool isDark;
+
+  const _GlassAdminSection({
+    required this.ref,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAdminAsync = ref.watch(isAdminProvider);
+
+    return isAdminAsync.when(
+      data: (isAdmin) {
+        if (!isAdmin) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      LiquidGlassColors.sunsetRose.withAlpha(isDark ? 30 : 20),
+                      LiquidGlassColors.sunsetOrange.withAlpha(isDark ? 20 : 15),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: LiquidGlassColors.sunsetRose.withAlpha(50),
+                  ),
+                ),
+                child: InkWell(
+                  onTap: () => context.go(AppRoutes.admin),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: LiquidGlassColors.sunsetRose.withAlpha(51),
+                          boxShadow: isDark
+                              ? LiquidGlassColors.neonGlow(
+                                  LiquidGlassColors.sunsetRose,
+                                  intensity: 0.3,
+                                  blur: 12,
+                                )
+                              : null,
+                        ),
+                        child: Icon(
+                          Icons.admin_panel_settings,
+                          color: LiquidGlassColors.sunsetRose,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Admin Dashboard',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              'Manage users, view stats, handle support',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white54 : Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: LiquidGlassColors.sunsetRose,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }
