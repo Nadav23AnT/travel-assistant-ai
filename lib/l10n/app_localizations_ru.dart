@@ -1035,4 +1035,38 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get failedToDeleteExpense => 'Failed to delete expense';
+
+  @override
+  String get editTrip => 'Edit Trip';
+
+  @override
+  String get tripUpdatedSuccess => 'Trip updated successfully!';
+
+  @override
+  String get failedToUpdateTrip => 'Failed to update trip';
+
+  @override
+  String get deleteTrip => 'Delete Trip';
+
+  @override
+  String get deleteTripConfirmation =>
+      'Are you sure you want to delete this trip? This action cannot be undone.';
+
+  @override
+  String get deleteTripWarningTitle => 'This will permanently delete:';
+
+  @override
+  String get deleteTripExpenses => 'All expenses for this trip';
+
+  @override
+  String get deleteTripJournal => 'All journal entries';
+
+  @override
+  String get deleteTripMembers => 'Shared member access';
+
+  @override
+  String get tripDeletedSuccess => 'Trip deleted successfully!';
+
+  @override
+  String get failedToDeleteTrip => 'Failed to delete trip';
 }

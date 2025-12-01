@@ -1391,5 +1391,50 @@
   "failedToDeleteExpense": "Failed to delete expense",
   "@failedToDeleteExpense": {
     "description": "Expense delete failure message"
+  },
+
+  "editTrip": "Edit Trip",
+  "@editTrip": {
+    "description": "Edit trip dialog title"
+  },
+  "tripUpdatedSuccess": "Trip updated successfully!",
+  "@tripUpdatedSuccess": {
+    "description": "Trip updated success message"
+  },
+  "failedToUpdateTrip": "Failed to update trip",
+  "@failedToUpdateTrip": {
+    "description": "Trip update failure message"
+  },
+  "deleteTrip": "Delete Trip",
+  "@deleteTrip": {
+    "description": "Delete trip dialog title"
+  },
+  "deleteTripConfirmation": "Are you sure you want to delete this trip? This action cannot be undone.",
+  "@deleteTripConfirmation": {
+    "description": "Delete trip confirmation message"
+  },
+  "deleteTripWarningTitle": "This will permanently delete:",
+  "@deleteTripWarningTitle": {
+    "description": "Delete trip warning title"
+  },
+  "deleteTripExpenses": "All expenses for this trip",
+  "@deleteTripExpenses": {
+    "description": "Delete trip expenses warning"
+  },
+  "deleteTripJournal": "All journal entries",
+  "@deleteTripJournal": {
+    "description": "Delete trip journal warning"
+  },
+  "deleteTripMembers": "Shared member access",
+  "@deleteTripMembers": {
+    "description": "Delete trip members warning"
+  },
+  "tripDeletedSuccess": "Trip deleted successfully!",
+  "@tripDeletedSuccess": {
+    "description": "Trip deleted success message"
+  },
+  "failedToDeleteTrip": "Failed to delete trip",
+  "@failedToDeleteTrip": {
+    "description": "Trip delete failure message"
   }
 }

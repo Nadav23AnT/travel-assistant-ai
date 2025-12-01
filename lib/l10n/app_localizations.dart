@@ -2037,6 +2037,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to delete expense'**
   String get failedToDeleteExpense;
+
+  /// Edit trip dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Trip'**
+  String get editTrip;
+
+  /// Trip updated success message
+  ///
+  /// In en, this message translates to:
+  /// **'Trip updated successfully!'**
+  String get tripUpdatedSuccess;
+
+  /// Trip update failure message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update trip'**
+  String get failedToUpdateTrip;
+
+  /// Delete trip dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Trip'**
+  String get deleteTrip;
+
+  /// Delete trip confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this trip? This action cannot be undone.'**
+  String get deleteTripConfirmation;
+
+  /// Delete trip warning title
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete:'**
+  String get deleteTripWarningTitle;
+
+  /// Delete trip expenses warning
+  ///
+  /// In en, this message translates to:
+  /// **'All expenses for this trip'**
+  String get deleteTripExpenses;
+
+  /// Delete trip journal warning
+  ///
+  /// In en, this message translates to:
+  /// **'All journal entries'**
+  String get deleteTripJournal;
+
+  /// Delete trip members warning
+  ///
+  /// In en, this message translates to:
+  /// **'Shared member access'**
+  String get deleteTripMembers;
+
+  /// Trip deleted success message
+  ///
+  /// In en, this message translates to:
+  /// **'Trip deleted successfully!'**
+  String get tripDeletedSuccess;
+
+  /// Trip delete failure message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete trip'**
+  String get failedToDeleteTrip;
 }
 
 class _AppLocalizationsDelegate

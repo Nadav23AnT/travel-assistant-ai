@@ -14,6 +14,8 @@ import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
 import '../../widgets/trips/trip_members_card.dart';
 import '../../widgets/trips/share_trip_sheet.dart';
+import '../../widgets/trips/edit_trip_dialog.dart';
+import '../../widgets/trips/delete_trip_dialog.dart';
 
 class TripDetailScreen extends ConsumerWidget {
   final String tripId;
@@ -887,10 +889,7 @@ class TripDetailScreen extends ConsumerWidget {
   void _handleMenuAction(BuildContext context, String action, TripModel trip) {
     switch (action) {
       case 'edit':
-        // TODO: Navigate to edit trip
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Edit trip coming soon')),
-        );
+        showEditTripDialog(context, trip);
         break;
       case 'share':
         ShareTripSheet.show(
@@ -900,10 +899,7 @@ class TripDetailScreen extends ConsumerWidget {
         );
         break;
       case 'delete':
-        // TODO: Show delete confirmation
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Delete coming soon')),
-        );
+        showDeleteTripDialog(context, trip);
         break;
     }
   }
