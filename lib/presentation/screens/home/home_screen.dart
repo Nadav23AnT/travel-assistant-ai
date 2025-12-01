@@ -1,10 +1,12 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../config/routes.dart';
-import '../../../config/theme.dart';
+import '../../../core/design/design_system.dart';
 import '../../../data/models/chat_models.dart';
 import '../../../data/models/expense_model.dart';
 import '../../../data/models/trip_model.dart';
@@ -24,6 +26,8 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     // Load user's home currency from profile on first build
     ref.watch(loadUserHomeCurrencyProvider);
 
@@ -31,7 +35,6 @@ class HomeScreen extends ConsumerWidget {
     final homeCurrency = ref.watch(userHomeCurrencyProvider);
     final exchangeRatesState = ref.watch(exchangeRatesProvider);
     if (exchangeRatesState.rates.isEmpty && !exchangeRatesState.isLoading) {
-      // Schedule the fetch after the build phase
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(exchangeRatesProvider.notifier).fetchRates(homeCurrency);
       });
@@ -44,49 +47,111 @@ class HomeScreen extends ConsumerWidget {
     final journalReadyData = ref.watch(journalReadyDataProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome header
-              _buildWelcomeHeader(context, ref),
-              const SizedBox(height: 24),
-
-              // Journal Ready notification (shows when trip ended)
-              if (showJournalReady && journalReadyData != null)
-                JournalReadyCard(
-                  result: journalReadyData,
-                  onDismiss: ref.read(dismissJournalNotificationProvider),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    LiquidGlassColors.canvasBaseDark,
+                    const Color(0xFF0D1321),
+                    LiquidGlassColors.canvasSubtleDark,
+                  ]
+                : [
+                    LiquidGlassColors.canvasBaseLight,
+                    const Color(0xFFF0F4FF),
+                    const Color(0xFFFAF5FF),
+                  ],
+          ),
+        ),
+        child: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              // Header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: _buildWelcomeHeader(context, ref, isDark),
                 ),
+              ),
+
+              // Journal Ready notification
               if (showJournalReady && journalReadyData != null)
-                const SizedBox(height: 16),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: JournalReadyCard(
+                      result: journalReadyData,
+                      onDismiss: ref.read(dismissJournalNotificationProvider),
+                    ),
+                  ),
+                ),
 
               // Active trip card
-              activeTripAsync.when(
-                loading: () => const _TripCardLoading(),
-                error: (error, stack) => _buildNoActiveTripCard(context),
-                data: (trip) => trip != null
-                    ? _buildActiveTripCard(context, ref, trip)
-                    : _buildNoActiveTripCard(context),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 24, 0, 0),
+                  child: activeTripAsync.when(
+                    loading: () => const _TripCardLoading(),
+                    error: (error, stack) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildNoActiveTripCard(context, isDark),
+                    ),
+                    data: (trip) => trip != null
+                        ? Consumer(
+                            builder: (context, ref, _) {
+                              final totalSpentAsync = ref.watch(
+                                tripTotalSpentProvider(trip.id),
+                              );
+                              return PremiumTripCard(
+                                trip: trip,
+                                totalSpent: totalSpentAsync.valueOrNull,
+                                onTap: () => context.push('/trips/${trip.id}'),
+                              );
+                            },
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: _buildNoActiveTripCard(context, isDark),
+                          ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 24),
 
               // Quick actions
-              _buildQuickActions(context),
-              const SizedBox(height: 24),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                  child: _buildQuickActions(context, isDark),
+                ),
+              ),
 
-              // Day Tip (AI-powered destination tips)
-              const DayTipCard(),
-              const SizedBox(height: 24),
+              // Day Tip
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
+                  child: DayTipCard(),
+                ),
+              ),
 
               // Recent Chats
-              _buildRecentChats(context, ref),
-              const SizedBox(height: 24),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                  child: _buildRecentChats(context, ref, isDark),
+                ),
+              ),
 
-              // Recent expenses
-              _buildRecentExpenses(context, ref),
+              // Recent Expenses
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 100),
+                  child: _buildRecentExpenses(context, ref, isDark),
+                ),
+              ),
             ],
           ),
         ),
@@ -94,12 +159,12 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildWelcomeHeader(BuildContext context, WidgetRef ref) {
+  Widget _buildWelcomeHeader(BuildContext context, WidgetRef ref, bool isDark) {
     final l10n = AppLocalizations.of(context);
     final user = ref.watch(currentUserProvider);
     final userName = user?.userMetadata?['full_name'] as String? ??
-                     user?.email?.split('@').first ??
-                     'Traveler';
+        user?.email?.split('@').first ??
+        'Traveler';
 
     final hour = DateTime.now().hour;
     String greeting;
@@ -120,13 +185,21 @@ class HomeScreen extends ConsumerWidget {
             children: [
               Text(
                 greeting,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
               ),
+              const SizedBox(height: 4),
               Text(
                 '$userName!',
-                style: Theme.of(context).textTheme.displaySmall,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.5,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -135,23 +208,42 @@ class HomeScreen extends ConsumerWidget {
         ),
         Row(
           children: [
-            // Reset button for testing
-            IconButton(
+            // Reset button (for testing)
+            GlowingIconButton(
+              icon: Icons.refresh_rounded,
               onPressed: () => _showResetDialog(context, ref),
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Reset data (for testing)',
-              color: AppTheme.textSecondary,
+              size: 44,
             ),
-            const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: AppTheme.primaryLight,
-              child: Text(
-                userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
+            const SizedBox(width: 12),
+            // Avatar
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LiquidGlassColors.auroraGradient,
+                boxShadow: isDark
+                    ? LiquidGlassColors.neonGlow(
+                        LiquidGlassColors.auroraIndigo,
+                        intensity: 0.4,
+                        blur: 16,
+                      )
+                    : [
+                        BoxShadow(
+                          color: LiquidGlassColors.auroraIndigo.withAlpha(77),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+              ),
+              child: Center(
+                child: Text(
+                  userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -163,545 +255,218 @@ class HomeScreen extends ConsumerWidget {
 
   void _showResetDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.resetDataTitle),
-        content: Text(l10n.resetDataMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(l10n.cancel),
+      builder: (dialogContext) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: AlertDialog(
+          backgroundColor: isDark
+              ? const Color(0xFF1A1F2E)
+              : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              await _resetUserData(context, ref);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorColor,
+          title: Text(
+            l10n.resetDataTitle,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
             ),
-            child: Text(l10n.reset),
           ),
-        ],
+          content: Text(
+            l10n.resetDataMessage,
+            style: TextStyle(
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+          ),
+          actions: [
+            GhostButton(
+              label: l10n.cancel,
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              width: 100,
+              height: 44,
+            ),
+            const SizedBox(width: 8),
+            PremiumButton.solid(
+              label: l10n.reset,
+              color: LiquidGlassColors.sunsetRose,
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                await _resetUserData(context, ref);
+              },
+              width: 100,
+              height: 44,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Future<void> _resetUserData(BuildContext context, WidgetRef ref) async {
-    // Store navigator and router before async gap
     final navigator = Navigator.of(context, rootNavigator: true);
     final router = GoRouter.of(context);
 
     try {
-      // Show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (dialogContext) => const Center(
-          child: CircularProgressIndicator(),
+        builder: (dialogContext) => Center(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF1A1F2E)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(
+                LiquidGlassColors.auroraIndigo,
+              ),
+            ),
+          ),
         ),
       );
 
-      // Reset user data
       final authService = ref.read(authServiceProvider);
       await authService.resetUserData();
 
-      // Close loading dialog using stored navigator
       navigator.pop();
-
-      // Navigate to onboarding using stored router
       router.go(AppRoutes.onboardingLanguages);
     } on AuthException catch (e) {
-      // Close loading dialog
       navigator.pop();
-
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to reset: ${e.message}'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: LiquidGlassColors.sunsetRose,
           ),
         );
       }
     } catch (e) {
-      // Handle any other errors
       navigator.pop();
-
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: LiquidGlassColors.sunsetRose,
           ),
         );
       }
     }
   }
 
-  Widget _buildActiveTripCard(BuildContext context, WidgetRef ref, TripModel trip) {
-    final l10n = AppLocalizations.of(context);
-    final dateFormat = DateFormat('MMM d');
-    final dateRange = trip.startDate != null && trip.endDate != null
-        ? '${dateFormat.format(trip.startDate!)} - ${dateFormat.format(trip.endDate!)}'
-        : l10n.datesNotSet;
-
-    final daysInfo = _getTripDaysInfo(context, trip);
-    final expensesAsync = ref.watch(tripExpensesProvider(trip.id));
-    final homeCurrency = ref.watch(userHomeCurrencyProvider);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/trips/${trip.id}'),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Trip header with flag background
-            Container(
-              width: double.infinity,
-              height: 140,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryColor.withAlpha(230),
-                    AppTheme.primaryColor.withAlpha(180),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Stack(
-                children: [
-                  // Large flag emoji as background
-                  Positioned(
-                    right: -20,
-                    top: -10,
-                    child: Text(
-                      trip.flagEmoji,
-                      style: const TextStyle(fontSize: 120),
-                    ),
-                  ),
-                  // Gradient overlay for readability
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.primaryColor.withAlpha(240),
-                          AppTheme.primaryColor.withAlpha(100),
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                    ),
-                  ),
-                  // Content
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(51),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                trip.status.toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              trip.flagEmoji,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Text(
-                          trip.displayTitle,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on,
-                              color: Colors.white70,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              trip.displayDestination,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Trip details
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      // Dates
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.dates,
-                              style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              dateRange,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Days info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              daysInfo.label,
-                              style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              daysInfo.value,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: daysInfo.color,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Expense indicator
-                  const SizedBox(height: 12),
-                  expensesAsync.when(
-                    loading: () => const SizedBox.shrink(),
-                    error: (error, stack) => const SizedBox.shrink(),
-                    data: (expenses) => _buildExpenseIndicator(
-                      context,
-                      ref,
-                      trip,
-                      expenses,
-                      homeCurrency,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExpenseIndicator(
-    BuildContext context,
-    WidgetRef ref,
-    TripModel trip,
-    List<ExpenseModel> expenses,
-    String homeCurrency,
-  ) {
+  Widget _buildNoActiveTripCard(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context);
 
-    if (expenses.isEmpty && trip.budget == null) {
-      return const SizedBox.shrink();
-    }
-
-    // Calculate total spent
-    double totalSpent = 0;
-    for (final expense in expenses) {
-      if (expense.currency == trip.budgetCurrency) {
-        totalSpent += expense.amount;
-      } else {
-        // Convert to trip's budget currency
-        final converted = ref.read(exchangeRatesProvider.notifier).convert(
-              expense.amount,
-              expense.currency,
-              trip.budgetCurrency,
-            );
-        totalSpent += converted;
-      }
-    }
-
-    // Calculate remaining budget
-    double? remaining;
-    double? budgetProgress;
-    if (trip.budget != null && trip.budget! > 0) {
-      remaining = trip.budget! - totalSpent;
-      budgetProgress = (totalSpent / trip.budget!).clamp(0.0, 1.0);
-    }
-
-    final currencySymbol = trip.currencySymbol;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(128),
-        borderRadius: BorderRadius.circular(10),
-      ),
+    return GlassCard(
+      padding: const EdgeInsets.all(32),
+      onTap: () => context.push(AppRoutes.createTrip),
       child: Column(
         children: [
-          Row(
-            children: [
-              // Total spent
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.account_balance_wallet,
-                      size: 16,
-                      color: AppTheme.primaryColor,
-                    ),
-                    const SizedBox(width: 6),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.totalSpent,
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 10,
-                          ),
-                        ),
-                        Text(
-                          '$currencySymbol${totalSpent.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: AppTheme.primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              // Remaining budget
-              if (remaining != null)
-                Expanded(
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.savings,
-                        size: 16,
-                        color: remaining >= 0 ? AppTheme.successColor : AppTheme.errorColor,
-                      ),
-                      const SizedBox(width: 6),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.remainingBudget,
-                            style: TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 10,
-                            ),
-                          ),
-                          Text(
-                            '$currencySymbol${remaining.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: remaining >= 0 ? AppTheme.successColor : AppTheme.errorColor,
-                            ),
-                          ),
-                        ],
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LiquidGlassColors.auroraGradient,
+              boxShadow: isDark
+                  ? LiquidGlassColors.neonGlow(
+                      LiquidGlassColors.auroraIndigo,
+                      intensity: 0.4,
+                      blur: 24,
+                    )
+                  : [
+                      BoxShadow(
+                        color: LiquidGlassColors.auroraIndigo.withAlpha(77),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
                       ),
                     ],
-                  ),
-                ),
-            ],
-          ),
-          // Budget progress bar
-          if (budgetProgress != null) ...[
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: budgetProgress,
-                minHeight: 4,
-                backgroundColor: AppTheme.textSecondary.withAlpha(51),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  budgetProgress > 0.9
-                      ? AppTheme.errorColor
-                      : budgetProgress > 0.7
-                          ? AppTheme.warningColor
-                          : AppTheme.successColor,
-                ),
-              ),
             ),
-          ],
+            child: const Icon(
+              Icons.add_location_alt_outlined,
+              size: 36,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            l10n.noActiveTrip,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.startPlanningAdventure,
+            style: TextStyle(
+              fontSize: 15,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          PremiumButton.gradient(
+            label: l10n.createNewTrip,
+            icon: Icons.add,
+            onPressed: () => context.push(AppRoutes.createTrip),
+            width: 200,
+            height: 52,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildNoActiveTripCard(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Card(
-      child: InkWell(
-        onTap: () => context.push(AppRoutes.createTrip),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Icon(
-                Icons.add_location_alt_outlined,
-                size: 48,
-                color: AppTheme.primaryColor,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.noActiveTrip,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.startPlanningAdventure,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => context.push(AppRoutes.createTrip),
-                icon: const Icon(Icons.add),
-                label: Text(l10n.createNewTrip),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  _TripDaysInfo _getTripDaysInfo(BuildContext context, TripModel trip) {
+  Widget _buildQuickActions(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context);
 
-    if (trip.startDate == null || trip.endDate == null) {
-      return _TripDaysInfo(
-        label: l10n.duration,
-        value: l10n.notSet,
-        color: AppTheme.textSecondary,
-      );
-    }
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final startDate = DateTime(
-      trip.startDate!.year,
-      trip.startDate!.month,
-      trip.startDate!.day,
-    );
-    final endDate = DateTime(
-      trip.endDate!.year,
-      trip.endDate!.month,
-      trip.endDate!.day,
-    );
-
-    if (today.isBefore(startDate)) {
-      final daysUntil = startDate.difference(today).inDays;
-      return _TripDaysInfo(
-        label: l10n.startsIn,
-        value: '$daysUntil ${daysUntil == 1 ? l10n.day : l10n.days}',
-        color: AppTheme.primaryColor,
-      );
-    } else if (today.isAfter(endDate)) {
-      return _TripDaysInfo(
-        label: l10n.status,
-        value: l10n.completed,
-        color: AppTheme.successColor,
-      );
-    } else {
-      final dayNumber = today.difference(startDate).inDays + 1;
-      final totalDays = endDate.difference(startDate).inDays + 1;
-      return _TripDaysInfo(
-        label: l10n.current,
-        value: l10n.dayOfTotal(dayNumber, totalDays),
-        color: AppTheme.accentColor,
-      );
-    }
-  }
-
-  Widget _buildQuickActions(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l10n.quickActions,
-          style: Theme.of(context).textTheme.headlineSmall,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: _QuickActionButton(
-                icon: Icons.add,
+              child: _QuickActionCard(
+                icon: Icons.add_rounded,
                 label: l10n.newTrip,
-                color: AppTheme.primaryColor,
+                gradient: LiquidGlassColors.auroraGradient,
                 onTap: () => context.push(AppRoutes.createTrip),
+                isDark: isDark,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _QuickActionButton(
-                icon: Icons.receipt_long,
+              child: _QuickActionCard(
+                icon: Icons.receipt_long_rounded,
                 label: l10n.addExpense,
-                color: AppTheme.accentColor,
+                gradient: LiquidGlassColors.oceanGradient,
                 onTap: () => context.push(AppRoutes.addExpense),
+                isDark: isDark,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _QuickActionButton(
-                icon: Icons.chat_bubble,
+              child: _QuickActionCard(
+                icon: Icons.chat_bubble_rounded,
                 label: l10n.aiChat,
-                color: AppTheme.successColor,
+                gradient: LiquidGlassColors.mintGradient,
                 onTap: () => context.go(AppRoutes.chat),
+                isDark: isDark,
               ),
             ),
           ],
@@ -710,7 +475,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentChats(BuildContext context, WidgetRef ref) {
+  Widget _buildRecentChats(BuildContext context, WidgetRef ref, bool isDark) {
     final l10n = AppLocalizations.of(context);
     final recentChatsAsync = ref.watch(recentChatsProvider);
 
@@ -722,91 +487,121 @@ class HomeScreen extends ConsumerWidget {
           children: [
             Text(
               l10n.recentChats,
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
-            TextButton(
-              onPressed: () => context.go(AppRoutes.chat),
-              child: Text(l10n.viewAll),
+            GestureDetector(
+              onTap: () => context.go(AppRoutes.chat),
+              child: Text(
+                l10n.viewAll,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: LiquidGlassColors.auroraIndigo,
+                ),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         recentChatsAsync.when(
-          loading: () => const Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
+          loading: () => GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  LiquidGlassColors.auroraIndigo,
+                ),
+              ),
             ),
           ),
-          error: (error, stack) => Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 32,
-                      color: AppTheme.errorColor,
+          error: (error, stack) => GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 32,
+                    color: LiquidGlassColors.sunsetRose,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.failedToLoadChats,
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : Colors.black54,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.failedToLoadChats,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
           data: (chats) {
             if (chats.isEmpty) {
-              return Card(
-                child: InkWell(
-                  onTap: () => context.go(AppRoutes.chat),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline,
-                            size: 32,
-                            color: AppTheme.textSecondary,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.startConversation,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                ),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            onPressed: () => context.go(AppRoutes.chat),
-                            icon: const Icon(Icons.add, size: 18),
-                            label: Text(l10n.newChat),
-                          ),
-                        ],
+              return GlassCard(
+                padding: const EdgeInsets.all(24),
+                onTap: () => context.go(AppRoutes.chat),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: LiquidGlassColors.mintEmerald.withAlpha(30),
+                        ),
+                        child: Icon(
+                          Icons.chat_bubble_outline,
+                          size: 28,
+                          color: LiquidGlassColors.mintEmerald,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.startConversation,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      PremiumButton.solid(
+                        label: l10n.newChat,
+                        icon: Icons.add,
+                        color: LiquidGlassColors.mintEmerald,
+                        onPressed: () => context.go(AppRoutes.chat),
+                        width: 140,
+                        height: 44,
+                      ),
+                    ],
                   ),
                 ),
               );
             }
 
-            return Card(
-              child: ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: chats.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  return _buildChatItem(context, chats[index]);
-                },
+            return GlassCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: chats.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final chat = entry.value;
+                  return Column(
+                    children: [
+                      _buildChatItem(context, chat, isDark),
+                      if (index < chats.length - 1)
+                        Divider(
+                          height: 1,
+                          color: isDark
+                              ? Colors.white.withAlpha(20)
+                              : Colors.black.withAlpha(10),
+                        ),
+                    ],
+                  );
+                }).toList(),
               ),
             );
           },
@@ -815,63 +610,86 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildChatItem(BuildContext context, ChatSession chat) {
+  Widget _buildChatItem(BuildContext context, ChatSession chat, bool isDark) {
     final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('MMM d');
     final timeFormat = DateFormat('h:mm a');
     final now = DateTime.now();
     final chatDate = chat.updatedAt;
 
-    // Format time: "Today 2:30 PM" or "Dec 15"
     String timeText;
     if (chatDate.year == now.year &&
         chatDate.month == now.month &&
         chatDate.day == now.day) {
       timeText = '${l10n.today} ${timeFormat.format(chatDate)}';
     } else if (chatDate.year == now.year &&
-               chatDate.month == now.month &&
-               chatDate.day == now.day - 1) {
+        chatDate.month == now.month &&
+        chatDate.day == now.day - 1) {
       timeText = l10n.yesterday;
     } else {
       timeText = dateFormat.format(chatDate);
     }
 
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppTheme.primaryLight,
-          borderRadius: BorderRadius.circular(8),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push('/chat/${chat.id}'),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: LiquidGlassColors.mintEmerald.withAlpha(isDark ? 40 : 25),
+                ),
+                child: Icon(
+                  Icons.chat_bubble_rounded,
+                  size: 20,
+                  color: LiquidGlassColors.mintEmerald,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      chat.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      timeText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white.withAlpha(128) : Colors.black45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: isDark ? Colors.white30 : Colors.black26,
+              ),
+            ],
+          ),
         ),
-        child: Icon(
-          Icons.chat_bubble,
-          color: AppTheme.primaryColor,
-          size: 20,
-        ),
       ),
-      title: Text(
-        chat.title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-      subtitle: Text(
-        timeText,
-        style: TextStyle(
-          color: AppTheme.textSecondary,
-          fontSize: 12,
-        ),
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: AppTheme.textSecondary,
-      ),
-      onTap: () => context.push('/chat/${chat.id}'),
     );
   }
 
-  Widget _buildRecentExpenses(BuildContext context, WidgetRef ref) {
+  Widget _buildRecentExpenses(BuildContext context, WidgetRef ref, bool isDark) {
     final l10n = AppLocalizations.of(context);
     final recentExpensesAsync = ref.watch(defaultRecentExpensesProvider);
 
@@ -883,81 +701,111 @@ class HomeScreen extends ConsumerWidget {
           children: [
             Text(
               l10n.recentExpenses,
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
-            TextButton(
-              onPressed: () => context.go(AppRoutes.expenses),
-              child: Text(l10n.viewAll),
+            GestureDetector(
+              onTap: () => context.go(AppRoutes.expenses),
+              child: Text(
+                l10n.viewAll,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: LiquidGlassColors.auroraIndigo,
+                ),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         recentExpensesAsync.when(
-          loading: () => const Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
+          loading: () => GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  LiquidGlassColors.auroraIndigo,
+                ),
+              ),
             ),
           ),
-          error: (error, stack) => Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 32,
-                      color: AppTheme.errorColor,
+          error: (error, stack) => GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 32,
+                    color: LiquidGlassColors.sunsetRose,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.failedToLoadExpenses,
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : Colors.black54,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.failedToLoadExpenses,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
           data: (expenses) {
             if (expenses.isEmpty) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(
+              return GlassCard(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: LiquidGlassColors.oceanSky.withAlpha(30),
+                        ),
+                        child: Icon(
                           Icons.receipt_outlined,
-                          size: 32,
-                          color: AppTheme.textSecondary,
+                          size: 28,
+                          color: LiquidGlassColors.oceanSky,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.noExpensesRecorded,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppTheme.textSecondary,
-                              ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.noExpensesRecorded,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: isDark ? Colors.white60 : Colors.black54,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );
             }
 
-            return Card(
-              child: ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: expenses.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  return _buildExpenseItem(context, expenses[index]);
-                },
+            return GlassCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: expenses.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final expense = entry.value;
+                  return Column(
+                    children: [
+                      _buildExpenseItem(context, expense, isDark),
+                      if (index < expenses.length - 1)
+                        Divider(
+                          height: 1,
+                          color: isDark
+                              ? Colors.white.withAlpha(20)
+                              : Colors.black.withAlpha(10),
+                        ),
+                    ],
+                  );
+                }).toList(),
               ),
             );
           },
@@ -966,78 +814,101 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildExpenseItem(BuildContext context, ExpenseModel expense) {
+  Widget _buildExpenseItem(BuildContext context, ExpenseModel expense, bool isDark) {
     final dateFormat = DateFormat('MMM d');
-    final categoryIcon = _getCategoryIcon(expense.category);
-    final categoryColor = AppTheme.categoryColors[expense.category] ?? AppTheme.textSecondary;
+    final categoryColor = _getCategoryColor(expense.category);
 
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: categoryColor.withAlpha(26),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          categoryIcon,
-          color: categoryColor,
-          size: 20,
-        ),
-      ),
-      title: Text(
-        expense.description,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-      subtitle: Text(
-        expense.expenseDate != null
-            ? dateFormat.format(expense.expenseDate!)
-            : 'No date',
-        style: TextStyle(
-          color: AppTheme.textSecondary,
-          fontSize: 12,
-        ),
-      ),
-      trailing: Text(
-        '${expense.amount.toStringAsFixed(2)} ${expense.currency}',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: categoryColor,
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: categoryColor.withAlpha(isDark ? 40 : 25),
+            ),
+            child: Icon(
+              _getCategoryIcon(expense.category),
+              size: 20,
+              color: categoryColor,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  expense.description,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  expense.expenseDate != null
+                      ? dateFormat.format(expense.expenseDate!)
+                      : 'No date',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white.withAlpha(128) : Colors.black45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${expense.amount.toStringAsFixed(2)} ${expense.currency}',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: categoryColor,
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'transport':
+        return LiquidGlassColors.categoryTransport;
+      case 'accommodation':
+        return LiquidGlassColors.categoryAccommodation;
+      case 'food':
+        return LiquidGlassColors.categoryFood;
+      case 'activities':
+        return LiquidGlassColors.categoryActivities;
+      case 'shopping':
+        return LiquidGlassColors.categoryShopping;
+      default:
+        return LiquidGlassColors.categoryOther;
+    }
   }
 
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
       case 'transport':
-        return Icons.directions_car;
+        return Icons.directions_car_rounded;
       case 'accommodation':
-        return Icons.hotel;
+        return Icons.hotel_rounded;
       case 'food':
-        return Icons.restaurant;
+        return Icons.restaurant_rounded;
       case 'activities':
-        return Icons.attractions;
+        return Icons.attractions_rounded;
       case 'shopping':
-        return Icons.shopping_bag;
+        return Icons.shopping_bag_rounded;
       default:
-        return Icons.receipt_long;
+        return Icons.receipt_long_rounded;
     }
   }
-}
-
-class _TripDaysInfo {
-  final String label;
-  final String value;
-  final Color color;
-
-  _TripDaysInfo({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
 }
 
 class _TripCardLoading extends StatelessWidget {
@@ -1045,57 +916,131 @@ class _TripCardLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        child: const Center(
-          child: CircularProgressIndicator(),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GlassCard(
+        padding: const EdgeInsets.all(32),
+        child: Center(
+          child: Column(
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  LiquidGlassColors.auroraIndigo,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Loading trip...',
+                style: TextStyle(
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _QuickActionButton extends StatelessWidget {
+class _QuickActionCard extends StatefulWidget {
   final IconData icon;
   final String label;
-  final Color color;
+  final LinearGradient gradient;
   final VoidCallback onTap;
+  final bool isDark;
 
-  const _QuickActionButton({
+  const _QuickActionCard({
     required this.icon,
     required this.label,
-    required this.color,
+    required this.gradient,
     required this.onTap,
+    required this.isDark,
   });
 
   @override
+  State<_QuickActionCard> createState() => _QuickActionCardState();
+}
+
+class _QuickActionCardState extends State<_QuickActionCard> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withAlpha(26),
-                  shape: BoxShape.circle,
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        transform: Matrix4.identity()..scale(_isPressed ? 0.95 : 1.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: widget.isDark
+                    ? Colors.white.withAlpha(20)
+                    : Colors.white.withAlpha(179),
+                border: Border.all(
+                  width: 1.5,
+                  color: widget.isDark
+                      ? Colors.white.withAlpha(31)
+                      : Colors.white.withAlpha(128),
                 ),
-                child: Icon(icon, color: color),
+                boxShadow: widget.isDark
+                    ? LiquidGlassColors.neonGlow(
+                        widget.gradient.colors.first,
+                        intensity: _isPressed ? 0.5 : 0.25,
+                        blur: 20,
+                      )
+                    : [
+                        BoxShadow(
+                          color: widget.gradient.colors.first.withAlpha(51),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+              child: Column(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: widget.gradient,
                     ),
-                textAlign: TextAlign.center,
+                    child: Icon(
+                      widget.icon,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: widget.isDark ? Colors.white : Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

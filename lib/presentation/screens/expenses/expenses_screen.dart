@@ -1,9 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/routes.dart';
-import '../../../config/theme.dart';
+import '../../../core/design/design_system.dart';
 import '../../../data/models/expense_stats.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../providers/currency_provider.dart';
@@ -43,55 +44,36 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final displayMode = ref.watch(currencyDisplayModeProvider);
     final homeCurrency = ref.watch(userHomeCurrencyProvider);
     final localCurrency = ref.watch(tripLocalCurrencyProvider);
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(l10n.expenses),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          l10n.expenses,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
         actions: [
-          // Currency toggle with 3 options: Home, USD, Local
+          // Currency toggle with glass styling
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: SegmentedButton<CurrencyDisplayMode>(
-              style: SegmentedButton.styleFrom(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              ),
-              segments: [
-                ButtonSegment(
-                  value: CurrencyDisplayMode.home,
-                  label: Text(
-                    homeCurrency,
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                  tooltip: l10n.homeCurrency,
-                ),
-                ButtonSegment(
-                  value: CurrencyDisplayMode.usd,
-                  label: const Text(
-                    'USD',
-                    style: TextStyle(fontSize: 11),
-                  ),
-                  tooltip: l10n.usDollar,
-                ),
-                ButtonSegment(
-                  value: CurrencyDisplayMode.local,
-                  label: Text(
-                    localCurrency ?? 'Local',
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                  tooltip: localCurrency != null
-                      ? DestinationCurrencyMapper.getCurrencyDisplayName(localCurrency)
-                      : l10n.localCurrency,
-                ),
-              ],
-              selected: {displayMode},
-              onSelectionChanged: (selected) async {
-                final newMode = selected.first;
+            child: _GlassCurrencySelector(
+              displayMode: displayMode,
+              homeCurrency: homeCurrency,
+              localCurrency: localCurrency,
+              isDark: isDark,
+              l10n: l10n,
+              onModeChanged: (newMode) async {
                 ref.read(currencyDisplayModeProvider.notifier).state = newMode;
 
-                // Fetch exchange rates for the target currency
                 String targetCurrency;
                 switch (newMode) {
                   case CurrencyDisplayMode.home:
@@ -113,31 +95,37 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       body: dashboardAsync.when(
         data: (data) {
           if (data.expenses.isEmpty) {
-            return _buildEmptyState(context);
+            return _buildEmptyState(context, isDark, l10n);
           }
           return RefreshIndicator(
             onRefresh: _onRefresh,
+            color: LiquidGlassColors.auroraIndigo,
             child: CustomScrollView(
               slivers: [
+                // Spacer for app bar
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 100),
+                ),
+
                 // Summary Stats Section
                 SliverToBoxAdapter(
-                  child: _buildSummarySection(data),
+                  child: _buildSummarySection(data, isDark, l10n),
                 ),
 
                 // Trip Info (if available)
                 if (data.trip != null)
                   SliverToBoxAdapter(
-                    child: _buildTripInfoBanner(data),
+                    child: _buildTripInfoBanner(data, isDark, l10n),
                   ),
 
                 // Category Breakdown Section
                 SliverToBoxAdapter(
-                  child: _buildCategorySection(data),
+                  child: _buildCategorySection(data, isDark, l10n),
                 ),
 
                 // Spending Over Time Section
                 SliverToBoxAdapter(
-                  child: _buildSpendingOverTimeSection(data),
+                  child: _buildSpendingOverTimeSection(data, isDark, l10n),
                 ),
 
                 // Expense History Section
@@ -149,27 +137,31 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   ),
                 ),
 
-                // Bottom padding
+                // Bottom padding for floating nav
                 const SliverToBoxAdapter(
-                  child: SizedBox(height: 80),
+                  child: SizedBox(height: 120),
                 ),
               ],
             ),
           );
         },
-        loading: () => _buildLoadingState(),
-        error: (error, stack) => _buildErrorState(context, error),
+        loading: () => _buildLoadingState(isDark, l10n),
+        error: (error, stack) => _buildErrorState(context, error, isDark, l10n),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.addExpense),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.addExpense),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: PremiumButton.gradient(
+          label: l10n.addExpense,
+          icon: Icons.add,
+          onPressed: () => context.push(AppRoutes.addExpense),
+          width: 160,
+          height: 52,
+        ),
       ),
     );
   }
 
-  Widget _buildSummarySection(ExpensesDashboardData data) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildSummarySection(ExpensesDashboardData data, bool isDark, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -177,9 +169,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         children: [
           Text(
             l10n.overview,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
           ),
           const SizedBox(height: 16),
           SingleChildScrollView(
@@ -215,58 +209,83 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     );
   }
 
-  Widget _buildTripInfoBanner(ExpensesDashboardData data) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildTripInfoBanner(ExpensesDashboardData data, bool isDark, AppLocalizations l10n) {
     final trip = data.trip!;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.primaryLight.withAlpha(77),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.flight_takeoff,
-            color: AppTheme.primaryColor,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              trip.displayTitle,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: LiquidGlassColors.auroraIndigo.withAlpha(isDark ? 30 : 20),
+              border: Border.all(
+                color: LiquidGlassColors.auroraIndigo.withAlpha(51),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: LiquidGlassColors.auroraIndigo.withAlpha(51),
+                    shape: BoxShape.circle,
                   ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+                  child: Icon(
+                    Icons.flight_takeoff,
+                    color: LiquidGlassColors.auroraIndigo,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    trip.displayTitle,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (data.stats.remainingDays > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      gradient: LiquidGlassColors.auroraGradient,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      l10n.daysLeft(data.stats.remainingDays),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-          if (data.stats.remainingDays > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                l10n.daysLeft(data.stats.remainingDays),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildCategorySection(ExpensesDashboardData data) {
-    final l10n = AppLocalizations.of(context);
-    // Define all categories for empty state
+  Widget _buildCategorySection(ExpensesDashboardData data, bool isDark, AppLocalizations l10n) {
+    final categoryColors = {
+      'transport': LiquidGlassColors.auroraIndigo,
+      'accommodation': LiquidGlassColors.auroraPurple,
+      'food': LiquidGlassColors.sunsetOrange,
+      'activities': LiquidGlassColors.oceanTeal,
+      'shopping': LiquidGlassColors.sunsetRose,
+      'other': LiquidGlassColors.mintEmerald,
+    };
+
     final allCategories = [
       ('transport', l10n.categoryTransport, Icons.directions_car),
       ('accommodation', l10n.categoryAccommodation, Icons.hotel),
@@ -283,9 +302,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         children: [
           Text(
             l10n.byCategory,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -294,8 +315,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ExpensePieChart(
               categoryTotals: data.categoryTotals,
               displayCurrency: data.displayCurrency,
-              onCategoryTap: (category) =>
-                  _showCategoryDetail(data, category),
+              onCategoryTap: (category) => _showCategoryDetail(data, category),
             ),
 
           const SizedBox(height: 16),
@@ -320,8 +340,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   amount: 0,
                   percentage: 0,
                   count: 0,
-                  color: AppTheme.categoryColors[categoryKey] ??
-                      AppTheme.textSecondary,
+                  color: categoryColors[categoryKey] ?? LiquidGlassColors.auroraIndigo,
                 ),
               );
 
@@ -329,8 +348,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 return EmptyCategoryCard(
                   categoryName: categoryName,
                   icon: icon,
-                  color: AppTheme.categoryColors[categoryKey] ??
-                      AppTheme.textSecondary,
+                  color: categoryColors[categoryKey] ?? LiquidGlassColors.auroraIndigo,
                 );
               }
 
@@ -346,8 +364,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     );
   }
 
-  Widget _buildSpendingOverTimeSection(ExpensesDashboardData data) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildSpendingOverTimeSection(ExpensesDashboardData data, bool isDark, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -355,12 +372,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         children: [
           Text(
             l10n.spendingOverTime,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
           ),
           const SizedBox(height: 16),
-          Card(
+          GlassCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: SpendingLineChart(
@@ -375,6 +394,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   void _showCategoryDetail(ExpensesDashboardData data, String category) {
+    final categoryColors = {
+      'transport': LiquidGlassColors.auroraIndigo,
+      'accommodation': LiquidGlassColors.auroraPurple,
+      'food': LiquidGlassColors.sunsetOrange,
+      'activities': LiquidGlassColors.oceanTeal,
+      'shopping': LiquidGlassColors.sunsetRose,
+      'other': LiquidGlassColors.mintEmerald,
+    };
+
     final categoryTotal = data.categoryTotals.firstWhere(
       (c) => c.category == category,
       orElse: () => CategoryTotal(
@@ -382,12 +410,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         amount: 0,
         percentage: 0,
         count: 0,
-        color: AppTheme.categoryColors[category] ?? AppTheme.textSecondary,
+        color: categoryColors[category] ?? LiquidGlassColors.auroraIndigo,
       ),
     );
 
-    final expenses =
-        data.expenses.where((e) => e.category == category).toList();
+    final expenses = data.expenses.where((e) => e.category == category).toList();
 
     showCategoryDetailSheet(
       context,
@@ -398,8 +425,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildEmptyState(BuildContext context, bool isDark, AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -407,37 +433,56 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
-                color: AppTheme.primaryLight.withAlpha(77),
                 shape: BoxShape.circle,
+                gradient: LiquidGlassColors.auroraGradient,
+                boxShadow: isDark
+                    ? LiquidGlassColors.neonGlow(
+                        LiquidGlassColors.auroraIndigo,
+                        intensity: 0.5,
+                        blur: 32,
+                      )
+                    : [
+                        BoxShadow(
+                          color: LiquidGlassColors.auroraIndigo.withAlpha(77),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.receipt_long_outlined,
-                size: 64,
-                color: AppTheme.primaryColor,
+                size: 56,
+                color: Colors.white,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
               l10n.noExpensesYet,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               l10n.startTrackingExpenses,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.white60 : Colors.black54,
+                height: 1.5,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
+            const SizedBox(height: 32),
+            PremiumButton.gradient(
+              label: l10n.addExpense,
+              icon: Icons.add,
               onPressed: () => context.push(AppRoutes.addExpense),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.addExpense),
+              width: 200,
             ),
           ],
         ),
@@ -445,18 +490,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     );
   }
 
-  Widget _buildLoadingState() {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildLoadingState(bool isDark, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 100, left: 16, right: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             l10n.overview,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
           ),
           const SizedBox(height: 16),
           SingleChildScrollView(
@@ -484,45 +530,62 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          const Center(
-            child: CircularProgressIndicator(),
+          Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(
+                LiquidGlassColors.auroraIndigo,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildErrorState(BuildContext context, Object error) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildErrorState(BuildContext context, Object error, bool isDark, AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppTheme.errorColor,
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: LiquidGlassColors.sunsetRose.withAlpha(51),
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: 40,
+                color: LiquidGlassColors.sunsetRose,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
               l10n.somethingWentWrong,
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               error.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
+              style: TextStyle(
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            PremiumButton.solid(
+              label: l10n.tryAgain,
+              icon: Icons.refresh,
               onPressed: _onRefresh,
-              icon: const Icon(Icons.refresh),
-              label: Text(l10n.tryAgain),
+              color: LiquidGlassColors.sunsetRose,
+              width: 160,
             ),
           ],
         ),
@@ -530,12 +593,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     );
   }
 
-  /// Build a map of expense ID to converted amount for currency display
   Map<String, double>? _buildConvertedAmountsMap(ExpensesDashboardData data) {
     final displayCurrency = data.displayCurrency;
     final rates = ref.read(exchangeRatesProvider);
 
-    // If no rates or all expenses are in display currency, return null
     if (rates.rates.isEmpty) return null;
 
     final convertedAmounts = <String, double>{};
@@ -551,5 +612,110 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     }
 
     return convertedAmounts.isNotEmpty ? convertedAmounts : null;
+  }
+}
+
+/// Glass-styled currency selector
+class _GlassCurrencySelector extends StatelessWidget {
+  final CurrencyDisplayMode displayMode;
+  final String homeCurrency;
+  final String? localCurrency;
+  final bool isDark;
+  final AppLocalizations l10n;
+  final ValueChanged<CurrencyDisplayMode> onModeChanged;
+
+  const _GlassCurrencySelector({
+    required this.displayMode,
+    required this.homeCurrency,
+    required this.localCurrency,
+    required this.isDark,
+    required this.l10n,
+    required this.onModeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          height: 36,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: isDark
+                ? Colors.white.withAlpha(15)
+                : Colors.white.withAlpha(128),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withAlpha(26)
+                  : Colors.white.withAlpha(179),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _CurrencyOption(
+                label: homeCurrency,
+                isSelected: displayMode == CurrencyDisplayMode.home,
+                isDark: isDark,
+                onTap: () => onModeChanged(CurrencyDisplayMode.home),
+              ),
+              _CurrencyOption(
+                label: 'USD',
+                isSelected: displayMode == CurrencyDisplayMode.usd,
+                isDark: isDark,
+                onTap: () => onModeChanged(CurrencyDisplayMode.usd),
+              ),
+              _CurrencyOption(
+                label: localCurrency ?? 'Local',
+                isSelected: displayMode == CurrencyDisplayMode.local,
+                isDark: isDark,
+                onTap: () => onModeChanged(CurrencyDisplayMode.local),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CurrencyOption extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _CurrencyOption({
+    required this.label,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          gradient: isSelected ? LiquidGlassColors.auroraGradient : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.white70 : Colors.black54),
+          ),
+        ),
+      ),
+    );
   }
 }

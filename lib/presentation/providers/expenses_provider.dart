@@ -65,6 +65,43 @@ final tripExpenseTotalsProvider =
   return repository.getTripExpenseTotals(tripId);
 });
 
+/// Provider to get total spent for a trip (converted to trip's budget currency)
+/// This is used by trip cards to display the total spent amount
+final tripTotalSpentProvider =
+    FutureProvider.family<double, String>((ref, tripId) async {
+  // Get all expenses for this trip
+  final expenses = await ref.watch(tripExpensesProvider(tripId).future);
+  if (expenses.isEmpty) return 0.0;
+
+  // Get the trip to determine the budget currency
+  final trip = await ref.watch(tripByIdProvider(tripId).future);
+  final targetCurrency = trip?.budgetCurrency ?? 'USD';
+
+  // Get exchange rates state for conversion
+  final ratesState = ref.watch(exchangeRatesProvider);
+
+  // Sum all expenses, converting to target currency
+  double total = 0.0;
+  for (final expense in expenses) {
+    if (expense.currency == targetCurrency) {
+      total += expense.amount;
+    } else if (ratesState.rates.isNotEmpty) {
+      // Convert using cached rates
+      final converted = ref.read(exchangeRatesProvider.notifier).convert(
+            expense.amount,
+            expense.currency,
+            targetCurrency,
+          );
+      total += converted;
+    } else {
+      // Fallback: just add the amount (no conversion available)
+      total += expense.amount;
+    }
+  }
+
+  return total;
+});
+
 /// Provider to get expenses grouped by category for a trip
 final tripExpensesByCategoryProvider =
     FutureProvider.family<Map<String, double>, String>((ref, tripId) async {
@@ -90,6 +127,7 @@ final tripExpensesRefreshProvider =
   return () {
     ref.invalidate(tripExpensesProvider(tripId));
     ref.invalidate(tripExpenseTotalsProvider(tripId));
+    ref.invalidate(tripTotalSpentProvider(tripId));
     ref.invalidate(tripExpensesByCategoryProvider(tripId));
     ref.invalidate(userExpensesProvider);
     ref.invalidate(defaultRecentExpensesProvider);
