@@ -1,8 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../config/theme.dart';
+import '../../../core/design/design_system.dart';
 import '../../../data/models/chat_models.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/token_usage_service.dart';
@@ -14,7 +15,8 @@ import '../../widgets/chat/journal_reminder_card.dart';
 import '../../widgets/chat/place_recommendation_card.dart';
 
 /// Provider for credit usage in chat (auto-refresh)
-final chatCreditUsageProvider = FutureProvider.autoDispose<TokenCheckResult>((ref) async {
+final chatCreditUsageProvider =
+    FutureProvider.autoDispose<TokenCheckResult>((ref) async {
   final service = TokenUsageService();
   return service.checkBeforeRequest();
 });
@@ -55,9 +57,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         await chatNotifier.createNewSession();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${l10n.errorCreatingChat}: $e')),
-          );
+          _showGlassSnackBar('${l10n.errorCreatingChat}: $e', isError: true);
         }
       }
     } else {
@@ -66,9 +66,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         await chatNotifier.loadSession(widget.sessionId);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${l10n.errorLoadingChat}: $e')),
-          );
+          _showGlassSnackBar('${l10n.errorLoadingChat}: $e', isError: true);
         }
       }
     }
@@ -79,6 +77,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showGlassSnackBar(String message, {required bool isError}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError
+            ? LiquidGlassColors.sunsetRose.withAlpha(200)
+            : LiquidGlassColors.mintEmerald.withAlpha(200),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   Future<void> _sendMessage() async {
@@ -95,12 +106,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ref.invalidate(chatCreditUsageProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showGlassSnackBar('Error: $e', isError: true);
       }
     }
   }
@@ -119,27 +125,51 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _showDeleteDialog() {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteChat),
-        content: Text(l10n.deleteChatConfirmation),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          l10n.deleteChat,
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          l10n.deleteChatConfirmation,
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black54,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
+            child: Text(
+              l10n.cancel,
+              style: TextStyle(
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () async {
               final navigator = Navigator.of(dialogContext);
               final router = GoRouter.of(context);
               navigator.pop();
-              await ref.read(chatNotifierProvider.notifier).deleteCurrentSession();
+              await ref
+                  .read(chatNotifierProvider.notifier)
+                  .deleteCurrentSession();
               if (mounted) {
                 router.pop();
               }
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: LiquidGlassColors.sunsetRose,
+            ),
             child: Text(l10n.delete),
           ),
         ],
@@ -149,13 +179,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _confirmExpense() async {
     final l10n = AppLocalizations.of(context);
-    final success = await ref.read(chatNotifierProvider.notifier).confirmPendingExpense();
+    final success =
+        await ref.read(chatNotifierProvider.notifier).confirmPendingExpense();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? l10n.expenseAdded : l10n.failedToAddExpense),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
+      _showGlassSnackBar(
+        success ? l10n.expenseAdded : l10n.failedToAddExpense,
+        isError: !success,
       );
       _scrollToBottom();
     }
@@ -172,186 +201,348 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final pendingExpense = chatState.pendingExpense;
     final isCreatingExpense = chatState.isCreatingExpense;
     final pendingPlaces = chatState.pendingPlaces;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Watch for active trip and journal status for reminder
     final activeTripAsync = ref.watch(activeTripProvider);
-    final shouldShowJournalReminder = !_journalReminderDismissed &&
-        ref.watch(shouldShowJournalPromptProvider);
+    final shouldShowJournalReminder =
+        !_journalReminderDismissed && ref.watch(shouldShowJournalPromptProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            ref.read(chatNotifierProvider.notifier).reset();
-            context.pop();
-          },
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  LiquidGlassColors.canvasBaseDark,
+                  const Color(0xFF0D1321),
+                  LiquidGlassColors.canvasSubtleDark,
+                ]
+              : [
+                  LiquidGlassColors.canvasBaseLight,
+                  const Color(0xFFF0F4FF),
+                  const Color(0xFFFAF5FF),
+                ],
         ),
-        title: Text(session?.title ?? l10n.aiChat),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'delete') {
-                _showDeleteDialog();
-              }
-            },
-            itemBuilder: (menuContext) => [
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    const Icon(Icons.delete_outline, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Text(l10n.deleteChat, style: const TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Credit usage indicator at top
-                _buildCreditIndicator(context, ref),
-
-                // Journal reminder banner (if applicable)
-                if (shouldShowJournalReminder)
-                  activeTripAsync.when(
-                    data: (trip) => trip != null
-                        ? JournalReminderCard(
-                            trip: trip,
-                            onDismiss: () => setState(() {
-                              _journalReminderDismissed = true;
-                            }),
-                          )
-                        : const SizedBox.shrink(),
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-
-                // Chat messages
-                Expanded(
-                  child: messages.isEmpty && !isSending
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.all(16),
-                          itemCount: messages.length +
-                              (isSending ? 1 : 0) +
-                              (pendingExpense != null ? 1 : 0) +
-                              (pendingPlaces.isNotEmpty ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            // Show typing indicator while sending
-                            if (isSending && index == messages.length) {
-                              return _buildTypingIndicator();
-                            }
-
-                            // Calculate card indices
-                            final typingOffset = isSending ? 1 : 0;
-                            final expenseCardIndex = messages.length + typingOffset;
-                            final placesCardIndex = expenseCardIndex + (pendingExpense != null ? 1 : 0);
-
-                            // Show expense confirmation card
-                            if (pendingExpense != null && index == expenseCardIndex) {
-                              return ExpenseConfirmationCard(
-                                expense: pendingExpense,
-                                onConfirm: isCreatingExpense ? () {} : _confirmExpense,
-                                onDismiss: () {
-                                  ref.read(chatNotifierProvider.notifier).dismissPendingExpense();
-                                },
-                                onEdit: (editedExpense) {
-                                  ref.read(chatNotifierProvider.notifier).updatePendingExpense(editedExpense);
-                                },
-                              );
-                            }
-
-                            // Show place recommendations card
-                            if (pendingPlaces.isNotEmpty && index == placesCardIndex) {
-                              return PlaceRecommendationsCard(
-                                places: pendingPlaces,
-                                onDismiss: () {
-                                  ref.read(chatNotifierProvider.notifier).dismissPendingPlaces();
-                                },
-                              );
-                            }
-
-                            return _buildMessageBubble(messages[index]);
-                          },
-                        ),
-                ),
-
-                // Input area
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(13),
-                        blurRadius: 8,
-                        offset: const Offset(0, -2),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: GlowingIconButton(
+            icon: Icons.arrow_back,
+            onPressed: () {
+              ref.read(chatNotifierProvider.notifier).reset();
+              context.pop();
+            },
+            size: 40,
+          ),
+          title: Text(
+            session?.title ?? l10n.aiChat,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          actions: [
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert,
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _showDeleteDialog();
+                }
+              },
+              itemBuilder: (menuContext) => [
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete_outline,
+                        color: LiquidGlassColors.sunsetRose,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.deleteChat,
+                        style: TextStyle(color: LiquidGlassColors.sunsetRose),
                       ),
                     ],
-                  ),
-                  child: SafeArea(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _messageController,
-                            enabled: !isSending,
-                            decoration: InputDecoration(
-                              hintText: l10n.chatHint,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                            ),
-                            onSubmitted: (_) => _sendMessage(),
-                            textInputAction: TextInputAction.send,
-                            maxLines: null,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        CircleAvatar(
-                          backgroundColor: isSending
-                              ? Colors.grey
-                              : AppTheme.primaryColor,
-                          child: IconButton(
-                            icon: isSending
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white),
-                                    ),
-                                  )
-                                : const Icon(Icons.send, color: Colors.white),
-                            onPressed: isSending ? null : _sendMessage,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
             ),
+          ],
+        ),
+        body: isLoading
+            ? Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    LiquidGlassColors.auroraIndigo,
+                  ),
+                ),
+              )
+            : Column(
+                children: [
+                  // Credit usage indicator at top
+                  _GlassCreditIndicator(ref: ref),
+
+                  // Journal reminder banner (if applicable)
+                  if (shouldShowJournalReminder)
+                    activeTripAsync.when(
+                      data: (trip) => trip != null
+                          ? JournalReminderCard(
+                              trip: trip,
+                              onDismiss: () => setState(() {
+                                _journalReminderDismissed = true;
+                              }),
+                            )
+                          : const SizedBox.shrink(),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+
+                  // Chat messages
+                  Expanded(
+                    child: messages.isEmpty && !isSending
+                        ? _buildEmptyState(isDark, l10n)
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.all(16),
+                            itemCount: messages.length +
+                                (isSending ? 1 : 0) +
+                                (pendingExpense != null ? 1 : 0) +
+                                (pendingPlaces.isNotEmpty ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              // Show typing indicator while sending
+                              if (isSending && index == messages.length) {
+                                return _GlassTypingIndicator(isDark: isDark);
+                              }
+
+                              // Calculate card indices
+                              final typingOffset = isSending ? 1 : 0;
+                              final expenseCardIndex =
+                                  messages.length + typingOffset;
+                              final placesCardIndex = expenseCardIndex +
+                                  (pendingExpense != null ? 1 : 0);
+
+                              // Show expense confirmation card
+                              if (pendingExpense != null &&
+                                  index == expenseCardIndex) {
+                                return ExpenseConfirmationCard(
+                                  expense: pendingExpense,
+                                  onConfirm:
+                                      isCreatingExpense ? () {} : _confirmExpense,
+                                  onDismiss: () {
+                                    ref
+                                        .read(chatNotifierProvider.notifier)
+                                        .dismissPendingExpense();
+                                  },
+                                  onEdit: (editedExpense) {
+                                    ref
+                                        .read(chatNotifierProvider.notifier)
+                                        .updatePendingExpense(editedExpense);
+                                  },
+                                );
+                              }
+
+                              // Show place recommendations card
+                              if (pendingPlaces.isNotEmpty &&
+                                  index == placesCardIndex) {
+                                return PlaceRecommendationsCard(
+                                  places: pendingPlaces,
+                                  onDismiss: () {
+                                    ref
+                                        .read(chatNotifierProvider.notifier)
+                                        .dismissPendingPlaces();
+                                  },
+                                );
+                              }
+
+                              return _GlassMessageBubble(
+                                message: messages[index],
+                                isDark: isDark,
+                              );
+                            },
+                          ),
+                  ),
+
+                  // Input area
+                  _GlassInputArea(
+                    controller: _messageController,
+                    isSending: isSending,
+                    onSend: _sendMessage,
+                    isDark: isDark,
+                    l10n: l10n,
+                  ),
+                ],
+              ),
+      ),
     );
   }
 
-  /// Small credit usage indicator at the top of chat
-  Widget _buildCreditIndicator(BuildContext context, WidgetRef ref) {
+  Widget _buildEmptyState(bool isDark, AppLocalizations l10n) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 32),
+
+            // Glass icon container
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LiquidGlassColors.auroraGradient,
+                boxShadow: isDark
+                    ? LiquidGlassColors.neonGlow(
+                        LiquidGlassColors.auroraIndigo,
+                        intensity: 0.5,
+                        blur: 30,
+                      )
+                    : [
+                        BoxShadow(
+                          color: LiquidGlassColors.auroraIndigo.withAlpha(60),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+              ),
+              child: const Icon(
+                Icons.travel_explore,
+                size: 48,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              l10n.chatWelcomeTitle,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.chatWelcomeDescription,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.white60 : Colors.black54,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 28),
+            Text(
+              l10n.chatWhatToDo,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Quick action buttons with glass styling
+            _GlassQuickActionButton(
+              icon: Icons.calendar_today,
+              label: l10n.tellAboutDay,
+              description: l10n.tellAboutDayDescription,
+              gradient: LiquidGlassColors.oceanGradient,
+              isDark: isDark,
+              onTap: () {
+                _messageController.text = l10n.tellAboutDayPrompt;
+                _sendMessage();
+              },
+            ),
+            const SizedBox(height: 12),
+            _GlassQuickActionButton(
+              icon: Icons.explore,
+              label: l10n.planActivity,
+              description: l10n.planActivityDescription,
+              gradient: LiquidGlassColors.mintGradient,
+              isDark: isDark,
+              onTap: () {
+                _messageController.text = l10n.planActivityPrompt;
+                _sendMessage();
+              },
+            ),
+            const SizedBox(height: 12),
+            _GlassQuickActionButton(
+              icon: Icons.receipt_long,
+              label: l10n.logExpenseAction,
+              description: l10n.logExpenseDescription,
+              gradient: LiquidGlassColors.sunsetGradient,
+              isDark: isDark,
+              onTap: () {
+                _messageController.text = l10n.logExpensePrompt;
+                _sendMessage();
+              },
+            ),
+            const SizedBox(height: 12),
+            _GlassQuickActionButton(
+              icon: Icons.auto_stories,
+              label: l10n.generateJournal,
+              description: l10n.generateJournalDescription,
+              gradient: LiquidGlassColors.auroraGradient,
+              isDark: isDark,
+              onTap: () {
+                _messageController.text = l10n.generateJournalPrompt;
+                _sendMessage();
+              },
+            ),
+            const SizedBox(height: 12),
+            _GlassQuickActionButton(
+              icon: Icons.help_outline,
+              label: l10n.askAnything,
+              description: l10n.askAnythingDescription,
+              gradient: LinearGradient(
+                colors: [
+                  isDark ? Colors.white24 : Colors.black26,
+                  isDark ? Colors.white12 : Colors.black12,
+                ],
+              ),
+              isDark: isDark,
+              onTap: () {
+                // Just focus the text field
+                FocusScope.of(context).requestFocus(FocusNode());
+              },
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================
+// GLASS COMPONENTS
+// ============================================
+
+class _GlassCreditIndicator extends StatelessWidget {
+  final WidgetRef ref;
+
+  const _GlassCreditIndicator({required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
     final creditUsageAsync = ref.watch(chatCreditUsageProvider);
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return creditUsageAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -366,231 +557,195 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         // Determine color based on usage
         Color progressColor;
         if (percentage < 0.5) {
-          progressColor = AppTheme.successColor;
+          progressColor = LiquidGlassColors.mintEmerald;
         } else if (percentage < 0.8) {
-          progressColor = AppTheme.warningColor;
+          progressColor = LiquidGlassColors.sunsetOrange;
         } else {
-          progressColor = AppTheme.errorColor;
+          progressColor = LiquidGlassColors.sunsetRose;
         }
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            border: Border(
-              bottom: BorderSide(
-                color: AppTheme.dividerColor.withAlpha(128),
-                width: 1,
-              ),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.auto_awesome,
-                size: 16,
-                color: progressColor,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: LinearProgressIndicator(
-                    value: percentage,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                    minHeight: 4,
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: isDark
+                      ? Colors.white.withAlpha(10)
+                      : Colors.white.withAlpha(180),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withAlpha(15)
+                        : Colors.white.withAlpha(100),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '$creditsUsed/$creditsLimit',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: progressColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [progressColor, progressColor.withAlpha(180)],
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.auto_awesome,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                     ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                l10n.credits,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textHint,
-                      fontSize: 11,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(3),
+                            child: LinearProgressIndicator(
+                              value: percentage,
+                              backgroundColor: isDark
+                                  ? Colors.white.withAlpha(20)
+                                  : Colors.black.withAlpha(15),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(progressColor),
+                              minHeight: 6,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '$creditsUsed/$creditsLimit',
+                      style: TextStyle(
+                        color: progressColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      l10n.credits,
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black45,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         );
       },
     );
   }
+}
 
-  Widget _buildEmptyState() {
-    final l10n = AppLocalizations.of(context);
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryLight.withAlpha(51),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.travel_explore,
-                size: 48,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              l10n.chatWelcomeTitle,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.chatWelcomeDescription,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                    height: 1.4,
-                  ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              l10n.chatWhatToDo,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(height: 16),
+class _GlassQuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String description;
+  final Gradient gradient;
+  final bool isDark;
+  final VoidCallback onTap;
 
-            // Quick action buttons
-            _buildQuickActionButton(
-              icon: Icons.calendar_today,
-              label: l10n.tellAboutDay,
-              description: l10n.tellAboutDayDescription,
-              color: AppTheme.primaryColor,
-              onTap: () {
-                _messageController.text = l10n.tellAboutDayPrompt;
-                _sendMessage();
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildQuickActionButton(
-              icon: Icons.explore,
-              label: l10n.planActivity,
-              description: l10n.planActivityDescription,
-              color: AppTheme.successColor,
-              onTap: () {
-                _messageController.text = l10n.planActivityPrompt;
-                _sendMessage();
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildQuickActionButton(
-              icon: Icons.receipt_long,
-              label: l10n.logExpenseAction,
-              description: l10n.logExpenseDescription,
-              color: AppTheme.accentColor,
-              onTap: () {
-                _messageController.text = l10n.logExpensePrompt;
-                _sendMessage();
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildQuickActionButton(
-              icon: Icons.auto_stories,
-              label: l10n.generateJournal,
-              description: l10n.generateJournalDescription,
-              color: Colors.purple,
-              onTap: () {
-                _messageController.text = l10n.generateJournalPrompt;
-                _sendMessage();
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildQuickActionButton(
-              icon: Icons.help_outline,
-              label: l10n.askAnything,
-              description: l10n.askAnythingDescription,
-              color: AppTheme.textSecondary,
-              onTap: () {
-                // Just focus the text field
-                FocusScope.of(context).requestFocus(FocusNode());
-              },
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    );
-  }
+  const _GlassQuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.description,
+    required this.gradient,
+    required this.isDark,
+    required this.onTap,
+  });
 
-  Widget _buildQuickActionButton({
-    required IconData icon,
-    required String label,
-    required String description,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withAlpha(20),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withAlpha(50)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withAlpha(30),
-                borderRadius: BorderRadius.circular(10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: isDark
+                  ? Colors.white.withAlpha(10)
+                  : Colors.white.withAlpha(180),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withAlpha(15)
+                    : Colors.white.withAlpha(100),
               ),
-              child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: gradient,
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.white54 : Colors.black54,
                         ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
+              ],
             ),
-            Icon(Icons.chevron_right, color: AppTheme.textHint),
-          ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildMessageBubble(ChatMessageModel message) {
+class _GlassMessageBubble extends StatelessWidget {
+  final ChatMessageModel message;
+  final bool isDark;
+
+  const _GlassMessageBubble({
+    required this.message,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final isUser = message.isUser;
 
     return Padding(
@@ -601,35 +756,74 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppTheme.primaryColor,
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LiquidGlassColors.auroraGradient,
+                boxShadow: isDark
+                    ? LiquidGlassColors.neonGlow(
+                        LiquidGlassColors.auroraIndigo,
+                        intensity: 0.3,
+                        blur: 12,
+                      )
+                    : null,
+              ),
               child: const Icon(
                 Icons.auto_awesome,
-                size: 16,
+                size: 18,
                 color: Colors.white,
               ),
             ),
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isUser ? AppTheme.primaryColor : AppTheme.cardColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(13),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: isUser ? 0 : 15,
+                  sigmaY: isUser ? 0 : 15,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                ],
-              ),
-              child: SelectableText(
-                message.content,
-                style: TextStyle(
-                  color: isUser ? Colors.white : AppTheme.textPrimary,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    gradient: isUser ? LiquidGlassColors.auroraGradient : null,
+                    color: isUser
+                        ? null
+                        : (isDark
+                            ? Colors.white.withAlpha(15)
+                            : Colors.white.withAlpha(200)),
+                    border: isUser
+                        ? null
+                        : Border.all(
+                            color: isDark
+                                ? Colors.white.withAlpha(20)
+                                : Colors.white.withAlpha(100),
+                          ),
+                    boxShadow: isUser && isDark
+                        ? LiquidGlassColors.neonGlow(
+                            LiquidGlassColors.auroraIndigo,
+                            intensity: 0.2,
+                            blur: 16,
+                          )
+                        : LiquidGlassColors.glassShadow(isDark),
+                  ),
+                  child: SelectableText(
+                    message.content,
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.4,
+                      color: isUser
+                          ? Colors.white
+                          : (isDark ? Colors.white : Colors.black87),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -639,56 +833,135 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
     );
   }
+}
 
-  Widget _buildTypingIndicator() {
+class _GlassTypingIndicator extends StatelessWidget {
+  final bool isDark;
+
+  const _GlassTypingIndicator({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: AppTheme.primaryColor,
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LiquidGlassColors.auroraGradient,
+              boxShadow: isDark
+                  ? LiquidGlassColors.neonGlow(
+                      LiquidGlassColors.auroraIndigo,
+                      intensity: 0.3,
+                      blur: 12,
+                    )
+                  : null,
+            ),
             child: const Icon(
               Icons.auto_awesome,
-              size: 16,
+              size: 18,
               color: Colors.white,
             ),
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.cardColor,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildDot(0),
-                const SizedBox(width: 4),
-                _buildDot(1),
-                const SizedBox(width: 4),
-                _buildDot(2),
-              ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  color: isDark
+                      ? Colors.white.withAlpha(15)
+                      : Colors.white.withAlpha(200),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withAlpha(20)
+                        : Colors.white.withAlpha(100),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _AnimatedDot(index: 0, isDark: isDark),
+                    const SizedBox(width: 6),
+                    _AnimatedDot(index: 1, isDark: isDark),
+                    const SizedBox(width: 6),
+                    _AnimatedDot(index: 2, isDark: isDark),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildDot(int index) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: Duration(milliseconds: 600 + (index * 200)),
-      builder: (context, value, child) {
+class _AnimatedDot extends StatefulWidget {
+  final int index;
+  final bool isDark;
+
+  const _AnimatedDot({required this.index, required this.isDark});
+
+  @override
+  State<_AnimatedDot> createState() => _AnimatedDotState();
+}
+
+class _AnimatedDotState extends State<_AnimatedDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _animation = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(
+          widget.index * 0.15,
+          0.5 + widget.index * 0.15,
+          curve: Curves.easeInOut,
+        ),
+      ),
+    );
+
+    _controller.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
         return Container(
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: AppTheme.textSecondary.withAlpha((value * 255).toInt()),
             shape: BoxShape.circle,
+            color: LiquidGlassColors.auroraIndigo
+                .withAlpha((_animation.value * 255).toInt()),
           ),
         );
       },
@@ -696,3 +969,143 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 }
 
+class _GlassInputArea extends StatelessWidget {
+  final TextEditingController controller;
+  final bool isSending;
+  final VoidCallback onSend;
+  final bool isDark;
+  final AppLocalizations l10n;
+
+  const _GlassInputArea({
+    required this.controller,
+    required this.isSending,
+    required this.onSend,
+    required this.isDark,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withAlpha(8)
+                : Colors.white.withAlpha(200),
+            border: Border(
+              top: BorderSide(
+                color: isDark
+                    ? Colors.white.withAlpha(15)
+                    : Colors.black.withAlpha(10),
+              ),
+            ),
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          color: isDark
+                              ? Colors.white.withAlpha(10)
+                              : Colors.white.withAlpha(180),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withAlpha(20)
+                                : Colors.black.withAlpha(10),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: controller,
+                          enabled: !isSending,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: l10n.chatHint,
+                            hintStyle: TextStyle(
+                              color: isDark ? Colors.white38 : Colors.black38,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 14,
+                            ),
+                          ),
+                          onSubmitted: (_) => onSend(),
+                          textInputAction: TextInputAction.send,
+                          maxLines: null,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: isSending ? null : LiquidGlassColors.auroraGradient,
+                    color: isSending
+                        ? (isDark ? Colors.white.withAlpha(15) : Colors.black12)
+                        : null,
+                    boxShadow: isSending
+                        ? null
+                        : (isDark
+                            ? LiquidGlassColors.neonGlow(
+                                LiquidGlassColors.auroraIndigo,
+                                intensity: 0.4,
+                                blur: 16,
+                              )
+                            : [
+                                BoxShadow(
+                                  color: LiquidGlassColors.auroraIndigo
+                                      .withAlpha(80),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: isSending ? null : onSend,
+                      borderRadius: BorderRadius.circular(24),
+                      child: Center(
+                        child: isSending
+                            ? SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    LiquidGlassColors.auroraIndigo,
+                                  ),
+                                ),
+                              )
+                            : const Icon(
+                                Icons.send,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
