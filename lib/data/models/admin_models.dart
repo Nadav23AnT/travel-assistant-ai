@@ -106,6 +106,7 @@ class SupportSessionModel {
   final String subject;
   final SupportStatus status;
   final SupportPriority priority;
+  final FeedbackType feedbackType;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? resolvedAt;
@@ -129,6 +130,7 @@ class SupportSessionModel {
     required this.subject,
     required this.status,
     required this.priority,
+    this.feedbackType = FeedbackType.generalSupport,
     required this.createdAt,
     required this.updatedAt,
     this.resolvedAt,
@@ -155,6 +157,8 @@ class SupportSessionModel {
       status: SupportStatus.fromString(json['status'] as String? ?? 'open'),
       priority:
           SupportPriority.fromString(json['priority'] as String? ?? 'normal'),
+      feedbackType: FeedbackType.fromString(
+          json['feedback_type'] as String? ?? 'general_support'),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       resolvedAt: json['resolved_at'] != null
@@ -180,6 +184,7 @@ class SupportSessionModel {
         'subject': subject,
         'status': status.value,
         'priority': priority.value,
+        'feedback_type': feedbackType.value,
         'created_at': createdAt.toIso8601String(),
         'updated_at': updatedAt.toIso8601String(),
         'resolved_at': resolvedAt?.toIso8601String(),
@@ -209,6 +214,7 @@ class SupportSessionModel {
     String? subject,
     SupportStatus? status,
     SupportPriority? priority,
+    FeedbackType? feedbackType,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? resolvedAt,
@@ -228,6 +234,7 @@ class SupportSessionModel {
       subject: subject ?? this.subject,
       status: status ?? this.status,
       priority: priority ?? this.priority,
+      feedbackType: feedbackType ?? this.feedbackType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       resolvedAt: resolvedAt ?? this.resolvedAt,
@@ -494,6 +501,50 @@ enum SenderRole {
       (r) => r.value == value,
       orElse: () => SenderRole.user,
     );
+  }
+}
+
+/// Feedback type enum for beta user feedback categorization
+enum FeedbackType {
+  bugReport('bug_report'),
+  featureRequest('feature_request'),
+  uxFeedback('ux_feedback'),
+  generalSupport('general_support');
+
+  final String value;
+  const FeedbackType(this.value);
+
+  static FeedbackType fromString(String value) {
+    return FeedbackType.values.firstWhere(
+      (f) => f.value == value,
+      orElse: () => FeedbackType.generalSupport,
+    );
+  }
+
+  String get displayName {
+    switch (this) {
+      case FeedbackType.bugReport:
+        return 'Bug Report';
+      case FeedbackType.featureRequest:
+        return 'Feature Request';
+      case FeedbackType.uxFeedback:
+        return 'UX Feedback';
+      case FeedbackType.generalSupport:
+        return 'General Support';
+    }
+  }
+
+  String get icon {
+    switch (this) {
+      case FeedbackType.bugReport:
+        return 'bug_report';
+      case FeedbackType.featureRequest:
+        return 'lightbulb';
+      case FeedbackType.uxFeedback:
+        return 'touch_app';
+      case FeedbackType.generalSupport:
+        return 'help';
+    }
   }
 }
 

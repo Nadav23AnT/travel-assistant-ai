@@ -206,9 +206,76 @@ class _AdminSupportScreenState extends ConsumerState<AdminSupportScreen>
               ),
             ],
           ),
+          const SizedBox(width: 8),
+
+          // Feedback Type filter
+          PopupMenuButton<FeedbackType?>(
+            child: Chip(
+              avatar: filters.feedbackType != null
+                  ? Icon(
+                      _getFeedbackTypeIcon(filters.feedbackType!),
+                      size: 16,
+                      color: AppTheme.primaryColor,
+                    )
+                  : null,
+              label: Text(
+                filters.feedbackType?.displayName ?? 'Feedback Type',
+                style: TextStyle(
+                  color: filters.feedbackType != null
+                      ? AppTheme.primaryColor
+                      : null,
+                ),
+              ),
+              deleteIcon: filters.feedbackType != null
+                  ? const Icon(Icons.close, size: 16)
+                  : null,
+              onDeleted: filters.feedbackType != null
+                  ? () {
+                      ref.read(supportSessionFiltersProvider.notifier).state =
+                          filters.copyWith(clearFeedbackType: true);
+                    }
+                  : null,
+            ),
+            onSelected: (type) {
+              ref.read(supportSessionFiltersProvider.notifier).state =
+                  filters.copyWith(
+                      feedbackType: type, clearFeedbackType: type == null);
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: null,
+                child: Text('All Types'),
+              ),
+              ...FeedbackType.values.map(
+                (t) => PopupMenuItem(
+                  value: t,
+                  child: Row(
+                    children: [
+                      Icon(_getFeedbackTypeIcon(t), size: 18),
+                      const SizedBox(width: 8),
+                      Text(t.displayName),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+  IconData _getFeedbackTypeIcon(FeedbackType type) {
+    switch (type) {
+      case FeedbackType.bugReport:
+        return Icons.bug_report;
+      case FeedbackType.featureRequest:
+        return Icons.lightbulb;
+      case FeedbackType.uxFeedback:
+        return Icons.touch_app;
+      case FeedbackType.generalSupport:
+        return Icons.help;
+    }
   }
 
   Widget _buildAllTicketsTab(BuildContext context, WidgetRef ref) {

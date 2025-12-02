@@ -21,6 +21,7 @@ class SupportRepository {
   Future<SupportSessionModel> createSession({
     required String subject,
     SupportPriority priority = SupportPriority.normal,
+    FeedbackType feedbackType = FeedbackType.generalSupport,
   }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
@@ -34,6 +35,7 @@ class SupportRepository {
             'user_id': userId,
             'subject': subject,
             'priority': priority.value,
+            'feedback_type': feedbackType.value,
             'status': SupportStatus.open.value,
           })
           .select('''
@@ -54,6 +56,7 @@ class SupportRepository {
   Future<List<SupportSessionModel>> getAllSessions({
     SupportStatus? statusFilter,
     SupportPriority? priorityFilter,
+    FeedbackType? feedbackTypeFilter,
     String? searchQuery,
     int page = 0,
     int pageSize = 20,
@@ -75,6 +78,11 @@ class SupportRepository {
       // Apply priority filter
       if (priorityFilter != null) {
         query = query.eq('priority', priorityFilter.value);
+      }
+
+      // Apply feedback type filter
+      if (feedbackTypeFilter != null) {
+        query = query.eq('feedback_type', feedbackTypeFilter.value);
       }
 
       // Apply sorting and pagination

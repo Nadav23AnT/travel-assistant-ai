@@ -236,6 +236,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
   void _showCreateTicketDialog(BuildContext context, WidgetRef ref) {
     final subjectController = TextEditingController();
     SupportPriority selectedPriority = SupportPriority.normal;
+    FeedbackType selectedFeedbackType = FeedbackType.generalSupport;
 
     showDialog(
       context: context,
@@ -245,45 +246,72 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
 
           return AlertDialog(
             title: const Text('Create Support Ticket'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: subjectController,
-                  decoration: const InputDecoration(
-                    labelText: 'Subject',
-                    hintText: 'Briefly describe your issue',
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Feedback Type Selector
+                  const Text('What type of feedback is this?'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: FeedbackType.values.map((type) {
+                      final isSelected = type == selectedFeedbackType;
+                      return ChoiceChip(
+                        avatar: Icon(
+                          _getFeedbackTypeIcon(type),
+                          size: 18,
+                          color: isSelected ? Colors.white : null,
+                        ),
+                        label: Text(type.displayName),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          if (selected) {
+                            setDialogState(() => selectedFeedbackType = type);
+                          }
+                        },
+                      );
+                    }).toList(),
                   ),
-                  maxLength: 100,
-                  autofocus: true,
-                ),
-                const SizedBox(height: 16),
-                const Text('Priority:'),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: SupportPriority.values.map((priority) {
-                    final isSelected = priority == selectedPriority;
-                    return ChoiceChip(
-                      label: Text(priority.displayName),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) {
-                          setDialogState(() => selectedPriority = priority);
-                        }
-                      },
-                    );
-                  }).toList(),
-                ),
-                if (createState.error != null) ...[
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: subjectController,
+                    decoration: InputDecoration(
+                      labelText: 'Subject',
+                      hintText: _getSubjectHint(selectedFeedbackType),
+                    ),
+                    maxLength: 100,
+                    autofocus: true,
+                  ),
                   const SizedBox(height: 16),
-                  Text(
-                    createState.error!,
-                    style: const TextStyle(color: AppTheme.errorColor),
+                  const Text('Priority:'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: SupportPriority.values.map((priority) {
+                      final isSelected = priority == selectedPriority;
+                      return ChoiceChip(
+                        label: Text(priority.displayName),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          if (selected) {
+                            setDialogState(() => selectedPriority = priority);
+                          }
+                        },
+                      );
+                    }).toList(),
                   ),
+                  if (createState.error != null) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      createState.error!,
+                      style: const TextStyle(color: AppTheme.errorColor),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
             actions: [
               TextButton(
@@ -302,6 +330,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                             .createSession(
                               subject: subjectController.text.trim(),
                               priority: selectedPriority,
+                              feedbackType: selectedFeedbackType,
                             );
                         if (session != null && context.mounted) {
                           Navigator.pop(context);
@@ -323,6 +352,32 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     ).then((_) {
       ref.read(createSessionProvider.notifier).reset();
     });
+  }
+
+  IconData _getFeedbackTypeIcon(FeedbackType type) {
+    switch (type) {
+      case FeedbackType.bugReport:
+        return Icons.bug_report;
+      case FeedbackType.featureRequest:
+        return Icons.lightbulb;
+      case FeedbackType.uxFeedback:
+        return Icons.touch_app;
+      case FeedbackType.generalSupport:
+        return Icons.help;
+    }
+  }
+
+  String _getSubjectHint(FeedbackType type) {
+    switch (type) {
+      case FeedbackType.bugReport:
+        return 'Describe the bug or error you encountered';
+      case FeedbackType.featureRequest:
+        return 'Describe the feature you\'d like to see';
+      case FeedbackType.uxFeedback:
+        return 'What could be improved in the experience?';
+      case FeedbackType.generalSupport:
+        return 'Briefly describe your issue';
+    }
   }
 
   String _formatDate(DateTime date) {

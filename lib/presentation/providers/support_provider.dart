@@ -22,12 +22,14 @@ final supportRepositoryProvider = Provider<SupportRepository>((ref) {
 class SupportSessionFilters {
   final SupportStatus? status;
   final SupportPriority? priority;
+  final FeedbackType? feedbackType;
   final String? searchQuery;
   final int page;
 
   const SupportSessionFilters({
     this.status,
     this.priority,
+    this.feedbackType,
     this.searchQuery,
     this.page = 0,
   });
@@ -35,14 +37,17 @@ class SupportSessionFilters {
   SupportSessionFilters copyWith({
     SupportStatus? status,
     SupportPriority? priority,
+    FeedbackType? feedbackType,
     String? searchQuery,
     int? page,
     bool clearStatus = false,
     bool clearPriority = false,
+    bool clearFeedbackType = false,
   }) {
     return SupportSessionFilters(
       status: clearStatus ? null : (status ?? this.status),
       priority: clearPriority ? null : (priority ?? this.priority),
+      feedbackType: clearFeedbackType ? null : (feedbackType ?? this.feedbackType),
       searchQuery: searchQuery ?? this.searchQuery,
       page: page ?? this.page,
     );
@@ -62,6 +67,7 @@ final allSupportSessionsProvider =
   return await repository.getAllSessions(
     statusFilter: filters.status,
     priorityFilter: filters.priority,
+    feedbackTypeFilter: filters.feedbackType,
     searchQuery: filters.searchQuery,
     page: filters.page,
   );
@@ -370,12 +376,14 @@ class CreateSessionNotifier extends StateNotifier<CreateSessionState> {
   Future<SupportSessionModel?> createSession({
     required String subject,
     SupportPriority priority = SupportPriority.normal,
+    FeedbackType feedbackType = FeedbackType.generalSupport,
   }) async {
     state = state.copyWith(isCreating: true, error: null);
     try {
       final session = await _repository.createSession(
         subject: subject,
         priority: priority,
+        feedbackType: feedbackType,
       );
       state = state.copyWith(isCreating: false, createdSession: session);
       _ref.invalidate(userSupportSessionsProvider);

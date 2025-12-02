@@ -82,6 +82,8 @@ class SupportTicketCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  FeedbackTypeBadge(feedbackType: session.feedbackType),
+                  const SizedBox(width: 4),
                   SupportPriorityBadge(priority: session.priority),
                 ],
               ),
@@ -274,6 +276,72 @@ class SupportPriorityBadge extends StatelessWidget {
         return (AppTheme.warningColor, Icons.arrow_upward);
       case SupportPriority.urgent:
         return (AppTheme.errorColor, Icons.priority_high);
+    }
+  }
+}
+
+/// Badge displaying feedback type
+class FeedbackTypeBadge extends StatelessWidget {
+  final FeedbackType feedbackType;
+
+  const FeedbackTypeBadge({super.key, required this.feedbackType});
+
+  @override
+  Widget build(BuildContext context) {
+    // Don't show badge for general support (it's the default)
+    if (feedbackType == FeedbackType.generalSupport) {
+      return const SizedBox.shrink();
+    }
+
+    final (color, icon) = _getColorAndIcon();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(26),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 2),
+          Text(
+            _getShortLabel(),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getShortLabel() {
+    switch (feedbackType) {
+      case FeedbackType.bugReport:
+        return 'Bug';
+      case FeedbackType.featureRequest:
+        return 'Feature';
+      case FeedbackType.uxFeedback:
+        return 'UX';
+      case FeedbackType.generalSupport:
+        return 'Support';
+    }
+  }
+
+  (Color, IconData) _getColorAndIcon() {
+    switch (feedbackType) {
+      case FeedbackType.bugReport:
+        return (AppTheme.errorColor, Icons.bug_report);
+      case FeedbackType.featureRequest:
+        return (AppTheme.primaryColor, Icons.lightbulb);
+      case FeedbackType.uxFeedback:
+        return (AppTheme.warningColor, Icons.touch_app);
+      case FeedbackType.generalSupport:
+        return (Colors.grey, Icons.help);
     }
   }
 }
