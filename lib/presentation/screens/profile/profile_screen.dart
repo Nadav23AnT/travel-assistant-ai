@@ -158,6 +158,14 @@ class ProfileScreen extends ConsumerWidget {
             // Admin Dashboard (only shown for admins)
             _GlassAdminSection(ref: ref, isDark: isDark),
 
+            // Support & Feedback
+            _GlassMenuItem(
+              icon: Icons.support_agent_outlined,
+              title: 'Support & Feedback',
+              onTap: () => context.push('/support'),
+              isDark: isDark,
+            ),
+
             // Menu items
             _GlassMenuItem(
               icon: Icons.settings_outlined,

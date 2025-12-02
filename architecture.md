@@ -2258,7 +2258,7 @@ CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
 - [x] Support chat screen (real-time messaging with admin)
 - [x] Ticket status tracking (open, in_progress, resolved, closed)
 - [x] Admin support dashboard (manage all tickets)
-- [ ] Add support access from Profile screen menu
+- [x] Add support access from Profile screen menu
 - [ ] Push notifications for support replies
 - [ ] Email notifications for ticket updates
 
