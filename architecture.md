@@ -2252,6 +2252,16 @@ CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
 - [ ] Settlement tracking (mark as paid)
 - [ ] Settlement summary screen
 
+**User Support System**
+- [x] Support ticket database schema (support_tickets, support_messages tables)
+- [x] User support screen (view tickets, create new ticket)
+- [x] Support chat screen (real-time messaging with admin)
+- [x] Ticket status tracking (open, in_progress, resolved, closed)
+- [x] Admin support dashboard (manage all tickets)
+- [ ] Add support access from Profile screen menu
+- [ ] Push notifications for support replies
+- [ ] Email notifications for ticket updates
+
 #### 2. Configure OpenRouter for Multiple Models
 - [ ] Set up OpenRouter API integration
 - [ ] Configure model selection (GPT-4, Claude, Gemini, etc.)
