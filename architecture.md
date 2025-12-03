@@ -1,7 +1,7 @@
 # Waylo - Architecture & Specification
 
-**Version:** 1.12.0
-**Last Updated:** November 30, 2025
+**Version:** 1.13.0
+**Last Updated:** December 3, 2025
 **Related:** See `claude.md` for development workflow and coding standards.
 
 ---
@@ -1806,6 +1806,31 @@ REVENUECAT_API_KEY=...
 ---
 
 ## Changelog
+
+### v1.13.0 (December 3, 2025)
+- **Support & Feedback UI Redesign - COMPLETE:**
+  - Fixed SupportChatNotifier dispose error with mounted guards
+  - Fixed back button navigation with `context.canPop()` fallback
+  - Redesigned support_screen.dart with Liquid Glass design:
+    - Glass AppBar with backdrop blur
+    - Gradient background (Aurora colors)
+    - Premium gradient FAB with glow effects
+    - Glass-styled ticket cards with feedback type and priority badges
+    - Improved empty state with gradient icon
+  - Replaced AlertDialog with modal bottom sheet for ticket creation:
+    - 2x2 grid of feedback type cards with selection animation
+    - Glass input styling
+    - Segmented priority selector
+    - Gradient submit button
+  - Added beta feedback type categorization (Bug Report, Feature Request, UX Feedback, General Support)
+  - Improved GlowingIconButton visibility (increased background opacity, added icon shadow in dark mode)
+- **Files Modified:**
+  - `lib/presentation/providers/support_provider.dart` (mounted guards)
+  - `lib/presentation/screens/support/support_screen.dart` (full redesign)
+  - `lib/presentation/screens/support/support_chat_screen.dart` (back button fix)
+  - `lib/presentation/screens/admin/admin_support_chat_screen.dart` (back button fix)
+  - `lib/core/design/components/premium_button.dart` (GlowingIconButton visibility)
+  - `supabase/migrations/20251202000000_beta_feedback_type.sql` (feedback type column)
 
 ### v1.12.0 (November 30, 2025)
 - **Trip Cards Redesign - COMPLETE:**
