@@ -7,14 +7,16 @@ import '../../../config/routes.dart';
 import '../../../core/design/design_system.dart';
 import '../../../data/models/expense_stats.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../utils/country_currency_helper.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
-import '../../widgets/charts/expense_pie_chart.dart';
+import '../../widgets/charts/mini_pie_chart.dart';
 import '../../widgets/charts/spending_line_chart.dart';
-import '../../widgets/expenses/category_card.dart';
+import '../../widgets/expenses/budget_progress_bar.dart';
 import '../../widgets/expenses/category_detail_sheet.dart';
+import '../../widgets/expenses/category_progress_bar.dart';
+import '../../widgets/expenses/compact_stat_tile.dart';
 import '../../widgets/expenses/expenses_history_section.dart';
-import '../../widgets/expenses/summary_stat_card.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -107,16 +109,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   child: SizedBox(height: 100),
                 ),
 
-                // Summary Stats Section
+                // Budget Overview Section (includes trip badge)
                 SliverToBoxAdapter(
-                  child: _buildSummarySection(data, isDark, l10n),
+                  child: _buildBudgetOverviewSection(data, isDark, l10n),
                 ),
-
-                // Trip Info (if available)
-                if (data.trip != null)
-                  SliverToBoxAdapter(
-                    child: _buildTripInfoBanner(data, isDark, l10n),
-                  ),
 
                 // Category Breakdown Section
                 SliverToBoxAdapter(
@@ -161,140 +157,142 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     );
   }
 
-  Widget _buildSummarySection(ExpensesDashboardData data, bool isDark, AppLocalizations l10n) {
+  Widget _buildBudgetOverviewSection(ExpensesDashboardData data, bool isDark, AppLocalizations l10n) {
+    final trip = data.trip;
+    final originalBudget = trip?.budget ?? 0;
+    final budgetCurrency = trip?.budgetCurrency ?? data.displayCurrency;
+    final displayCurrency = data.displayCurrency;
+
+    // Convert budget to display currency if needed
+    // Watch the exchange rates to trigger rebuild when currency changes
+    final exchangeRates = ref.watch(exchangeRatesProvider);
+    double convertedBudget = originalBudget;
+    if (originalBudget > 0 && budgetCurrency != displayCurrency && exchangeRates.rates.isNotEmpty) {
+      convertedBudget = ref.read(exchangeRatesProvider.notifier).convert(
+            originalBudget,
+            budgetCurrency,
+            displayCurrency,
+          );
+    }
+
+    // Format budget value for display in the display currency
+    final budgetFormatted = convertedBudget > 0
+        ? CountryCurrencyHelper.formatAmount(convertedBudget, displayCurrency)
+        : '';
+    final spentFormatted = data.stats.formattedTotal;
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.overview,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
+          // Header row with title and trip badge
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.overview,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+              // Trip badge (if available)
+              if (trip != null && data.stats.remainingDays > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    gradient: LiquidGlassColors.auroraGradient,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: isDark
+                        ? LiquidGlassColors.neonGlow(
+                            LiquidGlassColors.auroraIndigo,
+                            intensity: 0.3,
+                            blur: 8,
+                          )
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.flight_takeoff,
+                        size: 12,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        l10n.daysLeft(data.stats.remainingDays),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                SummaryStatCard(
-                  type: StatType.totalSpent,
-                  value: data.stats.formattedTotal,
-                  subtitle: l10n.expensesCount(data.stats.totalExpenseCount),
-                ),
-                const SizedBox(width: 12),
-                SummaryStatCard(
-                  type: StatType.dailyAverage,
-                  value: data.stats.formattedDailyAverage,
-                  subtitle: data.stats.elapsedDays > 0
-                      ? l10n.daysTracked(data.stats.elapsedDays)
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                SummaryStatCard(
-                  type: StatType.estimatedTotal,
-                  value: data.stats.formattedEstimatedTotal,
-                  subtitle: data.stats.tripDays > 0
-                      ? l10n.dayTrip(data.stats.tripDays)
-                      : null,
-                ),
-              ],
+
+          // Budget Progress Card
+          GlassCard(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: BudgetProgressBar(
+                spent: data.stats.totalSpent,
+                budget: convertedBudget,
+                spentFormatted: spentFormatted,
+                budgetFormatted: budgetFormatted,
+                isDark: isDark,
+              ),
             ),
+          ),
+          const SizedBox(height: 12),
+
+          // Compact Stats Row
+          Row(
+            children: [
+              Expanded(
+                child: CompactStatTile(
+                  icon: Icons.calendar_today,
+                  value: data.stats.formattedDailyAverage,
+                  label: 'Daily Avg',
+                  color: LiquidGlassColors.oceanTeal,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: CompactStatTile(
+                  icon: Icons.trending_up,
+                  value: data.stats.formattedEstimatedTotal,
+                  label: 'Est. Total',
+                  color: LiquidGlassColors.auroraPurple,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: CompactStatTile(
+                  icon: Icons.receipt_long,
+                  value: data.stats.totalExpenseCount.toString(),
+                  label: 'Expenses',
+                  color: LiquidGlassColors.sunsetOrange,
+                  isDark: isDark,
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTripInfoBanner(ExpensesDashboardData data, bool isDark, AppLocalizations l10n) {
-    final trip = data.trip!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: LiquidGlassColors.auroraIndigo.withAlpha(isDark ? 30 : 20),
-              border: Border.all(
-                color: LiquidGlassColors.auroraIndigo.withAlpha(51),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: LiquidGlassColors.auroraIndigo.withAlpha(51),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.flight_takeoff,
-                    color: LiquidGlassColors.auroraIndigo,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    trip.displayTitle,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (data.stats.remainingDays > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      gradient: LiquidGlassColors.auroraGradient,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      l10n.daysLeft(data.stats.remainingDays),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildCategorySection(ExpensesDashboardData data, bool isDark, AppLocalizations l10n) {
-    final categoryColors = {
-      'transport': LiquidGlassColors.auroraIndigo,
-      'accommodation': LiquidGlassColors.auroraPurple,
-      'food': LiquidGlassColors.sunsetOrange,
-      'activities': LiquidGlassColors.oceanTeal,
-      'shopping': LiquidGlassColors.sunsetRose,
-      'other': LiquidGlassColors.mintEmerald,
-    };
-
-    final allCategories = [
-      ('transport', l10n.categoryTransport, Icons.directions_car),
-      ('accommodation', l10n.categoryAccommodation, Icons.hotel),
-      ('food', l10n.foodAndDrinks, Icons.restaurant),
-      ('activities', l10n.categoryActivities, Icons.attractions),
-      ('shopping', l10n.categoryShopping, Icons.shopping_bag),
-      ('other', l10n.categoryOther, Icons.receipt_long),
-    ];
-
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -308,56 +306,36 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
-          // Pie Chart
-          if (data.categoryTotals.isNotEmpty)
-            ExpensePieChart(
-              categoryTotals: data.categoryTotals,
-              displayCurrency: data.displayCurrency,
-              onCategoryTap: (category) => _showCategoryDetail(data, category),
+          // Compact layout: Mini Pie Chart + Category Progress Bars
+          GlassCard(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Mini Pie Chart (140px)
+                  MiniPieChart(
+                    categoryTotals: data.categoryTotals,
+                    onCategoryTap: (category) => _showCategoryDetail(data, category),
+                    size: 140,
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Category Progress Bars
+                  Expanded(
+                    child: CategoryProgressBarList(
+                      categories: data.categoryTotals,
+                      displayCurrency: data.displayCurrency,
+                      onCategoryTap: (category) => _showCategoryDetail(data, category),
+                      isDark: isDark,
+                      maxCategories: 6,
+                    ),
+                  ),
+                ],
+              ),
             ),
-
-          const SizedBox(height: 16),
-
-          // Category Grid
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1.3,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            itemCount: allCategories.length,
-            itemBuilder: (context, index) {
-              final (categoryKey, categoryName, icon) = allCategories[index];
-              final categoryTotal = data.categoryTotals.firstWhere(
-                (c) => c.category == categoryKey,
-                orElse: () => CategoryTotal(
-                  category: categoryKey,
-                  amount: 0,
-                  percentage: 0,
-                  count: 0,
-                  color: categoryColors[categoryKey] ?? LiquidGlassColors.auroraIndigo,
-                ),
-              );
-
-              if (categoryTotal.count == 0) {
-                return EmptyCategoryCard(
-                  categoryName: categoryName,
-                  icon: icon,
-                  color: categoryColors[categoryKey] ?? LiquidGlassColors.auroraIndigo,
-                );
-              }
-
-              return CategoryCard(
-                category: categoryTotal,
-                displayCurrency: data.displayCurrency,
-                onTap: () => _showCategoryDetail(data, categoryKey),
-              );
-            },
           ),
         ],
       ),
@@ -378,13 +356,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           GlassCard(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SpendingLineChart(
-                dailySpending: data.dailySpending,
-                displayCurrency: data.displayCurrency,
+              padding: const EdgeInsets.all(12),
+              child: SizedBox(
+                height: 180,
+                child: SpendingLineChart(
+                  dailySpending: data.dailySpending,
+                  displayCurrency: data.displayCurrency,
+                ),
               ),
             ),
           ),
@@ -505,29 +486,43 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                SummaryStatCard(
-                  type: StatType.totalSpent,
-                  value: '',
-                  isLoading: true,
-                ),
-                const SizedBox(width: 12),
-                SummaryStatCard(
-                  type: StatType.dailyAverage,
-                  value: '',
-                  isLoading: true,
-                ),
-                const SizedBox(width: 12),
-                SummaryStatCard(
-                  type: StatType.estimatedTotal,
-                  value: '',
-                  isLoading: true,
-                ),
-              ],
+          // Loading skeleton for budget progress
+          GlassCard(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildLoadingSkeleton(isDark, width: 80, height: 14),
+                      _buildLoadingSkeleton(isDark, width: 80, height: 14),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildLoadingSkeleton(isDark, width: 100, height: 24),
+                      _buildLoadingSkeleton(isDark, width: 100, height: 24),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildLoadingSkeleton(isDark, width: double.infinity, height: 12),
+                ],
+              ),
             ),
+          ),
+          const SizedBox(height: 12),
+          // Loading skeleton for stat tiles
+          Row(
+            children: [
+              Expanded(child: _buildLoadingStatTile(isDark)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildLoadingStatTile(isDark)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildLoadingStatTile(isDark)),
+            ],
           ),
           const SizedBox(height: 32),
           Center(
@@ -537,6 +532,41 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingSkeleton(bool isDark, {required double width, required double height}) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withAlpha(15) : Colors.black.withAlpha(10),
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
+  }
+
+  Widget _buildLoadingStatTile(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withAlpha(10) : Colors.black.withAlpha(5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? Colors.white.withAlpha(15) : Colors.black.withAlpha(10),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLoadingSkeleton(isDark, width: 16, height: 16),
+          const SizedBox(height: 6),
+          _buildLoadingSkeleton(isDark, width: 60, height: 14),
+          const SizedBox(height: 4),
+          _buildLoadingSkeleton(isDark, width: 40, height: 10),
         ],
       ),
     );
