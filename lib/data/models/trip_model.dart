@@ -204,6 +204,42 @@ class TripModel extends Equatable {
     return diff > 0 ? diff : null;
   }
 
+  /// Days until trip ends (for ongoing trips)
+  int? get daysUntilEnd {
+    if (endDate == null) return null;
+    final diff = endDate!.difference(DateTime.now()).inDays;
+    return diff >= 0 ? diff : 0;
+  }
+
+  /// Days since trip ended (for past trips)
+  int? get daysSinceEnd {
+    if (endDate == null) return null;
+    final diff = DateTime.now().difference(endDate!).inDays;
+    return diff > 0 ? diff : null;
+  }
+
+  /// Priority score for "closest trip" selection (lower = higher priority)
+  /// - 0-999: Ongoing trips (by days until end)
+  /// - 1000-1999: Upcoming trips (by days until start)
+  /// - 2000-2999: Recently ended (≤7 days)
+  /// - 3000+: Null dates or old trips (by creation recency)
+  int get closestTripPriorityScore {
+    final now = DateTime.now();
+
+    // Ongoing: highest priority (0-999)
+    if (isActive) return daysUntilEnd ?? 0;
+
+    // Upcoming: priority 1000-1999
+    if (isUpcoming) return 1000 + (daysUntilStart ?? 0);
+
+    // Recently ended (within 7 days): priority 2000-2006
+    final daysSince = daysSinceEnd;
+    if (daysSince != null && daysSince <= 7) return 2000 + daysSince;
+
+    // Null dates or old trips: priority 3000+ (by creation recency)
+    return 3000 + now.difference(createdAt).inDays.clamp(0, 999);
+  }
+
   @override
   List<Object?> get props => [id, ownerId, title, destination, status];
 }

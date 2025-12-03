@@ -63,24 +63,58 @@ class TripsRepository {
     }
   }
 
-  /// Get active or planning trip (most recent)
+  /// Get the trip closest to current date (owned + shared)
+  /// Priority: ongoing > upcoming (by start date) > recently ended > null dates
   Future<TripModel?> getActiveTrip() async {
     if (_currentUserId == null) {
       throw TripsRepositoryException('User not authenticated');
     }
 
     try {
-      final response = await _supabase
-          .from('trips')
-          .select()
-          .eq('owner_id', _currentUserId!)
-          .inFilter('status', ['planning', 'active'])
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
+      // Fetch all user trips (owned + shared)
+      List<TripModel> allTrips;
+      try {
+        final response = await _supabase.rpc(
+          'get_user_all_trips',
+          params: {'p_user_id': _currentUserId},
+        );
 
-      if (response == null) return null;
-      return TripModel.fromJson(response);
+        final responseList = response as List?;
+        if (responseList == null || responseList.isEmpty) {
+          return null;
+        }
+
+        allTrips = responseList
+            .map((json) => TripModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        // Fallback to owned trips only
+        debugPrint('RPC failed, falling back to owned trips: $e');
+        final response = await _supabase
+            .from('trips')
+            .select()
+            .eq('owner_id', _currentUserId!);
+
+        if ((response as List).isEmpty) return null;
+
+        allTrips = response
+            .map((json) => TripModel.fromJson(json, isOwner: true))
+            .toList();
+      }
+
+      // Filter to only 'planning' or 'active' status
+      final candidateTrips = allTrips
+          .where((trip) => trip.status == 'planning' || trip.status == 'active')
+          .toList();
+
+      if (candidateTrips.isEmpty) return null;
+
+      // Sort by priority score (lowest = highest priority)
+      // Priority: ongoing > upcoming (by start date) > recently ended > null dates
+      candidateTrips.sort((a, b) =>
+          a.closestTripPriorityScore.compareTo(b.closestTripPriorityScore));
+
+      return candidateTrips.first;
     } catch (e) {
       debugPrint('Error fetching active trip: $e');
       throw TripsRepositoryException('Failed to fetch active trip');
