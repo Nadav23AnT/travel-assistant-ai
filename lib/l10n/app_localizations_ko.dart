@@ -1104,4 +1104,16 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get aiChatDescription =>
       'Ask anything about your trip and get instant suggestions and recommendations';
+
+  @override
+  String get welcomeBackExplorer => 'Welcome Back, Explorer!';
+
+  @override
+  String get journeyStartsHere => 'Your journey starts here';
+
+  @override
+  String get startExploring => 'Start Exploring';
+
+  @override
+  String get maybeLater => 'Maybe later';
 }

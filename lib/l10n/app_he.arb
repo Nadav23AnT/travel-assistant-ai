@@ -286,5 +286,18 @@
   "showMore": "הצג עוד",
   "showLess": "הצג פחות",
   "journalReminder": "צור יומן מסע",
-  "journalReminderDescription": "הטיול שלך הסתיים! הקש כאן ליצירת יומן מסע יפהפה."
+  "journalReminderDescription": "הטיול שלך הסתיים! הקש כאן ליצירת יומן מסע יפהפה.",
+
+  "welcomeBack": "!ברוך הבא",
+  "discoverFeatures": "הנה מה שאתה יכול לעשות היום",
+  "dailyTipsFeature": "טיפים יומיים לטיול",
+  "dailyTipsDescription": "קבל טיפים מותאמים אישית מבינה מלאכותית ליעד שלך כל יום",
+  "multiCurrencyFeature": "הוצאות במטבעות מרובים",
+  "multiCurrencyDescription": "עקוב אחר הוצאות בכל מטבע עם המרה אוטומטית למטבע הבית שלך",
+  "aiChatFeature": "עוזר נסיעות AI",
+  "aiChatDescription": "שאל כל דבר על הטיול שלך וקבל הצעות והמלצות מיידיות",
+  "welcomeBackExplorer": "!ברוך שובך, חוקר",
+  "journeyStartsHere": "המסע שלך מתחיל כאן",
+  "startExploring": "התחל לחקור",
+  "maybeLater": "אולי אחר כך"
 }

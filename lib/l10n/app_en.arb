@@ -1497,5 +1497,21 @@
   "aiChatDescription": "Ask anything about your trip and get instant suggestions and recommendations",
   "@aiChatDescription": {
     "description": "Feature description for AI chat"
+  },
+  "welcomeBackExplorer": "Welcome Back, Explorer!",
+  "@welcomeBackExplorer": {
+    "description": "Daily welcome banner title - more engaging"
+  },
+  "journeyStartsHere": "Your journey starts here",
+  "@journeyStartsHere": {
+    "description": "Daily welcome banner subtitle chip"
+  },
+  "startExploring": "Start Exploring",
+  "@startExploring": {
+    "description": "Main action button on welcome banner"
+  },
+  "maybeLater": "Maybe later",
+  "@maybeLater": {
+    "description": "Secondary dismiss link on welcome banner"
   }
 }

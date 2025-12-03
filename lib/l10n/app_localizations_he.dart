@@ -1081,29 +1081,41 @@ class AppLocalizationsHe extends AppLocalizations {
   String get chatDeleted => 'Chat deleted';
 
   @override
-  String get welcomeBack => 'Welcome Back!';
+  String get welcomeBack => '!ברוך הבא';
 
   @override
-  String get discoverFeatures => 'Here\'s what you can do today';
+  String get discoverFeatures => 'הנה מה שאתה יכול לעשות היום';
 
   @override
-  String get dailyTipsFeature => 'Daily Travel Tips';
+  String get dailyTipsFeature => 'טיפים יומיים לטיול';
 
   @override
   String get dailyTipsDescription =>
-      'Get personalized AI-powered tips for your destination every day';
+      'קבל טיפים מותאמים אישית מבינה מלאכותית ליעד שלך כל יום';
 
   @override
-  String get multiCurrencyFeature => 'Multi-Currency Expenses';
+  String get multiCurrencyFeature => 'הוצאות במטבעות מרובים';
 
   @override
   String get multiCurrencyDescription =>
-      'Track expenses in any currency with automatic conversion to your home currency';
+      'עקוב אחר הוצאות בכל מטבע עם המרה אוטומטית למטבע הבית שלך';
 
   @override
-  String get aiChatFeature => 'AI Travel Assistant';
+  String get aiChatFeature => 'עוזר נסיעות AI';
 
   @override
   String get aiChatDescription =>
-      'Ask anything about your trip and get instant suggestions and recommendations';
+      'שאל כל דבר על הטיול שלך וקבל הצעות והמלצות מיידיות';
+
+  @override
+  String get welcomeBackExplorer => '!ברוך שובך, חוקר';
+
+  @override
+  String get journeyStartsHere => 'המסע שלך מתחיל כאן';
+
+  @override
+  String get startExploring => 'התחל לחקור';
+
+  @override
+  String get maybeLater => 'אולי אחר כך';
 }

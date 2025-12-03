@@ -2193,6 +2193,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask anything about your trip and get instant suggestions and recommendations'**
   String get aiChatDescription;
+
+  /// Daily welcome banner title - more engaging
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Back, Explorer!'**
+  String get welcomeBackExplorer;
+
+  /// Daily welcome banner subtitle chip
+  ///
+  /// In en, this message translates to:
+  /// **'Your journey starts here'**
+  String get journeyStartsHere;
+
+  /// Main action button on welcome banner
+  ///
+  /// In en, this message translates to:
+  /// **'Start Exploring'**
+  String get startExploring;
+
+  /// Secondary dismiss link on welcome banner
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get maybeLater;
 }
 
 class _AppLocalizationsDelegate
