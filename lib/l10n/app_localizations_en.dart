@@ -1089,4 +1089,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatDeleted => 'Chat deleted';
+
+  @override
+  String get welcomeBack => 'Welcome Back!';
+
+  @override
+  String get discoverFeatures => 'Here\'s what you can do today';
+
+  @override
+  String get dailyTipsFeature => 'Daily Travel Tips';
+
+  @override
+  String get dailyTipsDescription =>
+      'Get personalized AI-powered tips for your destination every day';
+
+  @override
+  String get multiCurrencyFeature => 'Multi-Currency Expenses';
+
+  @override
+  String get multiCurrencyDescription =>
+      'Track expenses in any currency with automatic conversion to your home currency';
+
+  @override
+  String get aiChatFeature => 'AI Travel Assistant';
+
+  @override
+  String get aiChatDescription =>
+      'Ask anything about your trip and get instant suggestions and recommendations';
 }

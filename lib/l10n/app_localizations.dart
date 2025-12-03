@@ -2145,6 +2145,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chat deleted'**
   String get chatDeleted;
+
+  /// Daily welcome banner title
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Back!'**
+  String get welcomeBack;
+
+  /// Daily welcome banner subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Here\'s what you can do today'**
+  String get discoverFeatures;
+
+  /// Feature title for daily tips
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Travel Tips'**
+  String get dailyTipsFeature;
+
+  /// Feature description for daily tips
+  ///
+  /// In en, this message translates to:
+  /// **'Get personalized AI-powered tips for your destination every day'**
+  String get dailyTipsDescription;
+
+  /// Feature title for multi-currency
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Currency Expenses'**
+  String get multiCurrencyFeature;
+
+  /// Feature description for multi-currency
+  ///
+  /// In en, this message translates to:
+  /// **'Track expenses in any currency with automatic conversion to your home currency'**
+  String get multiCurrencyDescription;
+
+  /// Feature title for AI chat
+  ///
+  /// In en, this message translates to:
+  /// **'AI Travel Assistant'**
+  String get aiChatFeature;
+
+  /// Feature description for AI chat
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything about your trip and get instant suggestions and recommendations'**
+  String get aiChatDescription;
 }
 
 class _AppLocalizationsDelegate

@@ -19,6 +19,8 @@ import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/trips_provider.dart';
+import '../../providers/welcome_banner_provider.dart';
+import '../../widgets/home/daily_welcome_dialog.dart';
 import '../../widgets/home/day_tip_card.dart';
 import '../../widgets/home/journal_ready_card.dart';
 
@@ -46,6 +48,17 @@ class HomeScreen extends ConsumerWidget {
     // Watch journal auto-generation (triggers on app open)
     final showJournalReady = ref.watch(shouldShowJournalReadyProvider);
     final journalReadyData = ref.watch(journalReadyDataProvider);
+
+    // Show daily welcome banner on first login of the day
+    ref.listen<AsyncValue<bool>>(shouldShowWelcomeBannerProvider, (_, next) {
+      next.whenData((shouldShow) {
+        if (shouldShow) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            showDailyWelcomeDialog(context, ref);
+          });
+        }
+      });
+    });
 
     return Scaffold(
       extendBodyBehindAppBar: true,

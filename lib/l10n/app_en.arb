@@ -1464,5 +1464,38 @@
   "chatDeleted": "Chat deleted",
   "@chatDeleted": {
     "description": "Chat deleted success message"
+  },
+
+  "welcomeBack": "Welcome Back!",
+  "@welcomeBack": {
+    "description": "Daily welcome banner title"
+  },
+  "discoverFeatures": "Here's what you can do today",
+  "@discoverFeatures": {
+    "description": "Daily welcome banner subtitle"
+  },
+  "dailyTipsFeature": "Daily Travel Tips",
+  "@dailyTipsFeature": {
+    "description": "Feature title for daily tips"
+  },
+  "dailyTipsDescription": "Get personalized AI-powered tips for your destination every day",
+  "@dailyTipsDescription": {
+    "description": "Feature description for daily tips"
+  },
+  "multiCurrencyFeature": "Multi-Currency Expenses",
+  "@multiCurrencyFeature": {
+    "description": "Feature title for multi-currency"
+  },
+  "multiCurrencyDescription": "Track expenses in any currency with automatic conversion to your home currency",
+  "@multiCurrencyDescription": {
+    "description": "Feature description for multi-currency"
+  },
+  "aiChatFeature": "AI Travel Assistant",
+  "@aiChatFeature": {
+    "description": "Feature title for AI chat"
+  },
+  "aiChatDescription": "Ask anything about your trip and get instant suggestions and recommendations",
+  "@aiChatDescription": {
+    "description": "Feature description for AI chat"
   }
 }
