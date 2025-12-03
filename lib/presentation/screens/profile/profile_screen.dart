@@ -173,23 +173,15 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () => context.push(AppRoutes.settings),
               isDark: isDark,
             ),
-            _GlassMenuItem(
-              icon: Icons.help_outline,
-              title: l10n.helpAndSupport,
-              onTap: () => context.push(AppRoutes.helpSupport),
+            const SizedBox(height: 8),
+
+            // Legal & Policies section
+            _GlassLegalSection(
               isDark: isDark,
-            ),
-            _GlassMenuItem(
-              icon: Icons.privacy_tip_outlined,
-              title: l10n.privacyPolicy,
-              onTap: () => context.push(AppRoutes.privacyPolicy),
-              isDark: isDark,
-            ),
-            _GlassMenuItem(
-              icon: Icons.description_outlined,
-              title: l10n.termsOfService,
-              onTap: () => context.push(AppRoutes.termsOfService),
-              isDark: isDark,
+              l10n: l10n,
+              onHelpTap: () => context.push(AppRoutes.helpSupport),
+              onPrivacyTap: () => context.push(AppRoutes.privacyPolicy),
+              onTermsTap: () => context.push(AppRoutes.termsOfService),
             ),
             const SizedBox(height: 20),
 
@@ -1439,6 +1431,162 @@ class _GlassMenuItem extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Legal & Policies section with compact horizontal cards
+class _GlassLegalSection extends StatelessWidget {
+  final bool isDark;
+  final AppLocalizations l10n;
+  final VoidCallback onHelpTap;
+  final VoidCallback onPrivacyTap;
+  final VoidCallback onTermsTap;
+
+  const _GlassLegalSection({
+    required this.isDark,
+    required this.l10n,
+    required this.onHelpTap,
+    required this.onPrivacyTap,
+    required this.onTermsTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
+          child: Text(
+            l10n.legalAndPolicies,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isDark
+                  ? Colors.white.withAlpha(97)
+                  : Colors.black.withAlpha(97),
+            ),
+          ),
+        ),
+        // Cards Row
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Expanded(
+                child: _LegalCard(
+                  icon: Icons.help_outline,
+                  title: l10n.helpAndSupport,
+                  onTap: onHelpTap,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _LegalCard(
+                  icon: Icons.privacy_tip_outlined,
+                  title: l10n.privacyPolicy,
+                  onTap: onPrivacyTap,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _LegalCard(
+                  icon: Icons.description_outlined,
+                  title: l10n.termsOfService,
+                  onTap: onTermsTap,
+                  isDark: isDark,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Individual legal card with muted styling
+class _LegalCard extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  const _LegalCard({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  @override
+  State<_LegalCard> createState() => _LegalCardState();
+}
+
+class _LegalCardState extends State<_LegalCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 150),
+        opacity: _isPressed ? 0.6 : 1.0,
+        child: Container(
+          height: 88,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: widget.isDark
+                ? Colors.white.withAlpha(15)
+                : Colors.white.withAlpha(120),
+            border: Border.all(
+              width: 0.8,
+              color: widget.isDark
+                  ? Colors.white.withAlpha(20)
+                  : Colors.white.withAlpha(60),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                widget.icon,
+                size: 20,
+                color: widget.isDark
+                    ? Colors.white.withAlpha(102)
+                    : Colors.black.withAlpha(115),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  widget.title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: widget.isDark
+                        ? Colors.white.withAlpha(153)
+                        : Colors.black.withAlpha(153),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

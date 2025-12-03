@@ -679,6 +679,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get helpAndLegal => 'Help & Legal';
 
   @override
+  String get legalAndPolicies => 'Legal & Policies';
+
+  @override
   String get freePlan => '免费计划';
 
   @override

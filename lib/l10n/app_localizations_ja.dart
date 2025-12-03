@@ -681,6 +681,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get helpAndLegal => 'Help & Legal';
 
   @override
+  String get legalAndPolicies => 'Legal & Policies';
+
+  @override
   String get freePlan => '無料プラン';
 
   @override

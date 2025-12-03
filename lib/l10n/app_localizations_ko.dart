@@ -682,6 +682,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get helpAndLegal => 'Help & Legal';
 
   @override
+  String get legalAndPolicies => 'Legal & Policies';
+
+  @override
   String get freePlan => '무료 플랜';
 
   @override

@@ -695,6 +695,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get helpAndLegal => 'Help & Legal';
 
   @override
+  String get legalAndPolicies => 'Legal & Policies';
+
+  @override
   String get freePlan => 'Бесплатный план';
 
   @override

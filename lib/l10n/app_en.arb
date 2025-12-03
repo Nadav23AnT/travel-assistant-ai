@@ -968,6 +968,10 @@
   "@helpAndLegal": {
     "description": "Help and legal section header"
   },
+  "legalAndPolicies": "Legal & Policies",
+  "@legalAndPolicies": {
+    "description": "Legal and policies section header in profile"
+  },
   "freePlan": "Free Plan",
   "@freePlan": {
     "description": "Free subscription plan"

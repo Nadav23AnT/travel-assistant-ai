@@ -1408,6 +1408,12 @@ abstract class AppLocalizations {
   /// **'Help & Legal'**
   String get helpAndLegal;
 
+  /// Legal and policies section header in profile
+  ///
+  /// In en, this message translates to:
+  /// **'Legal & Policies'**
+  String get legalAndPolicies;
+
   /// Free subscription plan
   ///
   /// In en, this message translates to:
