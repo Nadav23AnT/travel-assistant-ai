@@ -12,6 +12,7 @@ import '../../../data/models/expense_model.dart';
 import '../../../data/models/trip_model.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/auth_service.dart';
+import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/currency_provider.dart';
@@ -165,6 +166,7 @@ class HomeScreen extends ConsumerWidget {
     final userName = user?.userMetadata?['full_name'] as String? ??
         user?.email?.split('@').first ??
         'Traveler';
+    final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
 
     final hour = DateTime.now().hour;
     String greeting;
@@ -208,41 +210,46 @@ class HomeScreen extends ConsumerWidget {
         ),
         Row(
           children: [
-            // Reset button (for testing)
-            GlowingIconButton(
-              icon: Icons.refresh_rounded,
-              onPressed: () => _showResetDialog(context, ref),
-              size: 44,
-            ),
-            const SizedBox(width: 12),
-            // Avatar
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LiquidGlassColors.auroraGradient,
-                boxShadow: isDark
-                    ? LiquidGlassColors.neonGlow(
-                        LiquidGlassColors.auroraIndigo,
-                        intensity: 0.4,
-                        blur: 16,
-                      )
-                    : [
-                        BoxShadow(
-                          color: LiquidGlassColors.auroraIndigo.withAlpha(77),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+            // Reset button (admin only - for testing)
+            if (isAdmin) ...[
+              GlowingIconButton(
+                icon: Icons.refresh_rounded,
+                onPressed: () => _showResetDialog(context, ref),
+                size: 44,
               ),
-              child: Center(
-                child: Text(
-                  userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              const SizedBox(width: 12),
+            ],
+            // Avatar - tap to go to profile
+            GestureDetector(
+              onTap: () => context.go(AppRoutes.profile),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LiquidGlassColors.auroraGradient,
+                  boxShadow: isDark
+                      ? LiquidGlassColors.neonGlow(
+                          LiquidGlassColors.auroraIndigo,
+                          intensity: 0.4,
+                          blur: 16,
+                        )
+                      : [
+                          BoxShadow(
+                            color: LiquidGlassColors.auroraIndigo.withAlpha(77),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                ),
+                child: Center(
+                  child: Text(
+                    userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -466,6 +473,16 @@ class HomeScreen extends ConsumerWidget {
                 label: l10n.aiChat,
                 gradient: LiquidGlassColors.mintGradient,
                 onTap: () => context.go(AppRoutes.chat),
+                isDark: isDark,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _QuickActionCard(
+                icon: Icons.account_balance_wallet_rounded,
+                label: l10n.expenses,
+                gradient: LiquidGlassColors.sunsetGradient,
+                onTap: () => context.go(AppRoutes.expenses),
                 isDark: isDark,
               ),
             ),
