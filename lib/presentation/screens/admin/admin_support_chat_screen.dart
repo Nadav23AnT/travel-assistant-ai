@@ -92,7 +92,13 @@ class _AdminSupportChatScreenState
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () => context.go('/admin/support'),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/admin/support');
+          }
+        },
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,10 +422,15 @@ class _AdminSupportChatScreenState
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
+    // Store notifier reference before clearing and awaiting
+    final notifier = ref.read(
+      supportChatProvider((widget.sessionId, SenderRole.admin)).notifier,
+    );
+
     _messageController.clear();
-    await ref
-        .read(supportChatProvider((widget.sessionId, SenderRole.admin)).notifier)
-        .sendMessage(content);
+
+    if (!mounted) return;
+    await notifier.sendMessage(content);
   }
 
   void _handleMenuAction(

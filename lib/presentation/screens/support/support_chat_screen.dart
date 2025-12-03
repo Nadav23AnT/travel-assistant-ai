@@ -1,14 +1,16 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../config/theme.dart';
+import '../../../core/design/components/premium_button.dart';
+import '../../../core/design/tokens/liquid_glass_colors.dart';
 import '../../../data/models/admin_models.dart';
 import '../../providers/support_provider.dart';
-import '../../widgets/admin/support_ticket_card.dart';
 
-/// User-facing support chat screen
+/// User-facing support chat screen with Liquid Glass design
 class SupportChatScreen extends ConsumerStatefulWidget {
   final String sessionId;
 
@@ -43,6 +45,8 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final chatState = ref.watch(
       supportChatProvider((widget.sessionId, SenderRole.user)),
     );
@@ -58,122 +62,235 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/support'),
+      extendBodyBehindAppBar: true,
+      appBar: _buildGlassAppBar(context, chatState, isDark),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    LiquidGlassColors.canvasBaseDark,
+                    LiquidGlassColors.canvasSubtleDark,
+                    const Color(0xFF1E1B4B),
+                  ]
+                : [
+                    LiquidGlassColors.canvasBaseLight,
+                    LiquidGlassColors.canvasSubtleLight,
+                    const Color(0xFFEEF2FF),
+                  ],
+          ),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              chatState.session?.subject ?? 'Support Chat',
-              style: const TextStyle(fontSize: 16),
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (chatState.session != null)
-              Row(
-                children: [
-                  SupportStatusBadge(status: chatState.session!.status),
-                ],
-              ),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
-          // Info banner for closed tickets
-          if (chatState.session?.status == SupportStatus.closed ||
-              chatState.session?.status == SupportStatus.resolved)
-            _buildClosedBanner(context, chatState.session!),
-
-          // Messages list
-          Expanded(
-            child: chatState.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : chatState.error != null
-                    ? _buildErrorState(context, chatState.error!)
-                    : _buildMessagesList(context, chatState),
-          ),
-
-          // Input area (disabled for closed tickets)
-          if (chatState.session?.isOpen ?? true)
-            _buildInputArea(context, ref, chatState),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildClosedBanner(BuildContext context, SupportSessionModel session) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      color: AppTheme.successColor.withAlpha(26),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.check_circle,
-            color: AppTheme.successColor,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              session.status == SupportStatus.resolved
-                  ? 'This ticket has been resolved.'
-                  : 'This ticket has been closed.',
-              style: const TextStyle(color: AppTheme.successColor),
-            ),
-          ),
-          TextButton(
-            onPressed: () => _showReopenDialog(context),
-            child: const Text('Reopen?'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessagesList(BuildContext context, SupportChatState chatState) {
-    if (chatState.messages.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
+        child: SafeArea(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withAlpha(26),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.chat_bubble_outline,
-                  size: 48,
-                  color: AppTheme.primaryColor,
-                ),
+              // Info banner for closed tickets
+              if (chatState.session?.status == SupportStatus.closed ||
+                  chatState.session?.status == SupportStatus.resolved)
+                _buildClosedBanner(context, chatState.session!, isDark),
+
+              // Messages list
+              Expanded(
+                child: chatState.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : chatState.error != null
+                        ? _buildErrorState(context, chatState.error!)
+                        : _buildMessagesList(context, chatState, isDark),
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Start the conversation',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Send a message to describe your issue and our support team will respond as soon as possible.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.darkTextSecondary
-                      : AppTheme.textSecondary,
-                ),
-              ),
+
+              // Input area (disabled for closed tickets)
+              if (chatState.session?.isOpen ?? true)
+                _buildGlassInputArea(context, ref, chatState, isDark),
             ],
           ),
         ),
-      );
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildGlassAppBar(
+    BuildContext context,
+    SupportChatState chatState,
+    bool isDark,
+  ) {
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(kToolbarHeight + 20),
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.black.withAlpha(40)
+                  : Colors.white.withAlpha(180),
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark
+                      ? Colors.white.withAlpha(20)
+                      : Colors.black.withAlpha(10),
+                ),
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    // Back button
+                    GlowingIconButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/support');
+                        }
+                      },
+                      size: 44,
+                    ),
+                    const SizedBox(width: 12),
+                    // Title and status
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            chatState.session?.subject ?? 'Support Chat',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (chatState.session != null) ...[
+                            const SizedBox(height: 4),
+                            _buildGlassStatusBadge(
+                                chatState.session!.status, isDark),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassStatusBadge(SupportStatus status, bool isDark) {
+    final (color, label) = _getStatusColorAndLabel(status);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: color.withAlpha(isDark ? 40 : 30),
+        border: Border.all(
+          color: color.withAlpha(isDark ? 80 : 60),
+        ),
+        boxShadow: isDark
+            ? [
+                BoxShadow(
+                  color: color.withAlpha(40),
+                  blurRadius: 8,
+                  offset: Offset.zero,
+                ),
+              ]
+            : [],
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  (Color, String) _getStatusColorAndLabel(SupportStatus status) {
+    switch (status) {
+      case SupportStatus.open:
+        return (LiquidGlassColors.sunsetOrange, 'Open');
+      case SupportStatus.inProgress:
+        return (LiquidGlassColors.auroraIndigo, 'In Progress');
+      case SupportStatus.resolved:
+        return (LiquidGlassColors.mintEmerald, 'Resolved');
+      case SupportStatus.closed:
+        return (Colors.grey, 'Closed');
+    }
+  }
+
+  Widget _buildClosedBanner(
+      BuildContext context, SupportSessionModel session, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: LiquidGlassColors.mintEmerald.withAlpha(isDark ? 30 : 20),
+              border: Border.all(
+                color: LiquidGlassColors.mintEmerald.withAlpha(isDark ? 60 : 40),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: LiquidGlassColors.mintEmerald.withAlpha(30),
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: LiquidGlassColors.mintEmerald,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    session.status == SupportStatus.resolved
+                        ? 'This ticket has been resolved.'
+                        : 'This ticket has been closed.',
+                    style: TextStyle(
+                      color: isDark
+                          ? LiquidGlassColors.mintLight
+                          : LiquidGlassColors.mintEmerald,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                GhostButton(
+                  label: 'Reopen?',
+                  onPressed: () => _showReopenDialog(context),
+                  color: LiquidGlassColors.mintEmerald,
+                  height: 36,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMessagesList(
+      BuildContext context, SupportChatState chatState, bool isDark) {
+    if (chatState.messages.isEmpty) {
+      return _buildEmptyState(context, isDark);
     }
 
     return ListView.builder(
@@ -191,29 +308,106 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
 
         return Column(
           children: [
-            if (showDateHeader) _buildDateHeader(context, message.createdAt),
-            _buildMessageBubble(context, message, isUser),
+            if (showDateHeader)
+              _buildGlassDateHeader(context, message.createdAt, isDark),
+            _buildGlassMessageBubble(context, message, isUser, isDark),
           ],
         );
       },
     );
   }
 
-  Widget _buildDateHeader(BuildContext context, DateTime date) {
+  Widget _buildEmptyState(BuildContext context, bool isDark) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LiquidGlassColors.auroraGradient,
+                boxShadow: isDark
+                    ? LiquidGlassColors.neonGlow(
+                        LiquidGlassColors.auroraViolet,
+                        intensity: 0.3,
+                        blur: 30,
+                      )
+                    : [
+                        BoxShadow(
+                          color: LiquidGlassColors.auroraIndigo.withAlpha(60),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+              ),
+              child: const Icon(
+                Icons.chat_bubble_outline,
+                size: 48,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Start the conversation',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Send a message to describe your issue and our support team will respond as soon as possible.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: isDark
+                    ? Colors.white.withAlpha(180)
+                    : Colors.black.withAlpha(150),
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassDateHeader(
+      BuildContext context, DateTime date, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            _formatDateHeader(date),
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: isDark
+                    ? Colors.white.withAlpha(15)
+                    : Colors.black.withAlpha(8),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withAlpha(20)
+                      : Colors.black.withAlpha(10),
+                ),
+              ),
+              child: Text(
+                _formatDateHeader(date),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isDark
+                      ? Colors.white.withAlpha(150)
+                      : Colors.black.withAlpha(120),
+                ),
+              ),
             ),
           ),
         ),
@@ -221,17 +415,16 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(
+  Widget _buildGlassMessageBubble(
     BuildContext context,
     SupportMessageModel message,
     bool isUser,
+    bool isDark,
   ) {
-    final theme = Theme.of(context);
-
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
+        margin: const EdgeInsets.symmetric(vertical: 6),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
@@ -239,62 +432,108 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
           crossAxisAlignment:
               isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
+            // Support agent label
             if (!isUser)
               Padding(
-                padding: const EdgeInsets.only(left: 12, bottom: 4),
+                padding: const EdgeInsets.only(left: 12, bottom: 6),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(2),
+                      padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withAlpha(26),
                         shape: BoxShape.circle,
+                        gradient: LiquidGlassColors.auroraGradient,
                       ),
                       child: const Icon(
                         Icons.support_agent,
-                        size: 14,
-                        color: AppTheme.primaryColor,
+                        size: 12,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Text(
                       message.senderDisplayName,
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      style: TextStyle(
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.primaryColor,
+                        color: LiquidGlassColors.auroraIndigo,
                       ),
                     ),
                   ],
                 ),
               ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isUser
-                    ? AppTheme.primaryColor
-                    : (theme.brightness == Brightness.dark
-                        ? AppTheme.darkCard
-                        : Colors.grey.shade200),
-                borderRadius: BorderRadius.circular(16).copyWith(
-                  bottomRight: isUser ? const Radius.circular(4) : null,
-                  bottomLeft: !isUser ? const Radius.circular(4) : null,
-                ),
+
+            // Message bubble with glass effect
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20).copyWith(
+                bottomRight: isUser ? const Radius.circular(6) : null,
+                bottomLeft: !isUser ? const Radius.circular(6) : null,
               ),
-              child: Text(
-                message.content,
-                style: TextStyle(
-                  color: isUser ? Colors.white : null,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: isUser ? 0 : 10,
+                  sigmaY: isUser ? 0 : 10,
+                ),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20).copyWith(
+                      bottomRight: isUser ? const Radius.circular(6) : null,
+                      bottomLeft: !isUser ? const Radius.circular(6) : null,
+                    ),
+                    gradient: isUser ? LiquidGlassColors.auroraGradient : null,
+                    color: isUser
+                        ? null
+                        : (isDark
+                            ? Colors.white.withAlpha(15)
+                            : Colors.white.withAlpha(200)),
+                    border: isUser
+                        ? null
+                        : Border.all(
+                            color: isDark
+                                ? Colors.white.withAlpha(20)
+                                : Colors.black.withAlpha(8),
+                          ),
+                    boxShadow: isUser && isDark
+                        ? LiquidGlassColors.neonGlow(
+                            LiquidGlassColors.auroraViolet,
+                            intensity: 0.25,
+                            blur: 16,
+                          )
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(isDark ? 40 : 15),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                  ),
+                  child: Text(
+                    message.content,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: isUser
+                          ? Colors.white
+                          : (isDark ? Colors.white : Colors.black87),
+                      height: 1.4,
+                    ),
+                  ),
                 ),
               ),
             ),
+
+            // Timestamp
             Padding(
               padding: const EdgeInsets.only(top: 4, left: 12, right: 12),
               child: Text(
                 DateFormat('HH:mm').format(message.createdAt),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.grey,
+                style: TextStyle(
                   fontSize: 10,
+                  color: isDark
+                      ? Colors.white.withAlpha(100)
+                      : Colors.black.withAlpha(80),
                 ),
               ),
             ),
@@ -304,69 +543,162 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     );
   }
 
-  Widget _buildInputArea(
+  Widget _buildGlassInputArea(
     BuildContext context,
     WidgetRef ref,
     SupportChatState chatState,
+    bool isDark,
   ) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 12,
-        bottom: MediaQuery.of(context).padding.bottom + 12,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : AppTheme.surfaceColor,
-        border: Border(
-          top: BorderSide(
-            color: isDark ? AppTheme.darkDivider : AppTheme.dividerColor,
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 12,
+            bottom: MediaQuery.of(context).padding.bottom + 12,
           ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                hintText: 'Type a message...',
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.black.withAlpha(40)
+                : Colors.white.withAlpha(180),
+            border: Border(
+              top: BorderSide(
+                color: isDark
+                    ? Colors.white.withAlpha(20)
+                    : Colors.black.withAlpha(10),
               ),
-              maxLines: null,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _sendMessage(ref),
             ),
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: chatState.isSending ? null : () => _sendMessage(ref),
-            icon: chatState.isSending
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.send),
-            color: AppTheme.primaryColor,
+          child: Row(
+            children: [
+              // Text input with glass effect
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    color: isDark
+                        ? Colors.white.withAlpha(10)
+                        : Colors.black.withAlpha(5),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withAlpha(15)
+                          : Colors.black.withAlpha(8),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
+                      hintStyle: TextStyle(
+                        color: isDark
+                            ? Colors.white.withAlpha(100)
+                            : Colors.black.withAlpha(80),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    maxLines: null,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendMessage(ref),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Send button with glow
+              GestureDetector(
+                onTap: chatState.isSending ? null : () => _sendMessage(ref),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: chatState.isSending
+                        ? null
+                        : LiquidGlassColors.auroraGradient,
+                    color: chatState.isSending
+                        ? (isDark
+                            ? Colors.white.withAlpha(20)
+                            : Colors.black.withAlpha(10))
+                        : null,
+                    boxShadow: chatState.isSending
+                        ? []
+                        : (isDark
+                            ? LiquidGlassColors.neonGlow(
+                                LiquidGlassColors.auroraViolet,
+                                intensity: 0.4,
+                                blur: 16,
+                              )
+                            : [
+                                BoxShadow(
+                                  color: LiquidGlassColors.auroraIndigo
+                                      .withAlpha(80),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]),
+                  ),
+                  child: Center(
+                    child: chatState.isSending
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                isDark ? Colors.white : Colors.black54,
+                              ),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildErrorState(BuildContext context, String error) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: LiquidGlassColors.sunsetRose.withAlpha(20),
+            ),
+            child: const Icon(
+              Icons.error_outline,
+              size: 48,
+              color: LiquidGlassColors.sunsetRose,
+            ),
+          ),
           const SizedBox(height: 16),
-          Text('Error: $error'),
+          Text(
+            'Error: $error',
+            style: TextStyle(
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+          ),
         ],
       ),
     );
@@ -376,33 +708,55 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
+    // Store notifier reference before clearing and awaiting
+    final notifier = ref.read(
+      supportChatProvider((widget.sessionId, SenderRole.user)).notifier,
+    );
+
     _messageController.clear();
-    await ref
-        .read(supportChatProvider((widget.sessionId, SenderRole.user)).notifier)
-        .sendMessage(content);
+
+    if (!mounted) return;
+    await notifier.sendMessage(content);
   }
 
   void _showReopenDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reopen Ticket'),
-        content: const Text(
+        backgroundColor:
+            isDark ? LiquidGlassColors.canvasSubtleDark : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Reopen Ticket',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        content: Text(
           'Would you like to reopen this support ticket? '
           'This will notify our support team.',
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black54,
+          ),
         ),
         actions: [
-          TextButton(
+          GhostButton(
+            label: 'Cancel',
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            height: 40,
           ),
-          ElevatedButton(
+          const SizedBox(width: 8),
+          PremiumButton.gradient(
+            label: 'Create New Ticket',
             onPressed: () {
               Navigator.pop(context);
-              // Create a new ticket instead of reopening
               context.go('/support');
             },
-            child: const Text('Create New Ticket'),
+            height: 40,
           ),
         ],
       ),

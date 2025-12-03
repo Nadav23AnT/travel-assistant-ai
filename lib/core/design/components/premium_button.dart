@@ -425,15 +425,15 @@ class _GlowingIconButtonState extends State<GlowingIconButton> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: isDark
-                ? Colors.white.withAlpha(20) // 0.08
-                : Colors.white.withAlpha(179), // 0.7
+                ? Colors.white.withAlpha(35) // 0.14 - increased for better visibility
+                : Colors.white.withAlpha(200), // 0.78 - increased for better visibility
             border: Border.all(
               width: 1.5,
               color: _isHovered
                   ? buttonColor.withAlpha(128)
                   : (isDark
-                      ? Colors.white.withAlpha(31)
-                      : Colors.white.withAlpha(77)),
+                      ? Colors.white.withAlpha(50) // increased
+                      : Colors.black.withAlpha(15)), // subtle dark border for light mode
             ),
             boxShadow: [
               if (_isHovered && isDark)
@@ -460,6 +460,15 @@ class _GlowingIconButtonState extends State<GlowingIconButton> {
               color: _isHovered
                   ? buttonColor
                   : (isDark ? Colors.white : Colors.black87),
+              shadows: isDark
+                  ? [
+                      const Shadow(
+                        color: Color(0x60000000),
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      ),
+                    ]
+                  : null,
             ),
           ),
         ),

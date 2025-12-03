@@ -202,6 +202,7 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
       final session = await _repository.getSessionById(sessionId);
       final messages = await _repository.getSessionMessages(sessionId);
 
+      if (!mounted) return;
       state = state.copyWith(
         session: session,
         messages: messages,
@@ -214,17 +215,20 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
       // Subscribe to real-time updates
       _messagesSubscription = _repository.streamMessages(sessionId).listen(
         (messages) {
+          if (!mounted) return;
           state = state.copyWith(messages: messages);
           // Mark new messages as read
           _repository.markMessagesAsRead(sessionId, senderRole);
         },
         onError: (e) {
+          if (!mounted) return;
           state = state.copyWith(error: e.toString());
         },
       );
 
       _sessionSubscription = _repository.streamSession(sessionId).listen(
         (session) {
+          if (!mounted) return;
           state = state.copyWith(session: session);
         },
         onError: (e) {
@@ -232,6 +236,7 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
         },
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -239,6 +244,7 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
   /// Send a message
   Future<bool> sendMessage(String content) async {
     if (content.trim().isEmpty) return false;
+    if (!mounted) return false;
 
     state = state.copyWith(isSending: true, error: null);
     try {
@@ -247,9 +253,11 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
         content: content.trim(),
         role: senderRole,
       );
+      if (!mounted) return true;
       state = state.copyWith(isSending: false);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(isSending: false, error: e.toString());
       return false;
     }
@@ -257,13 +265,16 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
 
   /// Update session status (admin only)
   Future<bool> updateStatus(SupportStatus status) async {
+    if (!mounted) return false;
     try {
       final session = await _repository.updateSessionStatus(sessionId, status);
+      if (!mounted) return true;
       state = state.copyWith(session: session);
       _ref.invalidate(allSupportSessionsProvider);
       _ref.invalidate(openTicketsCountProvider);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(error: e.toString());
       return false;
     }
@@ -271,12 +282,15 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
 
   /// Update session priority (admin only)
   Future<bool> updatePriority(SupportPriority priority) async {
+    if (!mounted) return false;
     try {
       final session = await _repository.updateSessionPriority(sessionId, priority);
+      if (!mounted) return true;
       state = state.copyWith(session: session);
       _ref.invalidate(allSupportSessionsProvider);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(error: e.toString());
       return false;
     }
@@ -284,17 +298,20 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
 
   /// Assign session to current admin
   Future<bool> assignToMe() async {
+    if (!mounted) return false;
     final user = _ref.read(currentUserProvider);
     if (user == null) return false;
 
     try {
       final session = await _repository.assignAdmin(sessionId, user.id);
+      if (!mounted) return true;
       state = state.copyWith(session: session);
       _ref.invalidate(allSupportSessionsProvider);
       _ref.invalidate(unassignedSessionsProvider);
       _ref.invalidate(myAssignedSessionsProvider);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(error: e.toString());
       return false;
     }
@@ -302,14 +319,17 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
 
   /// Unassign session
   Future<bool> unassign() async {
+    if (!mounted) return false;
     try {
       final session = await _repository.unassignAdmin(sessionId);
+      if (!mounted) return true;
       state = state.copyWith(session: session);
       _ref.invalidate(allSupportSessionsProvider);
       _ref.invalidate(unassignedSessionsProvider);
       _ref.invalidate(myAssignedSessionsProvider);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(error: e.toString());
       return false;
     }
