@@ -54,7 +54,7 @@ class _FloatingNavBarState extends State<FloatingNavBar>
       TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 30),
     ]).animate(CurvedAnimation(
       parent: _controller,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutCubic,
     ));
 
     _glowAnimation = TweenSequence<double>([
