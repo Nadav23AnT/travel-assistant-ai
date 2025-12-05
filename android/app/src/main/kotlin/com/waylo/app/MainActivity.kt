@@ -1,4 +1,4 @@
-package com.tripbuddy.trip_buddy
+package com.waylo.app
 
 import io.flutter.embedding.android.FlutterActivity
 
