@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/design/effects/glass_container.dart';
+import '../../../core/design/effects/glass_container.dart' show GlassCard;
 import '../../../core/design/tokens/liquid_glass_colors.dart';
 import '../../../data/models/notification_settings_model.dart';
 import '../../providers/notification_settings_provider.dart';
@@ -94,8 +94,8 @@ class _DndScheduleScreenState extends ConsumerState<DndScheduleScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // Enable toggle
-          GlassContainer(
-            borderRadius: 20,
+          GlassCard(
+            borderRadius: BorderRadius.circular(20),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -173,8 +173,8 @@ class _DndScheduleScreenState extends ConsumerState<DndScheduleScreen> {
                       ),
                     ),
                   ),
-                  GlassContainer(
-                    borderRadius: 20,
+                  GlassCard(
+                    borderRadius: BorderRadius.circular(20),
                     child: Column(
                       children: [
                         // Start time
@@ -221,8 +221,8 @@ class _DndScheduleScreenState extends ConsumerState<DndScheduleScreen> {
                       ),
                     ),
                   ),
-                  GlassContainer(
-                    borderRadius: 20,
+                  GlassCard(
+                    borderRadius: BorderRadius.circular(20),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: _buildDaySelector(isDark),

@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -8,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'config/env.dart';
 import 'presentation/providers/locale_provider.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +34,9 @@ Future<void> main() async {
     ),
   );
 
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
   // Initialize Supabase
   if (Env.hasSupabase) {
     await Supabase.initialize(
@@ -39,6 +44,9 @@ Future<void> main() async {
       anonKey: Env.supabaseAnonKey,
     );
   }
+
+  // Initialize notification service
+  await NotificationService().initialize();
 
   runApp(
     ProviderScope(
