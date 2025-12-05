@@ -2420,3 +2420,15 @@ CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
 
 - Receipt photo capture (moved to Sprint 5)
 - AI Model selection in settings (dev controlled for now)
+
+---
+
+## Known Issues
+
+### Daily Welcome Banner - 2-Click Bug (Web)
+**File**: `lib/presentation/widgets/home/daily_welcome_dialog.dart`
+**Issue**: The "Start Exploring" button requires 2 clicks to dismiss the banner on Flutter Web.
+**Root Cause**: Likely related to Flutter Web's focus/tap handling with animated widgets and BackdropFilter. Tried GestureDetector, ElevatedButton - both exhibit same behavior.
+**Workaround**: User needs to click twice.
+**Priority**: Low (does not affect mobile, only web testing)
+**To Fix**: Investigate Flutter Web focus semantics, possibly use Listener widget with onPointerUp, or remove BackdropFilter animation layer.
