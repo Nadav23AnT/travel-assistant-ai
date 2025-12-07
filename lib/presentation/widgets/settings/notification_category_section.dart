@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/design/effects/glass_container.dart';
+import '../../../core/design/effects/glass_container.dart' show GlassCard;
 import '../../../core/design/tokens/liquid_glass_colors.dart';
 
 /// An expandable notification category section with glassmorphism styling
@@ -77,8 +77,8 @@ class _NotificationCategorySectionState
     return AnimatedOpacity(
       opacity: widget.enabled ? 1.0 : 0.5,
       duration: const Duration(milliseconds: 300),
-      child: GlassContainer(
-        borderRadius: 24,
+      child: GlassCard(
+        borderRadius: BorderRadius.circular(24),
         child: Column(
           children: [
             // Header
