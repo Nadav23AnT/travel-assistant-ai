@@ -947,6 +947,14 @@
   "@noTripMembersToSplit": {
     "description": "No trip members message"
   },
+  "balances": "Balances",
+  "@balances": {
+    "description": "Balances section title"
+  },
+  "settlements": "Settlements",
+  "@settlements": {
+    "description": "Settlements screen title"
+  },
   "notesOptional": "Notes (optional)",
   "@notesOptional": {
     "description": "Notes label"

@@ -683,6 +683,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'No hay companeros de viaje. Crea un viaje primero!';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => 'Notas (opcional)';
 
   @override

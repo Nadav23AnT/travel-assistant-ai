@@ -680,6 +680,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нет попутчиков для разделения. Сначала создайте поездку!';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => 'Заметки (необязательно)';
 
   @override

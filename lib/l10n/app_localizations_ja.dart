@@ -666,6 +666,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noTripMembersToSplit => '分割する旅行メンバーがいません。まず旅行を作成してください！';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => 'メモ（任意）';
 
   @override

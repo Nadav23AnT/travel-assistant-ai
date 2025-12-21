@@ -679,6 +679,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Keine Reisepartner zum Teilen. Erstellen Sie zuerst eine Reise!';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => 'Notizen (optional)';
 
   @override

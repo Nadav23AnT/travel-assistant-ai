@@ -671,6 +671,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get noTripMembersToSplit => 'אין חברי טיול לפיצול. צור טיול קודם!';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => 'הערות (אופציונלי)';
 
   @override

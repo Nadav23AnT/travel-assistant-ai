@@ -678,6 +678,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'No trip members to split with. Create a trip first!';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => 'Notes (optional)';
 
   @override
