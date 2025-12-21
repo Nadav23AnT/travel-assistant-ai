@@ -201,6 +201,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final pendingExpense = chatState.pendingExpense;
     final isCreatingExpense = chatState.isCreatingExpense;
     final pendingPlaces = chatState.pendingPlaces;
+    final pendingSearchUrl = chatState.pendingSearchUrl;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Watch for active trip and journal status for reminder
@@ -360,6 +361,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   index == placesCardIndex) {
                                 return PlaceRecommendationsCard(
                                   places: pendingPlaces,
+                                  searchUrl: pendingSearchUrl,
                                   onDismiss: () {
                                     ref
                                         .read(chatNotifierProvider.notifier)

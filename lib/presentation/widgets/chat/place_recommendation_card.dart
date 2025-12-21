@@ -7,11 +7,13 @@ import '../../../data/models/travel_context.dart';
 /// A card displaying place recommendations with Google Maps links
 class PlaceRecommendationsCard extends StatefulWidget {
   final List<PlaceRecommendation> places;
+  final String? searchUrl; // "See more" link to Google Maps search
   final VoidCallback? onDismiss;
 
   const PlaceRecommendationsCard({
     super.key,
     required this.places,
+    this.searchUrl,
     this.onDismiss,
   });
 
@@ -120,6 +122,14 @@ class _PlaceRecommendationsCardState extends State<PlaceRecommendationsCard>
     }
   }
 
+  Future<void> _openSearchUrl() async {
+    if (widget.searchUrl == null) return;
+    final url = Uri.parse(widget.searchUrl!);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.places.isEmpty) return const SizedBox.shrink();
@@ -189,6 +199,45 @@ class _PlaceRecommendationsCardState extends State<PlaceRecommendationsCard>
 
               return _buildPlaceItem(place, isLast);
             }),
+
+            // "See more" button
+            if (widget.searchUrl != null)
+              InkWell(
+                onTap: () => _openSearchUrl(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withAlpha(15),
+                    border: Border(
+                      top: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.explore,
+                        size: 18,
+                        color: AppTheme.primaryColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'See more on Google Maps',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
             // Footer
             Container(

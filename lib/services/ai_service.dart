@@ -159,11 +159,13 @@ class AIResponse {
   final String message;
   final ParsedExpense? expense;
   final List<PlaceRecommendation> places;
+  final String? searchUrl; // Google Maps search URL for "see more"
 
   const AIResponse({
     required this.message,
     this.expense,
     this.places = const [],
+    this.searchUrl,
   });
 
   /// Check if response contains place recommendations
@@ -408,31 +410,39 @@ ${context.toContextString()}
 **ALWAYS include place data when recommending!**
 
 **Response format:**
-Give 2-3 specific places with this structure:
-"• **[Place Name]** in [Neighborhood] - [One sentence why it's great]. [Price: \$-\$\$\$\$] | [Best time]"
+Give 5 specific places with this structure:
+"• **[Place Name]** in [Neighborhood] - [One sentence why]. [Price] | [Best time]"
 
-**REQUIRED: Include PLACES_DATA block at END of your message for Google Maps integration:**
+Then add a "See more" link for Google Maps search.
+
+**REQUIRED: Include PLACES_DATA block at END with search_url for "see more":**
 ###PLACES_DATA###
-[
-  {"name": "Exact Place Name", "category": "restaurant", "address": "Neighborhood, $destination", "description": "Why visit", "price_level": "\$\$", "best_time_to_visit": "evening"},
-  {"name": "Second Place", "category": "cafe", "address": "Area, $destination", "description": "Why visit", "price_level": "\$", "best_time_to_visit": "morning"}
-]
+{
+  "places": [
+    {"name": "Place 1", "category": "restaurant", "address": "Area, $destination", "description": "Why", "price_level": "\$\$", "best_time_to_visit": "evening"},
+    {"name": "Place 2", "category": "restaurant", "address": "Area, $destination", "description": "Why", "price_level": "\$", "best_time_to_visit": "anytime"}
+  ],
+  "search_query": "best restaurants in $destination",
+  "search_url": "https://www.google.com/maps/search/best+restaurants+in+$destination"
+}
 ###END_PLACES_DATA###
 
 Categories: restaurant, cafe, bar, attraction, museum, temple, market, park, beach, shopping, nightlife, activity
 
 **Example:**
 User: "Where should I eat tonight?"
-Response: "Here are my top picks for tonight:
+Response: "Here are my top 5 picks for dinner tonight:
 
-• **Gaggan Anand** in Thonglor - Progressive Indian cuisine, worth the splurge. \$\$\$\$ | dinner
-• **Jay Fai** in Old Town - Legendary street food, famous crab omelette. \$\$\$ | dinner
-• **Som Tam Jay So** in Silom - Best papaya salad in town, super authentic. \$ | anytime
+• **Gaggan Anand** in Thonglor - Progressive Indian, worth the splurge. \$\$\$\$ | dinner
+• **Jay Fai** in Old Town - Legendary crab omelette. \$\$\$ | dinner
+• **Som Tam Jay So** in Silom - Best papaya salad in town. \$ | anytime
+• **Err Urban Rustic Thai** in Tha Tien - Modern Thai street food. \$\$ | dinner
+• **Thipsamai** in Phra Nakhon - Famous pad thai since 1966. \$ | dinner
 
-What sounds good - fancy or casual?
+Want me to narrow it down? 🍜
 
 ###PLACES_DATA###
-[{"name": "Gaggan Anand", "category": "restaurant", "address": "Thonglor, Bangkok", "description": "Progressive Indian cuisine", "price_level": "\$\$\$\$", "best_time_to_visit": "dinner"},{"name": "Jay Fai", "category": "restaurant", "address": "Old Town, Bangkok", "description": "Legendary street food, famous crab omelette", "price_level": "\$\$\$", "best_time_to_visit": "dinner"},{"name": "Som Tam Jay So", "category": "restaurant", "address": "Silom, Bangkok", "description": "Best papaya salad", "price_level": "\$", "best_time_to_visit": "anytime"}]
+{"places": [{"name": "Gaggan Anand", "category": "restaurant", "address": "Thonglor, Bangkok", "description": "Progressive Indian cuisine", "price_level": "\$\$\$\$", "best_time_to_visit": "dinner"},{"name": "Jay Fai", "category": "restaurant", "address": "Old Town, Bangkok", "description": "Legendary crab omelette", "price_level": "\$\$\$", "best_time_to_visit": "dinner"},{"name": "Som Tam Jay So", "category": "restaurant", "address": "Silom, Bangkok", "description": "Best papaya salad", "price_level": "\$", "best_time_to_visit": "anytime"},{"name": "Err Urban Rustic Thai", "category": "restaurant", "address": "Tha Tien, Bangkok", "description": "Modern Thai street food", "price_level": "\$\$", "best_time_to_visit": "dinner"},{"name": "Thipsamai", "category": "restaurant", "address": "Phra Nakhon, Bangkok", "description": "Famous pad thai since 1966", "price_level": "\$", "best_time_to_visit": "dinner"}], "search_query": "best restaurants Bangkok dinner", "search_url": "https://www.google.com/maps/search/best+restaurants+Bangkok+dinner"}
 ###END_PLACES_DATA###"
 ''' : '';
 
@@ -590,6 +600,7 @@ Every conversation should generate memories. Listen for:
     // Extract place recommendations
     const placesStartMarker = '###PLACES_DATA###';
     const placesEndMarker = '###END_PLACES_DATA###';
+    String? searchUrl;
 
     final placesStartIndex = messagePart.indexOf(placesStartMarker);
     final placesEndIndex = messagePart.indexOf(placesEndMarker);
@@ -606,10 +617,24 @@ Every conversation should generate memories. Listen for:
       ).trim();
 
       try {
-        final placesJson = jsonDecode(placesJsonString) as List;
-        places = placesJson
-            .map((p) => PlaceRecommendation.fromJson(p as Map<String, dynamic>))
-            .toList();
+        final decoded = jsonDecode(placesJsonString);
+
+        // Handle both formats: array or object with "places" key
+        if (decoded is List) {
+          // Old format: direct array
+          places = decoded
+              .map((p) => PlaceRecommendation.fromJson(p as Map<String, dynamic>))
+              .toList();
+        } else if (decoded is Map<String, dynamic>) {
+          // New format: object with places array and search_url
+          final placesArray = decoded['places'] as List?;
+          if (placesArray != null) {
+            places = placesArray
+                .map((p) => PlaceRecommendation.fromJson(p as Map<String, dynamic>))
+                .toList();
+          }
+          searchUrl = decoded['search_url'] as String?;
+        }
       } catch (e) {
         debugPrint('Failed to parse places JSON: $e');
       }
@@ -633,6 +658,7 @@ Every conversation should generate memories. Listen for:
       message: messagePart,
       expense: expense,
       places: places,
+      searchUrl: searchUrl,
     );
   }
 
