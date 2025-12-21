@@ -398,14 +398,42 @@ ${context.toContextString()}
     final defaultCurrency = context?.budgetCurrency ?? 'USD';
     final locationSection = destination != null ? '''
 
-PLACE RECOMMENDATIONS FOR $destination:
-Format: "• **[Place]** in [Area] - [Why + practical detail]"
-Give 2-3 options, then ONE follow-up.
+# PLACE RECOMMENDATIONS FOR $destination
 
-Include at END (for maps integration):
+**WHEN TO RECOMMEND PLACES:**
+- User asks "where should I eat/go/visit?"
+- User asks for recommendations, suggestions, tips
+- User mentions wanting to find something (restaurant, cafe, attraction, etc.)
+
+**ALWAYS include place data when recommending!**
+
+**Response format:**
+Give 2-3 specific places with this structure:
+"• **[Place Name]** in [Neighborhood] - [One sentence why it's great]. [Price: \$-\$\$\$\$] | [Best time]"
+
+**REQUIRED: Include PLACES_DATA block at END of your message for Google Maps integration:**
 ###PLACES_DATA###
-[{"name": "Place", "category": "restaurant", "address": "Area, $destination", "description": "Why visit", "price_level": "\$\$", "best_time_to_visit": "evening"}]
+[
+  {"name": "Exact Place Name", "category": "restaurant", "address": "Neighborhood, $destination", "description": "Why visit", "price_level": "\$\$", "best_time_to_visit": "evening"},
+  {"name": "Second Place", "category": "cafe", "address": "Area, $destination", "description": "Why visit", "price_level": "\$", "best_time_to_visit": "morning"}
+]
 ###END_PLACES_DATA###
+
+Categories: restaurant, cafe, bar, attraction, museum, temple, market, park, beach, shopping, nightlife, activity
+
+**Example:**
+User: "Where should I eat tonight?"
+Response: "Here are my top picks for tonight:
+
+• **Gaggan Anand** in Thonglor - Progressive Indian cuisine, worth the splurge. \$\$\$\$ | dinner
+• **Jay Fai** in Old Town - Legendary street food, famous crab omelette. \$\$\$ | dinner
+• **Som Tam Jay So** in Silom - Best papaya salad in town, super authentic. \$ | anytime
+
+What sounds good - fancy or casual?
+
+###PLACES_DATA###
+[{"name": "Gaggan Anand", "category": "restaurant", "address": "Thonglor, Bangkok", "description": "Progressive Indian cuisine", "price_level": "\$\$\$\$", "best_time_to_visit": "dinner"},{"name": "Jay Fai", "category": "restaurant", "address": "Old Town, Bangkok", "description": "Legendary street food, famous crab omelette", "price_level": "\$\$\$", "best_time_to_visit": "dinner"},{"name": "Som Tam Jay So", "category": "restaurant", "address": "Silom, Bangkok", "description": "Best papaya salad", "price_level": "\$", "best_time_to_visit": "anytime"}]
+###END_PLACES_DATA###"
 ''' : '';
 
     return '''
