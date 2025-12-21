@@ -724,6 +724,126 @@ abstract class AppLocalizations {
   /// **'Trip Reminders'**
   String get tripReminders;
 
+  /// Title for notification settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Settings'**
+  String get notificationSettings;
+
+  /// Subtitle for notifications navigation
+  ///
+  /// In en, this message translates to:
+  /// **'Manage all notification preferences'**
+  String get manageNotifications;
+
+  /// Do not disturb setting
+  ///
+  /// In en, this message translates to:
+  /// **'Do Not Disturb'**
+  String get doNotDisturb;
+
+  /// Do not disturb description
+  ///
+  /// In en, this message translates to:
+  /// **'Silence notifications during quiet hours'**
+  String get doNotDisturbDescription;
+
+  /// Trip status changes notification
+  ///
+  /// In en, this message translates to:
+  /// **'Trip Status Changes'**
+  String get tripStatusChanges;
+
+  /// Weather warnings notification
+  ///
+  /// In en, this message translates to:
+  /// **'Weather Warnings'**
+  String get weatherWarnings;
+
+  /// Daily trip summary notification
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Trip Summary'**
+  String get dailyTripSummary;
+
+  /// Expense reminder notification
+  ///
+  /// In en, this message translates to:
+  /// **'Expense Reminder'**
+  String get expenseReminder;
+
+  /// Budget alerts notification
+  ///
+  /// In en, this message translates to:
+  /// **'Budget Alerts'**
+  String get budgetAlerts;
+
+  /// Weekly spending summary notification
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Spending Summary'**
+  String get weeklySpendingSummary;
+
+  /// Journal ready notification
+  ///
+  /// In en, this message translates to:
+  /// **'Journal Ready'**
+  String get journalReady;
+
+  /// Daily journal prompt notification
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Journal Prompt'**
+  String get dailyJournalPrompt;
+
+  /// Rate app reminder notification
+  ///
+  /// In en, this message translates to:
+  /// **'Rate App Reminder'**
+  String get rateAppReminder;
+
+  /// New feature announcements notification
+  ///
+  /// In en, this message translates to:
+  /// **'New Feature Announcements'**
+  String get newFeatureAnnouncements;
+
+  /// Tips and recommendations notification
+  ///
+  /// In en, this message translates to:
+  /// **'Tips & Recommendations'**
+  String get tipsAndRecommendations;
+
+  /// Support reply notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Support Reply Notifications'**
+  String get supportReplyNotifications;
+
+  /// Ticket status updates notification
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket Status Updates'**
+  String get ticketStatusUpdates;
+
+  /// Message when all notifications are disabled
+  ///
+  /// In en, this message translates to:
+  /// **'All notifications are disabled'**
+  String get allNotificationsDisabled;
+
+  /// Message when system notifications are disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are disabled in system settings'**
+  String get notificationsDisabledInSystem;
+
+  /// Enable button text
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get enable;
+
   /// Privacy section
   ///
   /// In en, this message translates to:
@@ -1365,6 +1485,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split this expense?'**
   String get splitThisExpense;
+
+  /// Select trip title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Trip'**
+  String get selectTrip;
+
+  /// Error message when trips fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load trips'**
+  String get failedToLoadTrips;
 
   /// Split members instruction
   ///

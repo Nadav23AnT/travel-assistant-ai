@@ -205,6 +205,8 @@
   "addReceiptPhoto": "הוסף תמונת קבלה",
   "receiptPhotoComingSoon": "תמונת קבלה בקרוב!",
   "splitThisExpense": "לפצל הוצאה זו?",
+  "selectTrip": "בחר טיול",
+  "failedToLoadTrips": "טעינת הטיולים נכשלה",
   "selectTripMembersToSplit": "בחר חברי טיול לפיצול",
   "noTripMembersToSplit": "אין חברי טיול לפיצול. צור טיול קודם!",
   "notesOptional": "הערות (אופציונלי)",

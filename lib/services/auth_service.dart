@@ -281,15 +281,33 @@ class AuthService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    if (!isAuthenticated) {
+    // On web, session may need time to restore from storage
+    // Try to get user from session first, then fallback to currentUser
+    var user = currentUser;
+
+    // If no user, try to get from current session
+    if (user == null) {
+      final session = _supabase.auth.currentSession;
+      user = session?.user;
+    }
+
+    // If still no user, wait briefly for session restoration (web only)
+    if (user == null) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      user = currentUser ?? _supabase.auth.currentSession?.user;
+    }
+
+    if (user == null) {
       throw AuthException('Not authenticated');
     }
+
+    final userId = user.id;
 
     try {
       // Update user settings (upsert on user_id since record may already exist from signup trigger)
       await _supabase.from('user_settings').upsert(
         {
-          'user_id': currentUser!.id,
+          'user_id': userId,
           'preferred_languages': languages,
           'onboarding_completed': true,
           'onboarding_completed_at': DateTime.now().toIso8601String(),
@@ -301,7 +319,7 @@ class AuthService {
       if (homeCurrency != null) {
         await _supabase.from('profiles').update({
           'default_currency': homeCurrency,
-        }).eq('id', currentUser!.id);
+        }).eq('id', userId);
       }
 
       // Save onboarding trip if destination provided
@@ -309,7 +327,7 @@ class AuthService {
         // Save to onboarding_trips (preference data)
         await _supabase.from('onboarding_trips').upsert(
           {
-            'user_id': currentUser!.id,
+            'user_id': userId,
             'destination': destination,
             'destination_place_id': destinationPlaceId,
             'destination_lat': destinationLat,
@@ -326,7 +344,7 @@ class AuthService {
 
         // Also create an actual trip record for display on home screen
         await _supabase.from('trips').insert({
-          'owner_id': currentUser!.id,
+          'owner_id': userId,
           'title': 'Trip to $country',
           'destination': destination, // Keep original for coordinates lookup
           'destination_place_id': destinationPlaceId,

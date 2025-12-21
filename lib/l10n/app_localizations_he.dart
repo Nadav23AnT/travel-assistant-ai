@@ -322,6 +322,68 @@ class AppLocalizationsHe extends AppLocalizations {
   String get tripReminders => 'תזכורת טיול';
 
   @override
+  String get notificationSettings => 'Notification Settings';
+
+  @override
+  String get manageNotifications => 'Manage all notification preferences';
+
+  @override
+  String get doNotDisturb => 'Do Not Disturb';
+
+  @override
+  String get doNotDisturbDescription =>
+      'Silence notifications during quiet hours';
+
+  @override
+  String get tripStatusChanges => 'Trip Status Changes';
+
+  @override
+  String get weatherWarnings => 'Weather Warnings';
+
+  @override
+  String get dailyTripSummary => 'Daily Trip Summary';
+
+  @override
+  String get expenseReminder => 'Expense Reminder';
+
+  @override
+  String get budgetAlerts => 'Budget Alerts';
+
+  @override
+  String get weeklySpendingSummary => 'Weekly Spending Summary';
+
+  @override
+  String get journalReady => 'Journal Ready';
+
+  @override
+  String get dailyJournalPrompt => 'Daily Journal Prompt';
+
+  @override
+  String get rateAppReminder => 'Rate App Reminder';
+
+  @override
+  String get newFeatureAnnouncements => 'New Feature Announcements';
+
+  @override
+  String get tipsAndRecommendations => 'Tips & Recommendations';
+
+  @override
+  String get supportReplyNotifications => 'Support Reply Notifications';
+
+  @override
+  String get ticketStatusUpdates => 'Ticket Status Updates';
+
+  @override
+  String get allNotificationsDisabled => 'All notifications are disabled';
+
+  @override
+  String get notificationsDisabledInSystem =>
+      'Notifications are disabled in system settings';
+
+  @override
+  String get enable => 'Enable';
+
+  @override
   String get privacy => 'פרטיות';
 
   @override
@@ -663,6 +725,12 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get splitThisExpense => 'לפצל הוצאה זו?';
+
+  @override
+  String get selectTrip => 'בחר טיול';
+
+  @override
+  String get failedToLoadTrips => 'טעינת הטיולים נכשלה';
 
   @override
   String get selectTripMembersToSplit => 'בחר חברי טיול לפיצול';

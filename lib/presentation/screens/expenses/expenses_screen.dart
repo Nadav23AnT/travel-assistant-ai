@@ -6,10 +6,12 @@ import 'package:go_router/go_router.dart';
 import '../../../config/routes.dart';
 import '../../../core/design/design_system.dart';
 import '../../../data/models/expense_stats.dart';
+import '../../../data/models/trip_model.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../utils/country_currency_helper.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
+import '../../providers/trips_provider.dart';
 import '../../widgets/charts/mini_pie_chart.dart';
 import '../../widgets/charts/spending_line_chart.dart';
 import '../../widgets/expenses/budget_progress_bar.dart';
@@ -186,7 +188,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row with title and trip badge
+          // Header row with title and trip selector
           Row(
             children: [
               Expanded(
@@ -199,39 +201,49 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   ),
                 ),
               ),
-              // Trip badge (if available)
-              if (trip != null && data.stats.remainingDays > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    gradient: LiquidGlassColors.auroraGradient,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: isDark
-                        ? LiquidGlassColors.neonGlow(
-                            LiquidGlassColors.auroraIndigo,
-                            intensity: 0.3,
-                            blur: 8,
-                          )
-                        : null,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.flight_takeoff,
-                        size: 12,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        l10n.daysLeft(data.stats.remainingDays),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+              // Trip selector badge
+              if (trip != null)
+                GestureDetector(
+                  onTap: () => _showTripSelector(context, isDark, l10n),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      gradient: LiquidGlassColors.auroraGradient,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: isDark
+                          ? LiquidGlassColors.neonGlow(
+                              LiquidGlassColors.auroraIndigo,
+                              intensity: 0.3,
+                              blur: 8,
+                            )
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          trip.flagEmoji,
+                          style: const TextStyle(fontSize: 14),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Text(
+                          trip.displayDestination.length > 12
+                              ? '${trip.displayDestination.substring(0, 12)}...'
+                              : trip.displayDestination,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -642,6 +654,201 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     }
 
     return convertedAmounts.isNotEmpty ? convertedAmounts : null;
+  }
+
+  void _showTripSelector(BuildContext context, bool isDark, AppLocalizations l10n) {
+    final tripsAsync = ref.read(userTripsProvider);
+    final currentTripId = ref.read(effectiveTripIdProvider);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.black.withAlpha(200)
+                  : Colors.white.withAlpha(230),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withAlpha(26)
+                    : Colors.black.withAlpha(13),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white30 : Colors.black26,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    l10n.selectTrip,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: tripsAsync.when(
+                    data: (trips) => ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: trips.length,
+                      itemBuilder: (context, index) {
+                        final trip = trips[index];
+                        final isSelected = trip.id == currentTripId;
+                        return _buildTripOption(
+                          context,
+                          trip,
+                          isSelected,
+                          isDark,
+                        );
+                      },
+                    ),
+                    loading: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                    error: (_, __) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          l10n.failedToLoadTrips,
+                          style: TextStyle(
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTripOption(
+    BuildContext context,
+    TripModel trip,
+    bool isSelected,
+    bool isDark,
+  ) {
+    return InkWell(
+      onTap: () {
+        ref.read(selectedExpensesTripIdProvider.notifier).state = trip.id;
+        Navigator.of(context).pop();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? LiquidGlassColors.auroraIndigo.withAlpha(26)
+              : Colors.transparent,
+          border: Border(
+            bottom: BorderSide(
+              color: isDark ? Colors.white10 : Colors.black.withAlpha(8),
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Flag
+            Text(
+              trip.flagEmoji,
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(width: 12),
+            // Trip details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          trip.displayDestination,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ),
+                      if (trip.isShared)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: LiquidGlassColors.oceanTeal.withAlpha(26),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Shared',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: LiquidGlassColors.oceanTeal,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _getTripStatusText(trip),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Selection indicator
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: LiquidGlassColors.auroraIndigo,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getTripStatusText(TripModel trip) {
+    if (trip.isActive) return 'Ongoing';
+    if (trip.isUpcoming) return 'Upcoming';
+    if (trip.isCompleted) return 'Completed';
+    return trip.status;
   }
 }
 

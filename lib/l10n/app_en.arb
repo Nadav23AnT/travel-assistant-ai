@@ -460,6 +460,87 @@
     "description": "Trip reminders toggle"
   },
 
+  "notificationSettings": "Notification Settings",
+  "@notificationSettings": {
+    "description": "Title for notification settings screen"
+  },
+  "manageNotifications": "Manage all notification preferences",
+  "@manageNotifications": {
+    "description": "Subtitle for notifications navigation"
+  },
+  "doNotDisturb": "Do Not Disturb",
+  "@doNotDisturb": {
+    "description": "Do not disturb setting"
+  },
+  "doNotDisturbDescription": "Silence notifications during quiet hours",
+  "@doNotDisturbDescription": {
+    "description": "Do not disturb description"
+  },
+  "tripStatusChanges": "Trip Status Changes",
+  "@tripStatusChanges": {
+    "description": "Trip status changes notification"
+  },
+  "weatherWarnings": "Weather Warnings",
+  "@weatherWarnings": {
+    "description": "Weather warnings notification"
+  },
+  "dailyTripSummary": "Daily Trip Summary",
+  "@dailyTripSummary": {
+    "description": "Daily trip summary notification"
+  },
+  "expenseReminder": "Expense Reminder",
+  "@expenseReminder": {
+    "description": "Expense reminder notification"
+  },
+  "budgetAlerts": "Budget Alerts",
+  "@budgetAlerts": {
+    "description": "Budget alerts notification"
+  },
+  "weeklySpendingSummary": "Weekly Spending Summary",
+  "@weeklySpendingSummary": {
+    "description": "Weekly spending summary notification"
+  },
+  "journalReady": "Journal Ready",
+  "@journalReady": {
+    "description": "Journal ready notification"
+  },
+  "dailyJournalPrompt": "Daily Journal Prompt",
+  "@dailyJournalPrompt": {
+    "description": "Daily journal prompt notification"
+  },
+  "rateAppReminder": "Rate App Reminder",
+  "@rateAppReminder": {
+    "description": "Rate app reminder notification"
+  },
+  "newFeatureAnnouncements": "New Feature Announcements",
+  "@newFeatureAnnouncements": {
+    "description": "New feature announcements notification"
+  },
+  "tipsAndRecommendations": "Tips & Recommendations",
+  "@tipsAndRecommendations": {
+    "description": "Tips and recommendations notification"
+  },
+  "supportReplyNotifications": "Support Reply Notifications",
+  "@supportReplyNotifications": {
+    "description": "Support reply notifications"
+  },
+  "ticketStatusUpdates": "Ticket Status Updates",
+  "@ticketStatusUpdates": {
+    "description": "Ticket status updates notification"
+  },
+  "allNotificationsDisabled": "All notifications are disabled",
+  "@allNotificationsDisabled": {
+    "description": "Message when all notifications are disabled"
+  },
+  "notificationsDisabledInSystem": "Notifications are disabled in system settings",
+  "@notificationsDisabledInSystem": {
+    "description": "Message when system notifications are disabled"
+  },
+  "enable": "Enable",
+  "@enable": {
+    "description": "Enable button text"
+  },
+
   "privacy": "Privacy",
   "@privacy": {
     "description": "Privacy section"
@@ -938,6 +1019,14 @@
   "splitThisExpense": "Split this expense?",
   "@splitThisExpense": {
     "description": "Split expense question"
+  },
+  "selectTrip": "Select Trip",
+  "@selectTrip": {
+    "description": "Select trip title"
+  },
+  "failedToLoadTrips": "Failed to load trips",
+  "@failedToLoadTrips": {
+    "description": "Error message when trips fail to load"
   },
   "selectTripMembersToSplit": "Select trip members to split with",
   "@selectTripMembersToSplit": {

@@ -205,6 +205,8 @@
   "addReceiptPhoto": "Добавить фото чека",
   "receiptPhotoComingSoon": "Фото чека скоро!",
   "splitThisExpense": "Разделить этот расход?",
+  "selectTrip": "Выбрать поездку",
+  "failedToLoadTrips": "Не удалось загрузить поездки",
   "selectTripMembersToSplit": "Выберите попутчиков для разделения",
   "noTripMembersToSplit": "Нет попутчиков для разделения. Сначала создайте поездку!",
   "notesOptional": "Заметки (необязательно)",

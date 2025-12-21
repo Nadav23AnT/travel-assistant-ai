@@ -117,74 +117,49 @@ class _EnhancedTripCardState extends ConsumerState<EnhancedTripCard> {
 
   Widget _buildHeader(BuildContext context, TripModel trip) {
     return Container(
-      height: 100,
+      height: 56,
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primaryColor.withAlpha(230),
-            AppTheme.primaryColor.withAlpha(180),
+            AppTheme.primaryColor,
+            AppTheme.primaryColor.withAlpha(200),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-        image: trip.coverImageUrl != null
-            ? DecorationImage(
-                image: NetworkImage(trip.coverImageUrl!),
-                fit: BoxFit.cover,
-              )
-            : null,
       ),
-      child: Stack(
-        children: [
-          // Large flag emoji as background
-          if (trip.coverImageUrl == null)
-            Positioned(
-              right: -20,
-              top: -10,
-              child: Text(
-                trip.flagEmoji,
-                style: const TextStyle(fontSize: 100),
-              ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            // Country flag
+            Text(
+              trip.flagEmoji,
+              style: const TextStyle(fontSize: 28),
             ),
-          // Gradient overlay
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.primaryColor.withAlpha(200),
-                  trip.coverImageUrl != null
-                      ? Colors.black.withAlpha(100)
-                      : AppTheme.primaryColor.withAlpha(50),
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-            ),
-          ),
-          // Status pill (top-left)
-          Positioned(
-            top: 12,
-            left: 12,
-            child: _buildStatusPill(context, trip),
-          ),
-          // Country flag (top-right)
-          Positioned(
-            top: 12,
-            right: 12,
-            child: Container(
-              padding: const EdgeInsets.all(6),
+            const SizedBox(width: 12),
+            // Status pill
+            _buildStatusPill(context, trip),
+            const Spacer(),
+            // Currency badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(230),
+                color: Colors.white.withAlpha(40),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                trip.flagEmoji,
-                style: const TextStyle(fontSize: 24),
+                trip.budgetCurrency,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

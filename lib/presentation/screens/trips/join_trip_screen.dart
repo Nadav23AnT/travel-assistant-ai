@@ -55,11 +55,19 @@ class _JoinTripScreenState extends ConsumerState<JoinTripScreen> {
         ),
       );
 
-      // Navigate to the trip
+      // Navigate to the trip - first go to trips, then push trip detail
       if (result.tripId != null) {
-        context.go('/trips/${result.tripId}');
+        // Go to trips first to restore proper navigation stack
+        context.go('/trips');
+        // Then push the trip detail on top
+        context.push('/trips/${result.tripId}');
       } else {
-        context.pop();
+        // Safe pop with fallback
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/trips');
+        }
       }
     } else {
       setState(() {

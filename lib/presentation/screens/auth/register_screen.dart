@@ -56,16 +56,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _errorMessage = null;
     });
 
+    final email = _emailController.text.trim();
+
     try {
       await ref.read(authNotifierProvider.notifier).signUpWithEmail(
-            _emailController.text.trim(),
+            email,
             _passwordController.text,
             _nameController.text.trim(),
           );
 
       if (!mounted) return;
 
-      // Apply referral code if provided
+      // Check if user has a session (email confirmed) or needs verification
+      final authService = ref.read(authServiceProvider);
+      final hasSession = authService.currentSession != null;
+
+      if (!hasSession) {
+        // Email confirmation required - redirect to verification screen
+        context.go('${AppRoutes.emailVerification}?email=${Uri.encodeComponent(email)}');
+        return;
+      }
+
+      // Apply referral code if provided (only if session exists)
       final referralCode = _referralCodeController.text.trim();
       if (referralCode.isNotEmpty) {
         final referralService = ReferralService();

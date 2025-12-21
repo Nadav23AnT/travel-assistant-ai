@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../presentation/screens/auth/login_screen.dart';
 import '../presentation/screens/auth/register_screen.dart';
 import '../presentation/screens/auth/forgot_password_screen.dart';
+import '../presentation/screens/auth/email_verification_screen.dart';
 import '../presentation/screens/auth/splash_screen.dart';
 import '../presentation/screens/home/home_screen.dart';
 import '../presentation/screens/trips/trips_screen.dart';
@@ -27,6 +28,8 @@ import '../presentation/screens/admin/admin_support_screen.dart';
 import '../presentation/screens/admin/admin_support_chat_screen.dart';
 import '../presentation/screens/support/support_screen.dart';
 import '../presentation/screens/support/support_chat_screen.dart';
+import '../presentation/screens/settings/notification_settings_screen.dart';
+import '../presentation/screens/settings/dnd_schedule_screen.dart';
 import '../presentation/screens/onboarding/currency_selection_screen.dart';
 import '../presentation/screens/onboarding/destination_selection_screen.dart';
 import '../presentation/screens/onboarding/travel_dates_screen.dart';
@@ -40,6 +43,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+  static const String emailVerification = '/email-verification';
 
   // Onboarding routes
   static const String onboardingLanguages = '/onboarding/languages';
@@ -62,6 +66,8 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
   static const String settings = '/settings';
+  static const String notificationSettings = '/settings/notifications';
+  static const String dndSchedule = '/settings/notifications/dnd';
   static const String journal = '/trips/:id/journal';
 
   // Legal routes
@@ -84,6 +90,10 @@ class AppRoutes {
   static GoRouter? _router;
   static bool _isAuthenticated = false;
 
+  /// Get the router instance for navigation (e.g., from notification taps)
+  /// Returns null if router hasn't been initialized yet
+  static GoRouter? get instance => _router;
+
   // Router configuration - returns singleton instance
   static GoRouter router({required bool isAuthenticated}) {
     _isAuthenticated = isAuthenticated;
@@ -101,6 +111,7 @@ class AppRoutes {
         final isOnAuthPage = state.matchedLocation == login ||
             state.matchedLocation == register ||
             state.matchedLocation == forgotPassword ||
+            state.matchedLocation == emailVerification ||
             state.matchedLocation == splash;
 
         final isOnOnboardingPage =
@@ -138,6 +149,13 @@ class AppRoutes {
         GoRoute(
           path: forgotPassword,
           builder: (context, state) => const ForgotPasswordScreen(),
+        ),
+        GoRoute(
+          path: emailVerification,
+          builder: (context, state) {
+            final email = state.uri.queryParameters['email'] ?? '';
+            return EmailVerificationScreen(email: email);
+          },
         ),
 
         // Onboarding routes
@@ -229,6 +247,14 @@ class AppRoutes {
         GoRoute(
           path: settings,
           builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: notificationSettings,
+          builder: (context, state) => const NotificationSettingsScreen(),
+        ),
+        GoRoute(
+          path: dndSchedule,
+          builder: (context, state) => const DndScheduleScreen(),
         ),
         GoRoute(
           path: editProfile,

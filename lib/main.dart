@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -8,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'config/env.dart';
 import 'presentation/providers/locale_provider.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,12 +35,22 @@ Future<void> main() async {
     ),
   );
 
+  // Initialize Firebase (mobile only - web requires separate config)
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+  }
+
   // Initialize Supabase
   if (Env.hasSupabase) {
     await Supabase.initialize(
       url: Env.supabaseUrl,
       anonKey: Env.supabaseAnonKey,
     );
+  }
+
+  // Initialize notification service (mobile only)
+  if (!kIsWeb) {
+    await NotificationService().initialize();
   }
 
   runApp(
