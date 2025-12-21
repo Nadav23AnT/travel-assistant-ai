@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1095344348948",
+    "project_id": "waylo-travel-ai",
+    "storage_bucket": "waylo-travel-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1095344348948:android:0e4425d4ca8516e9d76c01",
+        "android_client_info": {
+          "package_name": "com.waylo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRURliGmLw0pBfTj97SLXzRnkkdY8NQn4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

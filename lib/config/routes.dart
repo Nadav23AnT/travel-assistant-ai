@@ -27,6 +27,8 @@ import '../presentation/screens/admin/admin_support_screen.dart';
 import '../presentation/screens/admin/admin_support_chat_screen.dart';
 import '../presentation/screens/support/support_screen.dart';
 import '../presentation/screens/support/support_chat_screen.dart';
+import '../presentation/screens/settings/notification_settings_screen.dart';
+import '../presentation/screens/settings/dnd_schedule_screen.dart';
 import '../presentation/screens/onboarding/currency_selection_screen.dart';
 import '../presentation/screens/onboarding/destination_selection_screen.dart';
 import '../presentation/screens/onboarding/travel_dates_screen.dart';
@@ -62,6 +64,8 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
   static const String settings = '/settings';
+  static const String notificationSettings = '/settings/notifications';
+  static const String dndSchedule = '/settings/notifications/dnd';
   static const String journal = '/trips/:id/journal';
 
   // Legal routes
@@ -229,6 +233,14 @@ class AppRoutes {
         GoRoute(
           path: settings,
           builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: notificationSettings,
+          builder: (context, state) => const NotificationSettingsScreen(),
+        ),
+        GoRoute(
+          path: dndSchedule,
+          builder: (context, state) => const DndScheduleScreen(),
         ),
         GoRoute(
           path: editProfile,

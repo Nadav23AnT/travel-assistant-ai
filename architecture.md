@@ -2423,12 +2423,86 @@ CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
 
 ---
 
-## Known Issues
+## Push Notification Triggers - Implementation Plan
 
-### Daily Welcome Banner - 2-Click Bug (Web)
-**File**: `lib/presentation/widgets/home/daily_welcome_dialog.dart`
-**Issue**: The "Start Exploring" button requires 2 clicks to dismiss the banner on Flutter Web.
-**Root Cause**: Likely related to Flutter Web's focus/tap handling with animated widgets and BackdropFilter. Tried GestureDetector, ElevatedButton - both exhibit same behavior.
-**Workaround**: User needs to click twice.
-**Priority**: Low (does not affect mobile, only web testing)
-**To Fix**: Investigate Flutter Web focus semantics, possibly use Listener widget with onPointerUp, or remove BackdropFilter animation layer.
+**Status:** Notification Settings UI and infrastructure are COMPLETE. The following documents what still needs to be implemented to make all notification types fully functional.
+
+### Current Implementation Status
+
+**COMPLETED:**
+- Notification Settings UI (all toggles, time pickers, DND screen)
+- Database schema (`notification_settings` table, `fcm_token` column)
+- `NotificationService` (FCM token management, local notifications)
+- Edge Function (`send-push-notification` deployed)
+- `FCM_SERVICE_ACCOUNT` secret configured
+- Provider and Repository for settings persistence
+
+**REMAINING:**
+- Scheduled notifications (pg_cron jobs)
+- Event-driven notifications (database triggers)
+- Weather warnings (external API integration)
+- Email notifications (transactional email service)
+
+### Phase 7: Scheduled Notifications (pg_cron)
+
+**Prerequisites:** Enable `pg_cron` and `pg_net` extensions in Supabase Dashboard → Database → Extensions
+
+| Notification Type | Schedule | Description |
+|------------------|----------|-------------|
+| Trip Reminders | Daily 9 AM | X days before trip starts |
+| Daily Trip Summary | Hourly check | At user-configured time during active trips |
+| Expense Reminder | Hourly check | At user-configured time during active trips |
+| Daily Journal Prompt | Hourly check | At user-configured time during active trips |
+| Weekly Spending Summary | Sundays 10 AM | Aggregate weekly expenses |
+| Rate App Reminder | Daily noon | 7 days after signup |
+
+**Files to create:**
+- `supabase/migrations/YYYYMMDD_enable_pg_cron.sql`
+- `supabase/migrations/YYYYMMDD_scheduled_notifications.sql`
+
+### Phase 8: Event-Driven Notifications (Database Triggers)
+
+| Trigger | Event | Description |
+|---------|-------|-------------|
+| Support Reply | INSERT on `support_messages` | Notify user when admin replies |
+| Budget Alert | INSERT on `expenses` | When spending exceeds threshold |
+| Trip Status Change | UPDATE on `trips` | When trip status changes |
+| Journal Ready | Trip end date passes | "Your Journal is Ready!" notification |
+
+**File to create:** `supabase/migrations/YYYYMMDD_notification_triggers.sql`
+
+### Phase 9: Weather Warnings (External API)
+
+- Create `supabase/functions/check-weather-warnings/index.ts`
+- Integrate OpenWeatherMap API for severe weather alerts
+- Schedule daily cron job at 6 AM
+- Requires `WEATHER_API_KEY` environment variable
+
+### Phase 10: Email Notifications
+
+- Create `supabase/functions/send-email/index.ts`
+- Integrate Resend or SendGrid for transactional emails
+- Templates: support-reply, weekly-summary, trip-reminder, ticket-status
+- Requires `RESEND_API_KEY` environment variable
+
+### Implementation Priority
+
+| Phase | Priority | Effort | Impact |
+|-------|----------|--------|--------|
+| 8.1 Support Replies | HIGH | Low | Critical for support UX |
+| 8.2 Budget Alerts | HIGH | Medium | Core feature value |
+| 7.1 Trip Reminders | HIGH | Low | User engagement |
+| 7.3 Expense Reminder | MEDIUM | Low | Active trip engagement |
+| 7.5 Weekly Summary | MEDIUM | Medium | Retention |
+| 9 Weather | LOW | High | Nice-to-have |
+| 10 Email | LOW | High | Backup channel |
+
+### Environment Variables Needed
+
+```env
+# Weather API (Phase 9)
+WEATHER_API_KEY=your_openweathermap_key
+
+# Email Service (Phase 10)
+RESEND_API_KEY=re_xxxxx
+```

@@ -362,41 +362,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   ) {
     return GlassCard(
       padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          _SettingsToggle(
-            icon: Icons.notifications_rounded,
-            iconColor: LiquidGlassColors.sunsetOrange,
-            title: l10n.pushNotifications,
-            value: settings?.pushNotifications ?? true,
-            isDark: isDark,
-            onChanged: (value) async {
-              await ref.read(userSettingsProvider.notifier).updatePushNotifications(value);
-            },
-          ),
-          _buildDivider(isDark),
-          _SettingsToggle(
-            icon: Icons.email_rounded,
-            iconColor: LiquidGlassColors.oceanTeal,
-            title: l10n.emailNotifications,
-            value: settings?.emailNotifications ?? true,
-            isDark: isDark,
-            onChanged: (value) async {
-              await ref.read(userSettingsProvider.notifier).updateEmailNotifications(value);
-            },
-          ),
-          _buildDivider(isDark),
-          _SettingsToggle(
-            icon: Icons.alarm_rounded,
-            iconColor: LiquidGlassColors.auroraPurple,
-            title: l10n.tripReminders,
-            value: settings?.tripReminders ?? true,
-            isDark: isDark,
-            onChanged: (value) async {
-              await ref.read(userSettingsProvider.notifier).updateTripReminders(value);
-            },
-          ),
-        ],
+      child: _SettingsTile(
+        icon: Icons.notifications_rounded,
+        iconColor: LiquidGlassColors.sunsetOrange,
+        title: l10n.notifications,
+        subtitle: 'Manage all notification preferences',
+        isDark: isDark,
+        onTap: () => context.push('/settings/notifications'),
       ),
     );
   }
