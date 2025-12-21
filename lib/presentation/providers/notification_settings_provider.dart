@@ -396,16 +396,16 @@ class NotificationSettingsNotifier
     return success;
   }
 
-  /// Update rate app reminder
-  Future<bool> updateRateAppReminder(bool enabled) async {
+  /// Update daily tips
+  Future<bool> updateDailyTips(bool enabled) async {
     final currentSettings = state.valueOrNull;
     if (currentSettings == null) return false;
 
-    state = AsyncValue.data(currentSettings.copyWith(rateAppReminder: enabled));
+    state = AsyncValue.data(currentSettings.copyWith(dailyTips: enabled));
 
     final success = await _repository.updateEngagementNotifications(
       currentSettings.userId,
-      rateAppReminder: enabled,
+      dailyTips: enabled,
     );
 
     if (!success) {

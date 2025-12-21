@@ -737,6 +737,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get splitThisExpense => 'Dividir este gasto?';
 
   @override
+  String get selectTrip => 'Select Trip';
+
+  @override
+  String get failedToLoadTrips => 'Failed to load trips';
+
+  @override
   String get selectTripMembersToSplit =>
       'Selecciona companeros de viaje para dividir';
 

@@ -735,6 +735,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitThisExpense => 'Разделить этот расход?';
 
   @override
+  String get selectTrip => 'Выбрать поездку';
+
+  @override
+  String get failedToLoadTrips => 'Не удалось загрузить поездки';
+
+  @override
   String get selectTripMembersToSplit => 'Выберите попутчиков для разделения';
 
   @override

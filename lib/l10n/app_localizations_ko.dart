@@ -723,6 +723,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get splitThisExpense => '이 지출을 나누시겠습니까?';
 
   @override
+  String get selectTrip => 'Select Trip';
+
+  @override
+  String get failedToLoadTrips => 'Failed to load trips';
+
+  @override
   String get selectTripMembersToSplit => '나눌 여행 멤버를 선택하세요';
 
   @override

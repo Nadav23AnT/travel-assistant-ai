@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
+import '../config/routes.dart';
 import '../data/repositories/notification_settings_repository.dart';
 
 /// Background message handler - must be top-level function
@@ -48,7 +49,12 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  // Lazy-initialize Firebase Messaging to avoid web crashes
+  FirebaseMessaging? _messagingInstance;
+  FirebaseMessaging get _messaging {
+    _messagingInstance ??= FirebaseMessaging.instance;
+    return _messagingInstance!;
+  }
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
   final NotificationSettingsRepository _settingsRepo =
@@ -66,6 +72,13 @@ class NotificationService {
   /// Initialize the notification service
   Future<void> initialize() async {
     if (_initialized) return;
+
+    // Firebase Messaging is not supported on web
+    if (kIsWeb) {
+      debugPrint('NotificationService: Skipping initialization on web');
+      _initialized = true;
+      return;
+    }
 
     try {
       // Initialize timezone data
@@ -196,6 +209,9 @@ class NotificationService {
 
   /// Request notification permissions
   Future<bool> requestPermissions() async {
+    // Firebase Messaging is not supported on web
+    if (kIsWeb) return false;
+
     try {
       final settings = await _messaging.requestPermission(
         alert: true,
@@ -220,9 +236,17 @@ class NotificationService {
 
   /// Check if notifications are enabled
   Future<bool> areNotificationsEnabled() async {
-    final settings = await _messaging.getNotificationSettings();
-    return settings.authorizationStatus == AuthorizationStatus.authorized ||
-        settings.authorizationStatus == AuthorizationStatus.provisional;
+    // Firebase Messaging is not supported on web
+    if (kIsWeb) return false;
+
+    try {
+      final settings = await _messaging.getNotificationSettings();
+      return settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+    } catch (e) {
+      debugPrint('NotificationService: Error checking permissions: $e');
+      return false;
+    }
   }
 
   /// Set up FCM token and listen for refreshes
@@ -304,12 +328,60 @@ class NotificationService {
     final type = data['type'] as String?;
     final id = data['id'] as String?;
 
-    // Navigation will be handled by the app's navigation system
-    // This could emit events or use a navigator key
     debugPrint('NotificationService: Navigate to type=$type, id=$id');
 
-    // TODO: Implement navigation using GoRouter or a global navigator key
-    // Example: navigatorKey.currentState?.pushNamed('/trips/$id')
+    final router = AppRoutes.instance;
+    if (router == null) {
+      debugPrint('NotificationService: Router not initialized yet');
+      return;
+    }
+
+    // Navigate based on notification type
+    switch (type) {
+      case 'trip_reminder':
+      case 'trip_status':
+      case 'weather_warning':
+      case 'daily_summary':
+        if (id != null) {
+          router.go('/trips/$id');
+        } else {
+          router.go(AppRoutes.trips);
+        }
+        break;
+
+      case 'expense_reminder':
+      case 'budget_alert':
+      case 'weekly_spending':
+        if (id != null) {
+          router.go('/expenses/$id');
+        } else {
+          router.go(AppRoutes.expenses);
+        }
+        break;
+
+      case 'journal_ready':
+      case 'journal_prompt':
+        if (id != null) {
+          router.go('/trips/$id/journal');
+        } else {
+          router.go(AppRoutes.trips);
+        }
+        break;
+
+      case 'support_reply':
+      case 'ticket_update':
+        if (id != null) {
+          router.go('/support/$id');
+        } else {
+          router.go(AppRoutes.support);
+        }
+        break;
+
+      default:
+        // Default to home for unknown notification types
+        router.go(AppRoutes.home);
+        break;
+    }
   }
 
   /// Get appropriate channel from notification data

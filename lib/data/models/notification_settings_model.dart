@@ -125,7 +125,7 @@ class NotificationSettingsModel {
   final TimeOfDay dailyJournalTime;
 
   // App & Engagement notifications
-  final bool rateAppReminder;
+  final bool dailyTips;
   final bool newFeatureAnnouncements;
   final bool tipsAndRecommendations;
 
@@ -158,7 +158,7 @@ class NotificationSettingsModel {
     this.journalReady = true,
     this.dailyJournalPrompt = false,
     this.dailyJournalTime = const TimeOfDay(hour: 21, minute: 0),
-    this.rateAppReminder = true,
+    this.dailyTips = true,
     this.newFeatureAnnouncements = true,
     this.tipsAndRecommendations = true,
     this.supportReplyNotifications = true,
@@ -193,7 +193,7 @@ class NotificationSettingsModel {
       journalReady: json['journal_ready'] as bool? ?? true,
       dailyJournalPrompt: json['daily_journal_prompt'] as bool? ?? false,
       dailyJournalTime: _parseTime(json['daily_journal_time'] as String?),
-      rateAppReminder: json['rate_app_reminder'] as bool? ?? true,
+      dailyTips: json['daily_tips'] as bool? ?? true,
       newFeatureAnnouncements:
           json['new_feature_announcements'] as bool? ?? true,
       tipsAndRecommendations:
@@ -233,7 +233,7 @@ class NotificationSettingsModel {
       'journal_ready': journalReady,
       'daily_journal_prompt': dailyJournalPrompt,
       'daily_journal_time': _formatTime(dailyJournalTime),
-      'rate_app_reminder': rateAppReminder,
+      'daily_tips': dailyTips,
       'new_feature_announcements': newFeatureAnnouncements,
       'tips_and_recommendations': tipsAndRecommendations,
       'support_reply_notifications': supportReplyNotifications,
@@ -264,7 +264,7 @@ class NotificationSettingsModel {
     bool? journalReady,
     bool? dailyJournalPrompt,
     TimeOfDay? dailyJournalTime,
-    bool? rateAppReminder,
+    bool? dailyTips,
     bool? newFeatureAnnouncements,
     bool? tipsAndRecommendations,
     bool? supportReplyNotifications,
@@ -295,7 +295,7 @@ class NotificationSettingsModel {
       journalReady: journalReady ?? this.journalReady,
       dailyJournalPrompt: dailyJournalPrompt ?? this.dailyJournalPrompt,
       dailyJournalTime: dailyJournalTime ?? this.dailyJournalTime,
-      rateAppReminder: rateAppReminder ?? this.rateAppReminder,
+      dailyTips: dailyTips ?? this.dailyTips,
       newFeatureAnnouncements:
           newFeatureAnnouncements ?? this.newFeatureAnnouncements,
       tipsAndRecommendations:

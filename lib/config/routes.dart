@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../presentation/screens/auth/login_screen.dart';
 import '../presentation/screens/auth/register_screen.dart';
 import '../presentation/screens/auth/forgot_password_screen.dart';
+import '../presentation/screens/auth/email_verification_screen.dart';
 import '../presentation/screens/auth/splash_screen.dart';
 import '../presentation/screens/home/home_screen.dart';
 import '../presentation/screens/trips/trips_screen.dart';
@@ -42,6 +43,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+  static const String emailVerification = '/email-verification';
 
   // Onboarding routes
   static const String onboardingLanguages = '/onboarding/languages';
@@ -88,6 +90,10 @@ class AppRoutes {
   static GoRouter? _router;
   static bool _isAuthenticated = false;
 
+  /// Get the router instance for navigation (e.g., from notification taps)
+  /// Returns null if router hasn't been initialized yet
+  static GoRouter? get instance => _router;
+
   // Router configuration - returns singleton instance
   static GoRouter router({required bool isAuthenticated}) {
     _isAuthenticated = isAuthenticated;
@@ -105,6 +111,7 @@ class AppRoutes {
         final isOnAuthPage = state.matchedLocation == login ||
             state.matchedLocation == register ||
             state.matchedLocation == forgotPassword ||
+            state.matchedLocation == emailVerification ||
             state.matchedLocation == splash;
 
         final isOnOnboardingPage =
@@ -142,6 +149,13 @@ class AppRoutes {
         GoRoute(
           path: forgotPassword,
           builder: (context, state) => const ForgotPasswordScreen(),
+        ),
+        GoRoute(
+          path: emailVerification,
+          builder: (context, state) {
+            final email = state.uri.queryParameters['email'] ?? '';
+            return EmailVerificationScreen(email: email);
+          },
         ),
 
         // Onboarding routes

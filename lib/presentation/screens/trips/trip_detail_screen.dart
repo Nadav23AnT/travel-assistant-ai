@@ -113,6 +113,14 @@ class TripDetailScreen extends ConsumerWidget {
     );
   }
 
+  void _handleBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/trips');
+    }
+  }
+
   Widget _buildTripDetail(
     BuildContext context,
     WidgetRef ref,
@@ -123,7 +131,14 @@ class TripDetailScreen extends ConsumerWidget {
     bool isDark,
     AppLocalizations l10n,
   ) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _handleBack(context);
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       body: RefreshIndicator(
         onRefresh: () async {
@@ -192,6 +207,7 @@ class TripDetailScreen extends ConsumerWidget {
           height: 52,
         ),
       ),
+      ),
     );
   }
 
@@ -204,7 +220,7 @@ class TripDetailScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(8),
         child: GlowingIconButton(
           icon: Icons.arrow_back,
-          onPressed: () => context.pop(),
+          onPressed: () => _handleBack(context),
           size: 40,
         ),
       ),
@@ -228,32 +244,7 @@ class TripDetailScreen extends ConsumerWidget {
             ),
           ],
         ),
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Cover image or gradient background
-            trip.coverImageUrl != null
-                ? Image.network(
-                    trip.coverImageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _buildFlagCover(trip, isDark),
-                  )
-                : _buildFlagCover(trip, isDark),
-            // Gradient overlay
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withAlpha(200),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+        background: _buildFlagCover(trip, isDark),
       ),
       actions: [
         Padding(

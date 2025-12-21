@@ -722,6 +722,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get splitThisExpense => 'この支出を分割しますか？';
 
   @override
+  String get selectTrip => 'Select Trip';
+
+  @override
+  String get failedToLoadTrips => 'Failed to load trips';
+
+  @override
   String get selectTripMembersToSplit => '分割する旅行メンバーを選択';
 
   @override

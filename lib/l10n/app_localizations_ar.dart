@@ -728,6 +728,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get splitThisExpense => 'تقسيم هذا المصروف؟';
 
   @override
+  String get selectTrip => 'Select Trip';
+
+  @override
+  String get failedToLoadTrips => 'Failed to load trips';
+
+  @override
   String get selectTripMembersToSplit => 'اختر رفاق السفر للتقسيم';
 
   @override

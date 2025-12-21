@@ -720,6 +720,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get splitThisExpense => '分摊此支出？';
 
   @override
+  String get selectTrip => 'Select Trip';
+
+  @override
+  String get failedToLoadTrips => 'Failed to load trips';
+
+  @override
   String get selectTripMembersToSplit => '选择要分摊的旅伴';
 
   @override

@@ -12,6 +12,7 @@ class NotificationToggleItem extends StatelessWidget {
   final ValueChanged<bool> onChanged;
   final bool enabled;
   final Widget? trailing;
+  final bool comingSoon;
 
   const NotificationToggleItem({
     super.key,
@@ -23,17 +24,19 @@ class NotificationToggleItem extends StatelessWidget {
     required this.onChanged,
     this.enabled = true,
     this.trailing,
+    this.comingSoon = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isInteractive = enabled && !comingSoon;
 
     return AnimatedOpacity(
-      opacity: enabled ? 1.0 : 0.5,
+      opacity: isInteractive ? 1.0 : 0.5,
       duration: const Duration(milliseconds: 200),
       child: InkWell(
-        onTap: enabled ? () => onChanged(!value) : null,
+        onTap: isInteractive ? () => onChanged(!value) : null,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
@@ -54,12 +57,38 @@ class NotificationToggleItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (comingSoon) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: LiquidGlassColors.auroraIndigo
+                                  .withOpacity(isDark ? 0.3 : 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Soon',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: LiquidGlassColors.auroraIndigo,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     if (description != null) ...[
                       const SizedBox(height: 2),
@@ -79,8 +108,8 @@ class NotificationToggleItem extends StatelessWidget {
                 trailing!
               else
                 Switch(
-                  value: value,
-                  onChanged: enabled ? onChanged : null,
+                  value: comingSoon ? false : value,
+                  onChanged: isInteractive ? onChanged : null,
                   activeColor: LiquidGlassColors.mintEmerald,
                 ),
             ],
@@ -99,6 +128,7 @@ class NotificationNavigationItem extends StatelessWidget {
   final String? subtitle;
   final VoidCallback onTap;
   final bool enabled;
+  final bool comingSoon;
 
   const NotificationNavigationItem({
     super.key,
@@ -108,17 +138,19 @@ class NotificationNavigationItem extends StatelessWidget {
     this.subtitle,
     required this.onTap,
     this.enabled = true,
+    this.comingSoon = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isInteractive = enabled && !comingSoon;
 
     return AnimatedOpacity(
-      opacity: enabled ? 1.0 : 0.5,
+      opacity: isInteractive ? 1.0 : 0.5,
       duration: const Duration(milliseconds: 200),
       child: InkWell(
-        onTap: enabled ? onTap : null,
+        onTap: isInteractive ? onTap : null,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
@@ -139,12 +171,38 @@ class NotificationNavigationItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (comingSoon) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: LiquidGlassColors.auroraIndigo
+                                  .withOpacity(isDark ? 0.3 : 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Soon',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: LiquidGlassColors.auroraIndigo,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),

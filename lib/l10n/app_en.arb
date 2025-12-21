@@ -1020,6 +1020,14 @@
   "@splitThisExpense": {
     "description": "Split expense question"
   },
+  "selectTrip": "Select Trip",
+  "@selectTrip": {
+    "description": "Select trip title"
+  },
+  "failedToLoadTrips": "Failed to load trips",
+  "@failedToLoadTrips": {
+    "description": "Error message when trips fail to load"
+  },
   "selectTripMembersToSplit": "Select trip members to split with",
   "@selectTripMembersToSplit": {
     "description": "Split members instruction"

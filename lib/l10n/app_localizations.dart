@@ -1486,6 +1486,18 @@ abstract class AppLocalizations {
   /// **'Split this expense?'**
   String get splitThisExpense;
 
+  /// Select trip title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Trip'**
+  String get selectTrip;
+
+  /// Error message when trips fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load trips'**
+  String get failedToLoadTrips;
+
   /// Split members instruction
   ///
   /// In en, this message translates to:

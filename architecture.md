@@ -2423,6 +2423,21 @@ CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
 
 ---
 
+## Pre-Production Checklist
+
+**Authentication & Security:**
+- [ ] **Enable Email Confirmation** - Currently disabled for development. Go to Supabase Dashboard → Authentication → Providers → Email → Enable "Confirm email"
+- [ ] **Configure Custom SMTP** - Set up Resend or SendGrid in Supabase Dashboard → Project Settings → Authentication → SMTP Settings for reliable email delivery
+- [ ] **Set RESEND_API_KEY** in environment for transactional emails
+
+**API Keys & Secrets:**
+- [ ] Replace test RevenueCat API key with production key
+- [ ] Configure Google OAuth client IDs for production
+- [ ] Configure Apple Sign In for production
+- [ ] Set up production Firebase project
+
+---
+
 ## Push Notification Triggers - Implementation Plan
 
 **Status:** Notification Settings UI and infrastructure are COMPLETE. The following documents what still needs to be implemented to make all notification types fully functional.

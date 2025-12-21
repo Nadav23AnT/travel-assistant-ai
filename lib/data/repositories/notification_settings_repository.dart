@@ -204,14 +204,14 @@ class NotificationSettingsRepository {
   /// Update app & engagement notifications
   Future<bool> updateEngagementNotifications(
     String userId, {
-    bool? rateAppReminder,
+    bool? dailyTips,
     bool? newFeatureAnnouncements,
     bool? tipsAndRecommendations,
   }) async {
     final updates = <String, dynamic>{};
 
-    if (rateAppReminder != null) {
-      updates['rate_app_reminder'] = rateAppReminder;
+    if (dailyTips != null) {
+      updates['daily_tips'] = dailyTips;
     }
     if (newFeatureAnnouncements != null) {
       updates['new_feature_announcements'] = newFeatureAnnouncements;
@@ -307,7 +307,7 @@ class NotificationSettingsRepository {
             'journal_ready': true,
             'daily_journal_prompt': false,
             'daily_journal_time': '21:00:00',
-            'rate_app_reminder': true,
+            'daily_tips': true,
             'new_feature_announcements': true,
             'tips_and_recommendations': true,
             'support_reply_notifications': true,

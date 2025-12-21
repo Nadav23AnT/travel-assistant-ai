@@ -727,6 +727,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get splitThisExpense => 'לפצל הוצאה זו?';
 
   @override
+  String get selectTrip => 'בחר טיול';
+
+  @override
+  String get failedToLoadTrips => 'טעינת הטיולים נכשלה';
+
+  @override
   String get selectTripMembersToSplit => 'בחר חברי טיול לפיצול';
 
   @override

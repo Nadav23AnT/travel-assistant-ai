@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +30,14 @@ class _NotificationSettingsScreenState
   }
 
   Future<void> _checkPermissions() async {
+    // Push notifications are not supported on web
+    if (kIsWeb) {
+      if (mounted) {
+        setState(() => _permissionGranted = false);
+      }
+      return;
+    }
+
     final granted = await NotificationService().areNotificationsEnabled();
     if (mounted) {
       setState(() => _permissionGranted = granted);
@@ -36,6 +45,9 @@ class _NotificationSettingsScreenState
   }
 
   Future<void> _requestPermissions() async {
+    // Push notifications are not supported on web
+    if (kIsWeb) return;
+
     final granted = await NotificationService().requestPermissions();
     if (mounted) {
       setState(() => _permissionGranted = granted);
@@ -168,6 +180,7 @@ class _NotificationSettingsScreenState
               value: settings.emailNotifications,
               onChanged: (value) => notifier.updateEmailNotifications(value),
               enabled: masterEnabled,
+              comingSoon: true,
             ),
             NotificationNavigationItem(
               icon: Icons.bedtime_rounded,
@@ -178,6 +191,7 @@ class _NotificationSettingsScreenState
                   : 'Not set',
               onTap: () => context.push('/settings/notifications/dnd'),
               enabled: masterEnabled,
+              comingSoon: true,
             ),
           ],
         ),
@@ -216,6 +230,7 @@ class _NotificationSettingsScreenState
               value: settings.weatherWarnings,
               onChanged: (value) => notifier.updateWeatherWarnings(value),
               enabled: masterEnabled,
+              comingSoon: true,
             ),
             NotificationScheduledItem(
               icon: Icons.today_rounded,
@@ -264,15 +279,6 @@ class _NotificationSettingsScreenState
               onChanged: (value) => notifier.updateBudgetAlerts(value),
               enabled: masterEnabled,
             ),
-            NotificationToggleItem(
-              icon: Icons.insert_chart_rounded,
-              iconColor: LiquidGlassColors.mintEmerald,
-              title: 'Weekly Spending Summary',
-              description: 'See your weekly spending breakdown',
-              value: settings.weeklySpendingSummary,
-              onChanged: (value) => notifier.updateWeeklySpendingSummary(value),
-              enabled: masterEnabled,
-            ),
           ],
         ),
 
@@ -289,22 +295,10 @@ class _NotificationSettingsScreenState
               icon: Icons.check_circle_rounded,
               iconColor: LiquidGlassColors.auroraPurple,
               title: 'Journal Ready',
-              description: 'Prompt when trip ends and journal is ready',
+              description: 'Notify when trip ends and journal is ready',
               value: settings.journalReady,
               onChanged: (value) => notifier.updateJournalReady(value),
               enabled: masterEnabled,
-            ),
-            NotificationScheduledItem(
-              icon: Icons.edit_note_rounded,
-              iconColor: LiquidGlassColors.auroraViolet,
-              title: 'Daily Journal Prompt',
-              description: 'Daily reminder to journal',
-              isEnabled: settings.dailyJournalPrompt,
-              time: settings.dailyJournalTime,
-              onEnabledChanged: (value) =>
-                  notifier.updateDailyJournalPrompt(value),
-              onTimeChanged: (time) => notifier.updateDailyJournalTime(time),
-              masterEnabled: masterEnabled,
             ),
           ],
         ),
@@ -319,12 +313,12 @@ class _NotificationSettingsScreenState
           enabled: masterEnabled,
           children: [
             NotificationToggleItem(
-              icon: Icons.star_rounded,
+              icon: Icons.tips_and_updates_rounded,
               iconColor: LiquidGlassColors.sunsetOrange,
-              title: 'Rate App Reminder',
-              description: 'Help us improve with your feedback',
-              value: settings.rateAppReminder,
-              onChanged: (value) => notifier.updateRateAppReminder(value),
+              title: 'Daily Tips',
+              description: 'Get AI-powered travel tips every morning',
+              value: settings.dailyTips,
+              onChanged: (value) => notifier.updateDailyTips(value),
               enabled: masterEnabled,
             ),
             NotificationToggleItem(
@@ -336,16 +330,7 @@ class _NotificationSettingsScreenState
               onChanged: (value) =>
                   notifier.updateNewFeatureAnnouncements(value),
               enabled: masterEnabled,
-            ),
-            NotificationToggleItem(
-              icon: Icons.lightbulb_rounded,
-              iconColor: LiquidGlassColors.oceanCyan,
-              title: 'Tips & Recommendations',
-              description: 'Get travel tips based on your trips',
-              value: settings.tipsAndRecommendations,
-              onChanged: (value) =>
-                  notifier.updateTipsAndRecommendations(value),
-              enabled: masterEnabled,
+              comingSoon: true,
             ),
           ],
         ),
