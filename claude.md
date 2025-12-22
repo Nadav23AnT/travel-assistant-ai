@@ -630,3 +630,218 @@ For each feature to be considered complete:
 2. **Commit the documentation** along with code changes
 
 This ensures the architecture document always reflects the current state of the project and provides accurate guidance for future development.
+
+---
+
+## 🤖 Specialized Subagents Reference
+
+Claude Code has access to specialized subagents for complex, domain-specific tasks. These agents are invoked via the **Task tool** and provide expert-level assistance in their respective domains.
+
+### When to Use Subagents
+
+**IMPORTANT:** Proactively use these subagents when tasks match their expertise. Don't wait for the user to ask - recognize opportunities and invoke the appropriate agent.
+
+---
+
+### 🏗️ supabase-backend-architect
+
+**Purpose:** Expert in Supabase projects, PostgreSQL database design, and backend architecture.
+
+**Use When:**
+- Designing database schemas or table structures
+- Writing migrations or DDL operations
+- Implementing Row Level Security (RLS) policies
+- Setting up authentication systems
+- Configuring real-time subscriptions
+- Optimizing PostgreSQL queries
+- Setting up Edge Functions
+- Troubleshooting Supabase-specific issues
+- Reviewing database code for security and performance
+
+**Examples:**
+- "I need to create a users table for profile information"
+- "How do I make sure users can only see their own data?"
+- "Review this migration I wrote"
+- "Set up social login with Google and GitHub"
+
+---
+
+### 💼 business-strategy-advisor
+
+**Purpose:** High-level strategic thinking, business planning, and market analysis for startups and AI ventures.
+
+**Use When:**
+- Performing competitive analysis and market positioning
+- Designing pricing strategies or monetization models
+- Creating growth plans (30/60/90 day plans)
+- Preparing for investor meetings or pitch decks
+- Building financial models and projections
+- Analyzing business viability or profitability paths
+- Defining go-to-market strategies
+
+**Examples:**
+- "Help me understand my main competitors"
+- "Design a pricing strategy with multiple tiers"
+- "What should I focus on in the next 90 days?"
+- "Help me prepare my pitch deck materials"
+- "Can the app be profitable by Q4 next year?"
+
+---
+
+### 🔒 cyber-security-expert
+
+**Purpose:** Comprehensive security analysis, threat detection, and security architecture guidance.
+
+**Use When:**
+- Reviewing authentication logic for vulnerabilities
+- Auditing infrastructure (Kubernetes, cloud resources, IAM)
+- Scanning code for vulnerabilities (SQL injection, XSS, CSRF)
+- Investigating suspicious activity or incidents
+- Designing secure architectures (Zero-Trust, encryption)
+- Preparing for compliance audits (SOC 2, GDPR)
+- Hardening CI/CD pipelines
+- Reviewing new dependencies or configuration changes
+
+**Examples:**
+- After implementing auth: "Review for authorization flaws"
+- Before deployment: "Audit Kubernetes configurations"
+- After writing APIs: "Check for injection vulnerabilities"
+- Suspicious logs: "Help investigate this anomaly"
+- New microservices: "Ensure Zero-Trust principles"
+
+---
+
+### 🤖 ai-instructions-architect
+
+**Purpose:** Design, structure, and optimize AI system prompts, agent behaviors, and chatbot personalities.
+
+**Use When:**
+- Building new chatbots for products or features
+- Rewriting or improving existing system prompts
+- Creating AI personalities for specific domains (travel, finance, support)
+- Ensuring behavioral consistency across multi-agent systems
+- Defining safety rules and boundaries
+- Translating product requirements into production-ready agent configs
+- Fixing hallucination or reliability issues in AI assistants
+
+**Examples:**
+- "Create a customer support chatbot for our SaaS"
+- "Our travel assistant keeps hallucinating prices - fix the prompt"
+- "Design instructions for a multi-agent legal review system"
+- "Turn 'helpful but not chatty' into actual instructions"
+
+---
+
+### ⚖️ legal-compliance-drafter
+
+**Purpose:** Create, review, and update legal and compliance documentation for tech startups and SaaS products.
+
+**Use When:**
+- Launching products that need privacy policies or terms of service
+- Collecting user data (emails, analytics, usage data)
+- Preparing compliance documents for investors
+- Designing privacy-conscious data models
+- Addressing GDPR, CCPA, or other regulations
+- Handling sensitive data (health, financial)
+- Creating data processing agreements
+
+**Examples:**
+- "Create privacy policy and terms of service for launch"
+- After implementing auth: "Draft privacy policy for data collection"
+- Before investor meeting: "Create compliance summary for investors"
+- Health app: "Help design privacy-conscious data model"
+- "What do I need to know about GDPR?"
+
+---
+
+### 📚 documentation-expert
+
+**Purpose:** Create, improve, and maintain technical documentation in Markdown format.
+
+**Use When:**
+- Creating README files for new projects
+- Improving existing documentation for clarity
+- Building architecture documentation
+- Writing API references
+- Creating onboarding guides
+- Maintaining CLAUDE.md files
+- Producing changelog documentation
+- Converting rough notes to polished docs
+- Ensuring documentation consistency across a project
+
+**Examples:**
+- After implementing auth: "Create documentation for this module"
+- New project: "Set up README, CONTRIBUTING, ARCHITECTURE docs"
+- "Review and improve the docs I just wrote"
+- After refactoring: "Update documentation to reflect changes"
+- "Convert these rough API notes into proper documentation"
+
+---
+
+### 🎨 app-design-expert
+
+**Purpose:** Comprehensive app design guidance including UI/UX, information architecture, and design systems.
+
+**Use When:**
+- Designing new mobile, web, or desktop applications
+- Creating or refining design systems
+- Planning information architecture and user flows
+- Improving existing screens or workflows
+- Validating UI/UX decisions
+- Designing features that align with existing patterns
+- Creating developer-ready blueprints and specifications
+- Translating complex business logic into intuitive interfaces
+- Producing high-fidelity mockups for stakeholders
+
+**Examples:**
+- "Design the main dashboard and workout logging flow"
+- "Review my onboarding screens - users are dropping off"
+- "Add a subscription paywall without annoying users"
+- "Create complete design system and screen layouts for SaaS"
+- After implementation: "Review design patterns for best practices"
+
+---
+
+### 🎯 design-system-architect
+
+**Purpose:** Create, refine, and maintain consistent UI/UX design elements and systems.
+
+**Use When:**
+- Designing multi-step flows (onboarding, checkout)
+- Building landing pages or marketing screens
+- Creating multiple screens requiring visual consistency
+- Designing pricing pages
+- Establishing component libraries
+- Ensuring design consistency across features
+- Creating reusable design patterns
+
+**Examples:**
+- "Design a 3-step onboarding flow for project management tool"
+- "Review hero section - it feels off"
+- "Design dashboard, profile, and notification screens"
+- "Create a pricing page with three tiers"
+
+---
+
+### Best Practices for Subagent Usage
+
+1. **Be Proactive:** Invoke subagents when you recognize a task matches their expertise - don't wait for explicit requests
+2. **Provide Context:** Give the subagent clear, detailed prompts with all necessary context
+3. **Trust the Output:** Subagent results should generally be trusted
+4. **Summarize Results:** After receiving subagent output, summarize key points for the user
+5. **Combine Expertise:** Complex tasks may benefit from multiple subagents (e.g., design + security review)
+
+---
+
+### Quick Reference Table
+
+| Subagent | Primary Use Case |
+|----------|------------------|
+| `supabase-backend-architect` | Database, RLS, auth, backend |
+| `business-strategy-advisor` | Strategy, pricing, investors |
+| `cyber-security-expert` | Security audits, vulnerabilities |
+| `ai-instructions-architect` | AI prompts, chatbots, agents |
+| `legal-compliance-drafter` | Privacy, terms, compliance |
+| `documentation-expert` | README, docs, changelogs |
+| `app-design-expert` | Full app design, UX flows |
+| `design-system-architect` | UI components, design systems |
