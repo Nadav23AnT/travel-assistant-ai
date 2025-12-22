@@ -18,6 +18,7 @@ import '../../widgets/trips/trip_members_card.dart';
 import '../../widgets/trips/share_trip_sheet.dart';
 import '../../widgets/trips/edit_trip_dialog.dart';
 import '../../widgets/trips/delete_trip_dialog.dart';
+import '../../providers/trip_sharing_provider.dart';
 
 class TripDetailScreen extends ConsumerWidget {
   final String tripId;
@@ -150,7 +151,7 @@ class TripDetailScreen extends ConsumerWidget {
         child: CustomScrollView(
           slivers: [
             // Collapsible App Bar with Cover Image
-            _buildSliverAppBar(context, trip, isDark),
+            _buildSliverAppBar(context, ref, trip, isDark),
 
             // Content
             SliverToBoxAdapter(
@@ -211,7 +212,7 @@ class TripDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSliverAppBar(BuildContext context, TripModel trip, bool isDark) {
+  Widget _buildSliverAppBar(BuildContext context, WidgetRef ref, TripModel trip, bool isDark) {
     return SliverAppBar(
       expandedHeight: 220,
       pinned: true,
@@ -251,7 +252,7 @@ class TripDetailScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(8),
           child: GlowingIconButton(
             icon: Icons.more_vert,
-            onPressed: () => _showMenuBottomSheet(context, trip),
+            onPressed: () => _showMenuBottomSheet(context, ref, trip),
             size: 40,
           ),
         ),
@@ -259,13 +260,14 @@ class TripDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _showMenuBottomSheet(BuildContext context, TripModel trip) {
+  void _showMenuBottomSheet(BuildContext context, WidgetRef ref, TripModel trip) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isOwner = trip.isOwner;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => ClipRRect(
+      builder: (sheetContext) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -294,38 +296,62 @@ class TripDetailScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _MenuOption(
-                  icon: Icons.edit_outlined,
-                  label: 'Edit Trip',
-                  onTap: () {
-                    Navigator.pop(context);
-                    showEditTripDialog(context, trip);
-                  },
-                  isDark: isDark,
-                ),
-                _MenuOption(
-                  icon: Icons.share_outlined,
-                  label: 'Share Trip',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ShareTripSheet.show(
-                      context,
-                      tripId: tripId,
-                      tripTitle: trip.displayTitle,
-                    );
-                  },
-                  isDark: isDark,
-                ),
-                _MenuOption(
-                  icon: Icons.delete_outline,
-                  label: 'Delete Trip',
-                  onTap: () {
-                    Navigator.pop(context);
-                    showDeleteTripDialog(context, trip);
-                  },
-                  isDark: isDark,
-                  isDestructive: true,
-                ),
+                // Owner-only options
+                if (isOwner) ...[
+                  _MenuOption(
+                    icon: Icons.edit_outlined,
+                    label: 'Edit Trip',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      showEditTripDialog(context, trip);
+                    },
+                    isDark: isDark,
+                  ),
+                  _MenuOption(
+                    icon: Icons.share_outlined,
+                    label: 'Share Trip',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      ShareTripSheet.show(
+                        context,
+                        tripId: tripId,
+                        tripTitle: trip.displayTitle,
+                      );
+                    },
+                    isDark: isDark,
+                  ),
+                  _MenuOption(
+                    icon: Icons.delete_outline,
+                    label: 'Delete Trip',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      showDeleteTripDialog(context, trip);
+                    },
+                    isDark: isDark,
+                    isDestructive: true,
+                  ),
+                ],
+                // Member-only options
+                if (!isOwner) ...[
+                  _MenuOption(
+                    icon: Icons.info_outline,
+                    label: 'Trip Details',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                    },
+                    isDark: isDark,
+                  ),
+                  _MenuOption(
+                    icon: Icons.exit_to_app,
+                    label: 'Leave Trip',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _showLeaveTripDialog(context, ref, trip);
+                    },
+                    isDark: isDark,
+                    isDestructive: true,
+                  ),
+                ],
                 const SizedBox(height: 16),
               ],
             ),
@@ -333,6 +359,67 @@ class TripDetailScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _showLeaveTripDialog(BuildContext context, WidgetRef ref, TripModel trip) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Leave Trip?',
+          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+        ),
+        content: Text(
+          'Are you sure you want to leave "${trip.displayTitle}"? You will need a new invite code to rejoin.',
+          style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: LiquidGlassColors.sunsetRose,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final result = await ref.read(tripSharingServiceProvider).leaveTrip(tripId);
+
+      if (result.success && context.mounted) {
+        // Refresh trips list and navigate back
+        ref.invalidate(userTripsProvider);
+        context.go('/trips');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You have left the trip'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error ?? 'Failed to leave trip'),
+            backgroundColor: LiquidGlassColors.sunsetRose,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildFlagCover(TripModel trip, bool isDark) {

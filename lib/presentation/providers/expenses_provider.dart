@@ -452,6 +452,9 @@ final expensesDashboardRefreshProvider = Provider<Future<void> Function()>((ref)
       ref.invalidate(tripExpensesProvider(tripId));
       ref.invalidate(tripExpenseTotalsProvider(tripId));
       ref.invalidate(tripExpensesByCategoryProvider(tripId));
+      // Also refresh settlement-related providers
+      ref.invalidate(tripUnsettledSplitsProvider(tripId));
+      ref.invalidate(tripBalancesProvider(tripId));
     }
     ref.invalidate(userExpensesProvider);
     ref.invalidate(expensesDashboardProvider);
@@ -642,6 +645,40 @@ class SplitOperationNotifier extends StateNotifier<SplitOperationState> {
       state = state.copyWith(isLoading: false, success: true);
 
       // Refresh providers
+      _ref.read(tripSplitsRefreshProvider(tripId))();
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        success: false,
+      );
+      return false;
+    }
+  }
+
+  /// Record a money transfer settlement
+  Future<bool> recordSettlement({
+    required String tripId,
+    required String toUserId,
+    required double amount,
+    String currency = 'USD',
+    String? notes,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true, success: false);
+
+    try {
+      await _repository.recordSettlement(
+        tripId: tripId,
+        toUserId: toUserId,
+        amount: amount,
+        currency: currency,
+        notes: notes,
+      );
+      state = state.copyWith(isLoading: false, success: true);
+
+      // Refresh balances - this updates the balance calculation
       _ref.read(tripSplitsRefreshProvider(tripId))();
 
       return true;

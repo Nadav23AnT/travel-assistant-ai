@@ -5,32 +5,58 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/design/design_system.dart';
 import '../../../data/models/expense_split_model.dart';
+import '../../../data/models/trip_member_model.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
+import '../../providers/trip_sharing_provider.dart';
+
+/// Internal model for balance calculation
+class _UserBalance {
+  final String userId;
+  String userName;
+  String? avatarUrl;
+  double totalPaid = 0;
+  double totalOwed = 0;
+  double balance = 0;
+
+  _UserBalance({
+    required this.userId,
+    required this.userName,
+    this.avatarUrl,
+  });
+}
 
 class SettlementsScreen extends ConsumerWidget {
   final String tripId;
+  final String? displayCurrency;
 
   const SettlementsScreen({
     super.key,
     required this.tripId,
+    this.displayCurrency,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final balancesAsync = ref.watch(tripBalancesProvider(tripId));
+    // Use client-side balance calculation with currency conversion
+    final expensesAsync = ref.watch(tripExpensesProvider(tripId));
     final splitsAsync = ref.watch(tripUnsettledSplitsProvider(tripId));
+    final membersAsync = ref.watch(tripMembersProvider(tripId));
+    final exchangeRates = ref.watch(exchangeRatesProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final targetCurrency = displayCurrency ?? 'USD';
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: isDark
-            ? LiquidGlassColors.darkGradient
-            : LiquidGlassColors.lightGradient,
-      ),
-      child: Scaffold(
+    // Build user info map from trip members
+    final members = membersAsync.value ?? [];
+    final userInfoMap = <String, TripMemberModel>{};
+    for (final member in members) {
+      userInfoMap[member.userId] = member;
+    }
+
+    return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -52,8 +78,9 @@ class SettlementsScreen extends ConsumerWidget {
         ),
         body: RefreshIndicator(
           onRefresh: () async {
-            ref.invalidate(tripBalancesProvider(tripId));
+            ref.invalidate(tripExpensesProvider(tripId));
             ref.invalidate(tripUnsettledSplitsProvider(tripId));
+            ref.invalidate(tripMembersProvider(tripId));
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -61,45 +88,148 @@ class SettlementsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Summary section
+                // Summary section - now uses client-side calculation
                 _buildSummarySection(
-                    context, ref, balancesAsync, isDark, l10n, currentUserId),
+                  context,
+                  ref,
+                  expensesAsync,
+                  splitsAsync,
+                  exchangeRates,
+                  targetCurrency,
+                  userInfoMap,
+                  isDark,
+                  l10n,
+                  currentUserId,
+                ),
                 const SizedBox(height: 24),
 
                 // Unsettled splits section
                 _buildUnsettledSplitsSection(
-                    context, ref, splitsAsync, isDark, l10n, currentUserId),
+                    context, ref, splitsAsync, exchangeRates, targetCurrency, userInfoMap, isDark, l10n, currentUserId),
               ],
             ),
           ),
         ),
-      ),
     );
+  }
+
+  /// Calculate balances from expenses and splits with currency conversion
+  Map<String, _UserBalance> _calculateBalances({
+    required List expenses,
+    required List<ExpenseSplitModel> splits,
+    required String targetCurrency,
+    required ExchangeRatesState exchangeRates,
+    required Map<String, TripMemberModel> userInfoMap,
+    required WidgetRef ref,
+  }) {
+    final balances = <String, _UserBalance>{};
+
+    // Helper to get user name from userInfoMap
+    String getUserName(String userId) {
+      final member = userInfoMap[userId];
+      return member?.displayName ?? 'Unknown';
+    }
+
+    // Helper to get avatar from userInfoMap
+    String? getAvatarUrl(String userId) {
+      return userInfoMap[userId]?.avatarUrl;
+    }
+
+    // Helper to convert amount
+    double convert(double amount, String fromCurrency) {
+      if (fromCurrency == targetCurrency) return amount;
+      if (exchangeRates.rates.isEmpty) return amount;
+      return ref.read(exchangeRatesProvider.notifier).convert(
+        amount,
+        fromCurrency,
+        targetCurrency,
+      );
+    }
+
+    // Process each split
+    for (final split in splits) {
+      final currency = split.expenseCurrency ?? 'USD';
+      final paidBy = split.expensePaidBy;
+
+      // Convert split amount to target currency
+      final convertedSplitAmount = convert(split.amount, currency);
+
+      // User who has this split owes money - use userInfoMap for name
+      balances.putIfAbsent(split.userId, () => _UserBalance(
+        userId: split.userId,
+        userName: getUserName(split.userId),
+        avatarUrl: getAvatarUrl(split.userId),
+      ));
+      balances[split.userId]!.totalOwed += convertedSplitAmount;
+
+      // User who paid gets credit (if we know who paid)
+      if (paidBy != null) {
+        final paidPortion = convert(split.amount, currency);
+
+        // Use userInfoMap for payer info
+        balances.putIfAbsent(paidBy, () => _UserBalance(
+          userId: paidBy,
+          userName: getUserName(paidBy),
+          avatarUrl: getAvatarUrl(paidBy),
+        ));
+        balances[paidBy]!.totalPaid += paidPortion;
+      }
+    }
+
+    // Calculate net balance for each user
+    for (final balance in balances.values) {
+      balance.balance = balance.totalPaid - balance.totalOwed;
+    }
+
+    return balances;
   }
 
   Widget _buildSummarySection(
     BuildContext context,
     WidgetRef ref,
-    AsyncValue<List<MemberBalanceModel>> balancesAsync,
+    AsyncValue<dynamic> expensesAsync,
+    AsyncValue<List<ExpenseSplitModel>> splitsAsync,
+    ExchangeRatesState exchangeRates,
+    String targetCurrency,
+    Map<String, TripMemberModel> userInfoMap,
     bool isDark,
     AppLocalizations l10n,
     String? currentUserId,
   ) {
-    return balancesAsync.when(
-      data: (balances) {
-        final myBalance = balances
-            .where((b) => b.userId == currentUserId)
-            .firstOrNull;
+    // Wait for both to load
+    if (expensesAsync.isLoading || splitsAsync.isLoading) {
+      return _buildLoadingCard(isDark);
+    }
 
-        if (myBalance == null || myBalance.balance == 0) {
-          return _buildAllSettledCard(isDark, l10n);
-        }
+    if (expensesAsync.hasError) {
+      return _buildErrorCard(expensesAsync.error.toString(), isDark);
+    }
 
-        return _buildMyBalanceCard(myBalance, isDark, l10n);
-      },
-      loading: () => _buildLoadingCard(isDark),
-      error: (e, _) => _buildErrorCard(e.toString(), isDark),
+    if (splitsAsync.hasError) {
+      return _buildErrorCard(splitsAsync.error.toString(), isDark);
+    }
+
+    final expenses = expensesAsync.value ?? [];
+    final splits = splitsAsync.value ?? [];
+
+    // Calculate balances with currency conversion
+    final balances = _calculateBalances(
+      expenses: expenses,
+      splits: splits,
+      targetCurrency: targetCurrency,
+      exchangeRates: exchangeRates,
+      userInfoMap: userInfoMap,
+      ref: ref,
     );
+
+    // Get current user's balance
+    final myBalance = balances[currentUserId];
+
+    if (myBalance == null || myBalance.balance.abs() < 0.01) {
+      return _buildAllSettledCard(isDark, l10n);
+    }
+
+    return _buildMyBalanceCard(myBalance, targetCurrency, isDark, l10n);
   }
 
   Widget _buildAllSettledCard(bool isDark, AppLocalizations l10n) {
@@ -153,12 +283,14 @@ class SettlementsScreen extends ConsumerWidget {
   }
 
   Widget _buildMyBalanceCard(
-    MemberBalanceModel balance,
+    _UserBalance balance,
+    String currency,
     bool isDark,
     AppLocalizations l10n,
   ) {
     final isOwed = balance.balance > 0;
     final absBalance = balance.balance.abs();
+    final currencySymbol = _getCurrencySymbol(currency);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -189,7 +321,7 @@ class SettlementsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '\$${absBalance.toStringAsFixed(2)}',
+                '$currencySymbol${absBalance.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontSize: 40,
                   fontWeight: FontWeight.w700,
@@ -216,7 +348,7 @@ class SettlementsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Total paid: \$${balance.totalPaid.toStringAsFixed(2)}',
+                      'Total paid: $currencySymbol${balance.totalPaid.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 13,
                         color: Colors.white,
@@ -232,10 +364,25 @@ class SettlementsScreen extends ConsumerWidget {
     );
   }
 
+  String _getCurrencySymbol(String currency) {
+    const symbols = {
+      'USD': '\$',
+      'EUR': '\u20AC',
+      'GBP': '\u00A3',
+      'ILS': '\u20AA',
+      'JPY': '\u00A5',
+      'THB': '\u0E3F',
+    };
+    return symbols[currency] ?? currency;
+  }
+
   Widget _buildUnsettledSplitsSection(
     BuildContext context,
     WidgetRef ref,
     AsyncValue<List<ExpenseSplitModel>> splitsAsync,
+    ExchangeRatesState exchangeRates,
+    String targetCurrency,
+    Map<String, TripMemberModel> userInfoMap,
     bool isDark,
     AppLocalizations l10n,
     String? currentUserId,
@@ -268,6 +415,9 @@ class SettlementsScreen extends ConsumerWidget {
                     ref,
                     split,
                     isMyDebt,
+                    exchangeRates,
+                    targetCurrency,
+                    userInfoMap,
                     isDark,
                     l10n,
                   ),
@@ -287,9 +437,35 @@ class SettlementsScreen extends ConsumerWidget {
     WidgetRef ref,
     ExpenseSplitModel split,
     bool isMyDebt,
+    ExchangeRatesState exchangeRates,
+    String targetCurrency,
+    Map<String, TripMemberModel> userInfoMap,
     bool isDark,
     AppLocalizations l10n,
   ) {
+    // Convert amount to target currency
+    final splitCurrency = split.expenseCurrency ?? 'USD';
+    double convertedAmount = split.amount;
+    if (splitCurrency != targetCurrency && exchangeRates.rates.isNotEmpty) {
+      convertedAmount = ref.read(exchangeRatesProvider.notifier).convert(
+        split.amount,
+        splitCurrency,
+        targetCurrency,
+      );
+    }
+    final currencySymbol = _getCurrencySymbol(targetCurrency);
+
+    // Determine which user to display based on debt direction
+    // If I owe: show the payer (who I owe money to)
+    // If someone owes me: show the debtor (who owes me)
+    final displayUserId = isMyDebt ? split.expensePaidBy : split.userId;
+    final displayMember = displayUserId != null ? userInfoMap[displayUserId] : null;
+
+    // Get display name, avatar, and initials from trip member
+    final displayName = displayMember?.displayName ?? 'Unknown';
+    final avatarUrl = displayMember?.avatarUrl;
+    final initials = displayMember?.initials ?? '?';
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
@@ -315,12 +491,12 @@ class SettlementsScreen extends ConsumerWidget {
                 backgroundColor: isMyDebt
                     ? LiquidGlassColors.sunsetRose.withAlpha(30)
                     : LiquidGlassColors.mintEmerald.withAlpha(30),
-                backgroundImage: split.userAvatarUrl != null
-                    ? NetworkImage(split.userAvatarUrl!)
+                backgroundImage: avatarUrl != null
+                    ? NetworkImage(avatarUrl)
                     : null,
-                child: split.userAvatarUrl == null
+                child: avatarUrl == null
                     ? Text(
-                        split.initials,
+                        initials,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -338,7 +514,7 @@ class SettlementsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      split.displayName,
+                      displayName,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
@@ -361,7 +537,7 @@ class SettlementsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '\$${split.amount.toStringAsFixed(2)}',
+                    '$currencySymbol${convertedAmount.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -372,7 +548,7 @@ class SettlementsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   GestureDetector(
-                    onTap: () => _handleSettle(context, ref, split),
+                    onTap: () => _handleSettle(context, ref, split, targetCurrency),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -405,13 +581,15 @@ class SettlementsScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     ExpenseSplitModel split,
+    String currency,
   ) async {
+    final currencySymbol = _getCurrencySymbol(currency);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Settlement'),
         content: Text(
-          'Mark this \$${split.amount.toStringAsFixed(2)} debt as settled?',
+          'Mark this $currencySymbol${split.amount.toStringAsFixed(2)} debt as settled?',
         ),
         actions: [
           TextButton(

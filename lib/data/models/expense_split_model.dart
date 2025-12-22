@@ -15,6 +15,17 @@ class ExpenseSplitModel extends Equatable {
   final String? userAvatarUrl;
   final String? userEmail;
 
+  /// Optional: Expense info if joined with expenses
+  final String? expensePaidBy;
+  final String? expenseCurrency;
+  final double? expenseAmount;
+  final String? expenseDescription;
+
+  /// Optional: Payer's profile info if joined
+  final String? payerName;
+  final String? payerAvatarUrl;
+  final String? payerEmail;
+
   const ExpenseSplitModel({
     required this.id,
     required this.expenseId,
@@ -26,7 +37,25 @@ class ExpenseSplitModel extends Equatable {
     this.userName,
     this.userAvatarUrl,
     this.userEmail,
+    this.expensePaidBy,
+    this.expenseCurrency,
+    this.expenseAmount,
+    this.expenseDescription,
+    this.payerName,
+    this.payerAvatarUrl,
+    this.payerEmail,
   });
+
+  /// Display name for the payer
+  String get payerDisplayName {
+    if (payerName != null && payerName!.isNotEmpty) {
+      return payerName!;
+    }
+    if (payerEmail != null && payerEmail!.isNotEmpty) {
+      return payerEmail!.split('@').first;
+    }
+    return 'Unknown';
+  }
 
   /// Display name for the user
   String get displayName {
@@ -52,6 +81,10 @@ class ExpenseSplitModel extends Equatable {
   factory ExpenseSplitModel.fromJson(Map<String, dynamic> json) {
     // Handle nested profile data if present
     final profile = json['profiles'] as Map<String, dynamic>?;
+    // Handle nested expense data if present
+    final expense = json['expenses'] as Map<String, dynamic>?;
+    // Handle nested payer profile data if present
+    final payer = expense?['payer'] as Map<String, dynamic>?;
 
     return ExpenseSplitModel(
       id: json['id'] as String,
@@ -67,6 +100,15 @@ class ExpenseSplitModel extends Equatable {
       userAvatarUrl:
           profile?['avatar_url'] as String? ?? json['user_avatar_url'] as String?,
       userEmail: profile?['email'] as String? ?? json['user_email'] as String?,
+      expensePaidBy: expense?['paid_by'] as String?,
+      expenseCurrency: expense?['currency'] as String?,
+      expenseAmount: expense?['amount'] != null
+          ? double.tryParse(expense!['amount'].toString())
+          : null,
+      expenseDescription: expense?['description'] as String?,
+      payerName: payer?['full_name'] as String?,
+      payerAvatarUrl: payer?['avatar_url'] as String?,
+      payerEmail: payer?['email'] as String?,
     );
   }
 
@@ -103,6 +145,13 @@ class ExpenseSplitModel extends Equatable {
     String? userName,
     String? userAvatarUrl,
     String? userEmail,
+    String? expensePaidBy,
+    String? expenseCurrency,
+    double? expenseAmount,
+    String? expenseDescription,
+    String? payerName,
+    String? payerAvatarUrl,
+    String? payerEmail,
   }) {
     return ExpenseSplitModel(
       id: id ?? this.id,
@@ -115,11 +164,18 @@ class ExpenseSplitModel extends Equatable {
       userName: userName ?? this.userName,
       userAvatarUrl: userAvatarUrl ?? this.userAvatarUrl,
       userEmail: userEmail ?? this.userEmail,
+      expensePaidBy: expensePaidBy ?? this.expensePaidBy,
+      expenseCurrency: expenseCurrency ?? this.expenseCurrency,
+      expenseAmount: expenseAmount ?? this.expenseAmount,
+      expenseDescription: expenseDescription ?? this.expenseDescription,
+      payerName: payerName ?? this.payerName,
+      payerAvatarUrl: payerAvatarUrl ?? this.payerAvatarUrl,
+      payerEmail: payerEmail ?? this.payerEmail,
     );
   }
 
   @override
-  List<Object?> get props => [id, expenseId, userId, amount, isSettled];
+  List<Object?> get props => [id, expenseId, userId, amount, isSettled, expenseCurrency];
 }
 
 /// Represents a member's balance in a trip
@@ -129,6 +185,8 @@ class MemberBalanceModel extends Equatable {
   final String? avatarUrl;
   final double totalPaid;
   final double totalOwed;
+  final double transfersSent;
+  final double transfersReceived;
   final double balance; // positive = others owe you, negative = you owe others
 
   const MemberBalanceModel({
@@ -137,6 +195,8 @@ class MemberBalanceModel extends Equatable {
     this.avatarUrl,
     required this.totalPaid,
     required this.totalOwed,
+    this.transfersSent = 0.0,
+    this.transfersReceived = 0.0,
     required this.balance,
   });
 
@@ -168,12 +228,14 @@ class MemberBalanceModel extends Equatable {
       avatarUrl: json['avatar_url'] as String?,
       totalPaid: double.tryParse(json['total_paid'].toString()) ?? 0.0,
       totalOwed: double.tryParse(json['total_owed'].toString()) ?? 0.0,
+      transfersSent: double.tryParse(json['transfers_sent'].toString()) ?? 0.0,
+      transfersReceived: double.tryParse(json['transfers_received'].toString()) ?? 0.0,
       balance: double.tryParse(json['balance'].toString()) ?? 0.0,
     );
   }
 
   @override
-  List<Object?> get props => [userId, userName, totalPaid, totalOwed, balance];
+  List<Object?> get props => [userId, userName, totalPaid, totalOwed, transfersSent, transfersReceived, balance];
 }
 
 /// Represents a settlement between two members

@@ -539,7 +539,12 @@ class ExpensesRepository {
               paid_by,
               description,
               amount,
-              currency
+              currency,
+              payer:profiles!expenses_paid_by_fkey (
+                full_name,
+                avatar_url,
+                email
+              )
             )
           ''')
           .eq('expenses.trip_id', tripId)
@@ -552,6 +557,70 @@ class ExpensesRepository {
     } catch (e) {
       debugPrint('Error fetching trip unsettled splits: $e');
       throw ExpensesRepositoryException('Failed to fetch unsettled splits');
+    }
+  }
+
+  // ============================================
+  // MONEY TRANSFERS / SETTLEMENTS
+  // ============================================
+
+  /// Record a money transfer to settle debts
+  /// Also marks relevant expense splits as settled
+  Future<void> recordSettlement({
+    required String tripId,
+    required String toUserId,
+    required double amount,
+    String currency = 'USD',
+    String? notes,
+  }) async {
+    final currentUser = _currentUserId;
+    if (currentUser == null) {
+      throw ExpensesRepositoryException('User not authenticated');
+    }
+
+    try {
+      // 1. Record the money transfer
+      await _supabase.from('money_transfers').insert({
+        'trip_id': tripId,
+        'from_user_id': currentUser,
+        'to_user_id': toUserId,
+        'amount': amount,
+        'currency': currency,
+        'notes': notes,
+        'transfer_date': DateTime.now().toIso8601String().split('T').first,
+        'created_by': currentUser,
+      });
+
+      // 2. Mark all unsettled splits where current user owes money to toUserId as settled
+      // First, get the expense IDs for this trip where toUserId paid
+      final expensesResponse = await _supabase
+          .from('expenses')
+          .select('id')
+          .eq('trip_id', tripId)
+          .eq('paid_by', toUserId);
+
+      final expenseIds = (expensesResponse as List)
+          .map((e) => e['id'] as String)
+          .toList();
+
+      if (expenseIds.isNotEmpty) {
+        // Mark splits as settled where:
+        // - user_id is current user (they owe)
+        // - expense_id is in the list of expenses paid by toUserId
+        // - is_settled is false
+        await _supabase
+            .from('expense_splits')
+            .update({
+              'is_settled': true,
+              'settled_at': DateTime.now().toIso8601String(),
+            })
+            .eq('user_id', currentUser)
+            .inFilter('expense_id', expenseIds)
+            .eq('is_settled', false);
+      }
+    } catch (e) {
+      debugPrint('Error recording settlement: $e');
+      throw ExpensesRepositoryException('Failed to record settlement');
     }
   }
 

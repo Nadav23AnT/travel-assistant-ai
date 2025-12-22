@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../config/theme.dart';
 import '../../../data/models/expense_model.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../providers/expenses_provider.dart';
 
-class ExpenseHistoryCard extends StatelessWidget {
+class ExpenseHistoryCard extends ConsumerWidget {
   final ExpenseModel expense;
   final String? displayCurrency;
   final double? convertedAmount;
@@ -22,10 +25,11 @@ class ExpenseHistoryCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final categoryColor =
         AppTheme.categoryColors[expense.category] ?? AppTheme.textSecondary;
     final l10n = AppLocalizations.of(context);
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -174,6 +178,12 @@ class ExpenseHistoryCard extends StatelessWidget {
               ),
             ],
 
+            // Split info (if expense is split)
+            if (expense.isSplit) ...[
+              const SizedBox(height: 12),
+              _buildSplitSection(context, ref, currentUserId),
+            ],
+
             const SizedBox(height: 12),
 
             // Action buttons
@@ -226,6 +236,150 @@ class ExpenseHistoryCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSplitSection(BuildContext context, WidgetRef ref, String? currentUserId) {
+    final splitsAsync = ref.watch(expenseSplitsProvider(expense.id));
+
+    return splitsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (splits) {
+        if (splits.isEmpty) return const SizedBox.shrink();
+
+        // Calculate conversion ratio for currency display
+        final conversionRatio = (convertedAmount != null && expense.amount > 0)
+            ? convertedAmount! / expense.amount
+            : 1.0;
+        final currency = displayCurrency ?? expense.currency;
+
+        // Check if current user is the payer
+        final isPayer = expense.paidBy == currentUserId;
+
+        // Filter and limit splits to display
+        final unsettledSplits = splits.where((s) => !s.isSettled).toList();
+        final displaySplits = unsettledSplits.take(3).toList();
+        final remainingCount = unsettledSplits.length - displaySplits.length;
+
+        return Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withAlpha(13),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: AppTheme.primaryColor.withAlpha(26),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    Icons.group_outlined,
+                    size: 14,
+                    color: AppTheme.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Split expense',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              // Split items
+              ...displaySplits.map((split) {
+                final convertedSplitAmount = split.amount * conversionRatio;
+                final formattedAmount = _formatAmount(convertedSplitAmount, currency);
+
+                if (isPayer) {
+                  // Current user paid - show who owes them
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: RichText(
+                            text: TextSpan(
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontSize: 12,
+                                  ),
+                              children: [
+                                TextSpan(
+                                  text: split.displayName,
+                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                                const TextSpan(text: ' owes you '),
+                                TextSpan(
+                                  text: formattedAmount,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.successColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                } else if (split.userId == currentUserId) {
+                  // Current user owes money
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: RichText(
+                            text: TextSpan(
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontSize: 12,
+                                  ),
+                              children: [
+                                const TextSpan(text: 'You owe '),
+                                TextSpan(
+                                  text: formattedAmount,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.errorColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+              // Show "+N more" if there are more splits
+              if (remainingCount > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 20),
+                  child: Text(
+                    '+$remainingCount more',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: AppTheme.textHint,
+                          fontStyle: FontStyle.italic,
+                        ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
