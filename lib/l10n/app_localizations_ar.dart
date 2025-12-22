@@ -741,6 +741,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يوجد رفاق سفر للتقسيم. أنشئ رحلة أولاً!';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => 'ملاحظات (اختياري)';
 
   @override

@@ -732,6 +732,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noTripMembersToSplit => '没有旅伴可分摊。请先创建行程！';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => '备注（可选）';
 
   @override

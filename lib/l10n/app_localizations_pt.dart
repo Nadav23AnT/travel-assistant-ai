@@ -748,6 +748,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sem companheiros de viagem. Crie uma viagem primeiro!';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => 'Notas (opcional)';
 
   @override

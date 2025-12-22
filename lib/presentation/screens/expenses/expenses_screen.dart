@@ -19,6 +19,7 @@ import '../../widgets/expenses/category_detail_sheet.dart';
 import '../../widgets/expenses/category_progress_bar.dart';
 import '../../widgets/expenses/compact_stat_tile.dart';
 import '../../widgets/expenses/expenses_history_section.dart';
+import '../../widgets/expenses/settlement_summary_card.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -115,6 +116,18 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 SliverToBoxAdapter(
                   child: _buildBudgetOverviewSection(data, isDark, l10n),
                 ),
+
+                // Settlement Summary (card handles visibility - only shows for trips with members)
+                if (data.trip != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                      child: SettlementSummaryCard(
+                        tripId: data.trip!.id,
+                        displayCurrency: data.displayCurrency,
+                      ),
+                    ),
+                  ),
 
                 // Category Breakdown Section
                 SliverToBoxAdapter(

@@ -1510,6 +1510,18 @@ abstract class AppLocalizations {
   /// **'No trip members to split with. Create a trip first!'**
   String get noTripMembersToSplit;
 
+  /// Balances section title
+  ///
+  /// In en, this message translates to:
+  /// **'Balances'**
+  String get balances;
+
+  /// Settlements screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Settlements'**
+  String get settlements;
+
   /// Notes label
   ///
   /// In en, this message translates to:

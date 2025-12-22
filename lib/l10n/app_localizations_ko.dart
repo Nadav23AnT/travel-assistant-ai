@@ -735,6 +735,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get noTripMembersToSplit => '나눌 여행 멤버가 없습니다. 먼저 여행을 만드세요!';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => '메모 (선택사항)';
 
   @override

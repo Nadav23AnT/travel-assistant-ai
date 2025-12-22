@@ -2,13 +2,16 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../config/constants.dart';
 import '../../../core/design/design_system.dart';
+import '../../../data/models/trip_member_model.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../utils/country_currency_helper.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
+import '../../providers/trip_sharing_provider.dart';
 import '../../providers/trips_provider.dart';
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
@@ -35,6 +38,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   DateTime _date = DateTime.now();
   bool _isSplit = false;
   bool _isLoading = false;
+  Set<String> _selectedMemberIds = {};
 
   @override
   void initState() {
@@ -121,31 +125,57 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       final description = _descriptionController.text.trim();
       final notes = _notesController.text.trim();
 
-      // Use the expense operation provider to create expense
-      final expense =
-          await ref.read(expenseOperationProvider.notifier).createExpense(
-                tripId: _selectedTripId!,
-                amount: amount,
-                currency: _currency,
-                category: _category,
-                description: description,
-                expenseDate: _date,
-                isSplit: _isSplit,
-                notes: notes.isNotEmpty ? notes : null,
-              );
+      // Use splits provider if splitting with members, otherwise regular expense
+      if (_isSplit && _selectedMemberIds.isNotEmpty) {
+        // Create expense with splits
+        final expense = await ref
+            .read(splitOperationProvider.notifier)
+            .createExpenseWithSplits(
+              tripId: _selectedTripId!,
+              amount: amount,
+              currency: _currency,
+              category: _category,
+              description: description,
+              splitWithUserIds: _selectedMemberIds.toList(),
+              expenseDate: _date,
+              notes: notes.isNotEmpty ? notes : null,
+              equalSplit: true,
+            );
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (expense != null) {
-        // Refresh the expenses dashboard
-        await ref.read(expensesDashboardRefreshProvider)();
-
-        context.pop();
-        _showGlassSnackBar(l10n.expenseAddedSuccess, isError: false);
+        if (expense != null) {
+          await ref.read(expensesDashboardRefreshProvider)();
+          context.pop();
+          _showGlassSnackBar(l10n.expenseAddedSuccess, isError: false);
+        } else {
+          final error = ref.read(splitOperationProvider).error;
+          _showGlassSnackBar(error ?? l10n.failedToAddExpense, isError: true);
+        }
       } else {
-        // Check for error in state
-        final error = ref.read(expenseOperationProvider).error;
-        _showGlassSnackBar(error ?? l10n.failedToAddExpense, isError: true);
+        // Regular expense without splits
+        final expense =
+            await ref.read(expenseOperationProvider.notifier).createExpense(
+                  tripId: _selectedTripId!,
+                  amount: amount,
+                  currency: _currency,
+                  category: _category,
+                  description: description,
+                  expenseDate: _date,
+                  isSplit: false,
+                  notes: notes.isNotEmpty ? notes : null,
+                );
+
+        if (!mounted) return;
+
+        if (expense != null) {
+          await ref.read(expensesDashboardRefreshProvider)();
+          context.pop();
+          _showGlassSnackBar(l10n.expenseAddedSuccess, isError: false);
+        } else {
+          final error = ref.read(expenseOperationProvider).error;
+          _showGlassSnackBar(error ?? l10n.failedToAddExpense, isError: true);
+        }
       }
     } catch (e) {
       if (!mounted) return;
@@ -348,15 +378,81 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Split expense toggle
-                _GlassSplitCard(
-                  isSplit: _isSplit,
-                  onChanged: (value) {
-                    setState(() => _isSplit = value);
-                  },
-                  isDark: isDark,
-                  l10n: l10n,
-                ),
+                // Split expense toggle with member selection
+                if (_selectedTripId != null)
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final membersAsync =
+                          ref.watch(tripMembersProvider(_selectedTripId!));
+                      final currentUserId =
+                          Supabase.instance.client.auth.currentUser?.id;
+
+                      return membersAsync.when(
+                        data: (members) {
+                          // Filter out current user from split options
+                          final otherMembers = members
+                              .where((m) => m.userId != currentUserId)
+                              .toList();
+
+                          return _GlassSplitCard(
+                            isSplit: _isSplit,
+                            onChanged: (value) {
+                              setState(() {
+                                _isSplit = value;
+                                if (!value) {
+                                  _selectedMemberIds.clear();
+                                }
+                              });
+                            },
+                            isDark: isDark,
+                            l10n: l10n,
+                            tripMembers: otherMembers,
+                            selectedMemberIds: _selectedMemberIds,
+                            onMemberToggled: (memberId) {
+                              setState(() {
+                                if (_selectedMemberIds.contains(memberId)) {
+                                  _selectedMemberIds.remove(memberId);
+                                } else {
+                                  _selectedMemberIds.add(memberId);
+                                }
+                              });
+                            },
+                            onSelectAll: () {
+                              setState(() {
+                                _selectedMemberIds = otherMembers
+                                    .map((m) => m.userId)
+                                    .toSet();
+                              });
+                            },
+                          );
+                        },
+                        loading: () => _GlassSplitCard(
+                          isSplit: _isSplit,
+                          onChanged: (value) {
+                            setState(() => _isSplit = value);
+                          },
+                          isDark: isDark,
+                          l10n: l10n,
+                          tripMembers: const [],
+                          selectedMemberIds: _selectedMemberIds,
+                          onMemberToggled: (_) {},
+                          onSelectAll: () {},
+                        ),
+                        error: (_, __) => _GlassSplitCard(
+                          isSplit: _isSplit,
+                          onChanged: (value) {
+                            setState(() => _isSplit = value);
+                          },
+                          isDark: isDark,
+                          l10n: l10n,
+                          tripMembers: const [],
+                          selectedMemberIds: _selectedMemberIds,
+                          onMemberToggled: (_) {},
+                          onSelectAll: () {},
+                        ),
+                      );
+                    },
+                  ),
                 const SizedBox(height: 16),
 
                 // Notes input
@@ -1038,16 +1134,26 @@ class _GlassSplitCard extends StatelessWidget {
   final ValueChanged<bool> onChanged;
   final bool isDark;
   final AppLocalizations l10n;
+  final List<TripMemberModel> tripMembers;
+  final Set<String> selectedMemberIds;
+  final ValueChanged<String> onMemberToggled;
+  final VoidCallback onSelectAll;
 
   const _GlassSplitCard({
     required this.isSplit,
     required this.onChanged,
     required this.isDark,
     required this.l10n,
+    required this.tripMembers,
+    required this.selectedMemberIds,
+    required this.onMemberToggled,
+    required this.onSelectAll,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasMembers = tripMembers.isNotEmpty;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
@@ -1078,10 +1184,10 @@ class _GlassSplitCard extends StatelessWidget {
                         height: 44,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          gradient: isSplit
+                          gradient: isSplit && hasMembers
                               ? LiquidGlassColors.mintGradient
                               : null,
-                          color: isSplit
+                          color: isSplit && hasMembers
                               ? null
                               : (isDark
                                   ? Colors.white.withAlpha(15)
@@ -1089,7 +1195,7 @@ class _GlassSplitCard extends StatelessWidget {
                         ),
                         child: Icon(
                           Icons.people_outline,
-                          color: isSplit
+                          color: isSplit && hasMembers
                               ? Colors.white
                               : (isDark ? Colors.white60 : Colors.black54),
                           size: 22,
@@ -1108,30 +1214,199 @@ class _GlassSplitCard extends StatelessWidget {
                   ),
                   Switch.adaptive(
                     value: isSplit,
-                    onChanged: onChanged,
+                    onChanged: hasMembers ? onChanged : null,
                     activeTrackColor: LiquidGlassColors.mintEmerald,
                     thumbColor: WidgetStateProperty.all(Colors.white),
                   ),
                 ],
               ),
-              if (isSplit) ...[
-                const SizedBox(height: 16),
+              if (!hasMembers) ...[
+                const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     color: isDark
                         ? Colors.white.withAlpha(8)
                         : Colors.black.withAlpha(5),
                   ),
-                  child: Text(
-                    l10n.noTripMembersToSplit,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark ? Colors.white54 : Colors.black45,
-                    ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.noTripMembersToSplit,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? Colors.white54 : Colors.black45,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
+              if (isSplit && hasMembers) ...[
+                const SizedBox(height: 16),
+                // Select all button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.selectTripMembersToSplit,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white70 : Colors.black54,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: selectedMemberIds.length == tripMembers.length
+                          ? null
+                          : onSelectAll,
+                      style: TextButton.styleFrom(
+                        foregroundColor: LiquidGlassColors.mintEmerald,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      child: Text(
+                        'Select All',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Member selection chips
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: tripMembers.map((member) {
+                    final isSelected = selectedMemberIds.contains(member.userId);
+                    return GestureDetector(
+                      onTap: () => onMemberToggled(member.userId),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: isSelected
+                              ? LiquidGlassColors.mintGradient
+                              : null,
+                          color: isSelected
+                              ? null
+                              : (isDark
+                                  ? Colors.white.withAlpha(12)
+                                  : Colors.black.withAlpha(8)),
+                          border: Border.all(
+                            color: isSelected
+                                ? Colors.transparent
+                                : (isDark
+                                    ? Colors.white.withAlpha(20)
+                                    : Colors.black.withAlpha(15)),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (member.avatarUrl != null &&
+                                member.avatarUrl!.isNotEmpty)
+                              CircleAvatar(
+                                radius: 12,
+                                backgroundImage:
+                                    NetworkImage(member.avatarUrl!),
+                              )
+                            else
+                              CircleAvatar(
+                                radius: 12,
+                                backgroundColor: isSelected
+                                    ? Colors.white.withAlpha(50)
+                                    : (isDark
+                                        ? Colors.white.withAlpha(20)
+                                        : Colors.black.withAlpha(15)),
+                                child: Text(
+                                  member.initials,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : (isDark
+                                            ? Colors.white70
+                                            : Colors.black54),
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(width: 8),
+                            Text(
+                              member.displayName,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight:
+                                    isSelected ? FontWeight.w600 : FontWeight.w500,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark ? Colors.white : Colors.black87),
+                              ),
+                            ),
+                            if (isSelected) ...[
+                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                if (selectedMemberIds.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: [
+                          LiquidGlassColors.mintEmerald.withAlpha(30),
+                          LiquidGlassColors.auroraIndigo.withAlpha(20),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: LiquidGlassColors.mintEmerald.withAlpha(50),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calculate_outlined,
+                          size: 18,
+                          color: LiquidGlassColors.mintEmerald,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Split equally between you and ${selectedMemberIds.length} ${selectedMemberIds.length == 1 ? 'person' : 'people'}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ],
           ),

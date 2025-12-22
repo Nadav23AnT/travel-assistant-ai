@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/expense_model.dart';
+import '../../data/models/expense_split_model.dart';
 import '../../data/models/expense_stats.dart';
 import '../../data/models/trip_model.dart';
 import '../../data/repositories/expenses_repository.dart';
@@ -451,6 +452,9 @@ final expensesDashboardRefreshProvider = Provider<Future<void> Function()>((ref)
       ref.invalidate(tripExpensesProvider(tripId));
       ref.invalidate(tripExpenseTotalsProvider(tripId));
       ref.invalidate(tripExpensesByCategoryProvider(tripId));
+      // Also refresh settlement-related providers
+      ref.invalidate(tripUnsettledSplitsProvider(tripId));
+      ref.invalidate(tripBalancesProvider(tripId));
     }
     ref.invalidate(userExpensesProvider);
     ref.invalidate(expensesDashboardProvider);
@@ -478,3 +482,230 @@ String _getPrimaryCurrency(List<ExpenseModel> expenses) {
 
   return primaryCurrency;
 }
+
+// ============================================
+// EXPENSE SPLITS PROVIDERS
+// ============================================
+
+/// Provider to fetch splits for a specific expense
+final expenseSplitsProvider =
+    FutureProvider.family<List<ExpenseSplitModel>, String>(
+        (ref, expenseId) async {
+  final repository = ref.watch(expensesRepositoryProvider);
+  return repository.getExpenseSplits(expenseId);
+});
+
+/// Provider to fetch balances for a specific trip
+final tripBalancesProvider =
+    FutureProvider.family<List<MemberBalanceModel>, String>(
+        (ref, tripId) async {
+  final repository = ref.watch(expensesRepositoryProvider);
+  return repository.getTripBalances(tripId);
+});
+
+/// Provider to fetch all unsettled splits where current user owes money
+final userOwedSplitsProvider =
+    FutureProvider<List<ExpenseSplitModel>>((ref) async {
+  final repository = ref.watch(expensesRepositoryProvider);
+  return repository.getUserOwedSplits();
+});
+
+/// Provider to fetch unsettled splits for a specific trip
+final tripUnsettledSplitsProvider =
+    FutureProvider.family<List<ExpenseSplitModel>, String>(
+        (ref, tripId) async {
+  final repository = ref.watch(expensesRepositoryProvider);
+  return repository.getTripUnsettledSplits(tripId);
+});
+
+/// Refresh splits-related providers for a trip
+final tripSplitsRefreshProvider =
+    Provider.family<void Function(), String>((ref, tripId) {
+  return () {
+    ref.invalidate(tripBalancesProvider(tripId));
+    ref.invalidate(tripUnsettledSplitsProvider(tripId));
+    ref.invalidate(userOwedSplitsProvider);
+  };
+});
+
+// ============================================
+// EXPENSE SPLIT OPERATIONS STATE
+// ============================================
+
+/// State for split operations
+class SplitOperationState {
+  final bool isLoading;
+  final String? error;
+  final bool success;
+
+  const SplitOperationState({
+    this.isLoading = false,
+    this.error,
+    this.success = false,
+  });
+
+  SplitOperationState copyWith({
+    bool? isLoading,
+    String? error,
+    bool? success,
+    bool clearError = false,
+  }) {
+    return SplitOperationState(
+      isLoading: isLoading ?? this.isLoading,
+      error: clearError ? null : (error ?? this.error),
+      success: success ?? this.success,
+    );
+  }
+}
+
+/// Notifier for split operations
+class SplitOperationNotifier extends StateNotifier<SplitOperationState> {
+  final ExpensesRepository _repository;
+  final Ref _ref;
+
+  SplitOperationNotifier(this._repository, this._ref)
+      : super(const SplitOperationState());
+
+  /// Create an expense with splits
+  Future<ExpenseModel?> createExpenseWithSplits({
+    required String tripId,
+    required double amount,
+    required String currency,
+    required String category,
+    required String description,
+    required List<String> splitWithUserIds,
+    DateTime? expenseDate,
+    String? receiptUrl,
+    String? notes,
+    bool equalSplit = true,
+    Map<String, double>? customAmounts,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true, success: false);
+
+    try {
+      final expense = await _repository.createExpenseWithSplits(
+        tripId: tripId,
+        amount: amount,
+        currency: currency,
+        category: category,
+        description: description,
+        splitWithUserIds: splitWithUserIds,
+        expenseDate: expenseDate,
+        receiptUrl: receiptUrl,
+        notes: notes,
+        equalSplit: equalSplit,
+        customAmounts: customAmounts,
+      );
+
+      state = state.copyWith(isLoading: false, success: true);
+
+      // Refresh providers
+      _ref.read(tripExpensesRefreshProvider(tripId))();
+      _ref.read(tripSplitsRefreshProvider(tripId))();
+
+      return expense;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        success: false,
+      );
+      return null;
+    }
+  }
+
+  /// Mark a split as settled
+  Future<bool> settleSplit(String splitId, String tripId) async {
+    state = state.copyWith(isLoading: true, clearError: true, success: false);
+
+    try {
+      await _repository.markSplitAsSettled(splitId);
+      state = state.copyWith(isLoading: false, success: true);
+
+      // Refresh providers
+      _ref.read(tripSplitsRefreshProvider(tripId))();
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        success: false,
+      );
+      return false;
+    }
+  }
+
+  /// Mark a split as unsettled
+  Future<bool> unsettleSplit(String splitId, String tripId) async {
+    state = state.copyWith(isLoading: true, clearError: true, success: false);
+
+    try {
+      await _repository.markSplitAsUnsettled(splitId);
+      state = state.copyWith(isLoading: false, success: true);
+
+      // Refresh providers
+      _ref.read(tripSplitsRefreshProvider(tripId))();
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        success: false,
+      );
+      return false;
+    }
+  }
+
+  /// Record a money transfer settlement
+  Future<bool> recordSettlement({
+    required String tripId,
+    required String toUserId,
+    required double amount,
+    String currency = 'USD',
+    String? notes,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true, success: false);
+
+    try {
+      await _repository.recordSettlement(
+        tripId: tripId,
+        toUserId: toUserId,
+        amount: amount,
+        currency: currency,
+        notes: notes,
+      );
+      state = state.copyWith(isLoading: false, success: true);
+
+      // Refresh balances - this updates the balance calculation
+      _ref.read(tripSplitsRefreshProvider(tripId))();
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        success: false,
+      );
+      return false;
+    }
+  }
+
+  /// Clear error state
+  void clearError() {
+    state = state.copyWith(clearError: true);
+  }
+
+  /// Reset state
+  void reset() {
+    state = const SplitOperationState();
+  }
+}
+
+/// Provider for split operations
+final splitOperationProvider =
+    StateNotifierProvider<SplitOperationNotifier, SplitOperationState>((ref) {
+  final repository = ref.watch(expensesRepositoryProvider);
+  return SplitOperationNotifier(repository, ref);
+});

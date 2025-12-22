@@ -40,9 +40,11 @@ class TripsRepository {
       if (response == null) return [];
 
       final List<dynamic> jsonList = response as List<dynamic>;
-      return jsonList
+      final trips = jsonList
           .map((json) => TripModel.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      return _sortTripsByPriority(trips);
     } catch (e) {
       debugPrint('Error fetching trips: $e');
       // Fallback to owner-only trips if RPC fails
@@ -53,14 +55,39 @@ class TripsRepository {
             .eq('owner_id', _currentUserId!)
             .order('start_date', ascending: true);
 
-        return (response as List)
+        final trips = (response as List)
             .map((json) => TripModel.fromJson(json, isOwner: true))
             .toList();
+
+        return _sortTripsByPriority(trips);
       } catch (e2) {
         debugPrint('Fallback also failed: $e2');
         throw TripsRepositoryException('Failed to fetch trips');
       }
     }
+  }
+
+  /// Sort trips so active/upcoming trips come first (by priority score),
+  /// followed by completed trips (by end date, most recent first)
+  List<TripModel> _sortTripsByPriority(List<TripModel> trips) {
+    // Separate active and completed trips
+    final activeTrips = trips.where((t) => !t.isCompleted).toList();
+    final completedTrips = trips.where((t) => t.isCompleted).toList();
+
+    // Sort active trips by priority score (lowest = highest priority)
+    activeTrips.sort((a, b) =>
+        a.closestTripPriorityScore.compareTo(b.closestTripPriorityScore));
+
+    // Sort completed trips by end date (most recent first)
+    completedTrips.sort((a, b) {
+      if (a.endDate == null && b.endDate == null) return 0;
+      if (a.endDate == null) return 1;
+      if (b.endDate == null) return -1;
+      return b.endDate!.compareTo(a.endDate!);
+    });
+
+    // Return active trips first, then completed
+    return [...activeTrips, ...completedTrips];
   }
 
   /// Get the trip closest to current date (owned + shared)
@@ -102,9 +129,12 @@ class TripsRepository {
             .toList();
       }
 
-      // Filter to only 'planning' or 'active' status
+      // Filter to only 'planning' or 'active' status, excluding completed trips
+      // A trip is completed if its end date has passed or status is 'completed'
       final candidateTrips = allTrips
-          .where((trip) => trip.status == 'planning' || trip.status == 'active')
+          .where((trip) =>
+              (trip.status == 'planning' || trip.status == 'active') &&
+              !trip.isCompleted)
           .toList();
 
       if (candidateTrips.isEmpty) return null;

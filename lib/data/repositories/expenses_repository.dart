@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/expense_model.dart';
+import '../models/expense_split_model.dart';
 
 class ExpensesRepositoryException implements Exception {
   final String message;
@@ -315,6 +316,383 @@ class ExpensesRepository {
     } catch (e) {
       debugPrint('Error deleting trip expenses: $e');
       throw ExpensesRepositoryException('Failed to delete expenses');
+    }
+  }
+
+  // ============================================
+  // EXPENSE SPLITS OPERATIONS
+  // ============================================
+
+  /// Get all splits for an expense
+  Future<List<ExpenseSplitModel>> getExpenseSplits(String expenseId) async {
+    try {
+      final response = await _supabase
+          .from('expense_splits')
+          .select('''
+            *,
+            profiles:user_id (
+              full_name,
+              avatar_url,
+              email
+            )
+          ''')
+          .eq('expense_id', expenseId)
+          .order('created_at');
+
+      return (response as List)
+          .map((json) => ExpenseSplitModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching expense splits: $e');
+      throw ExpensesRepositoryException('Failed to fetch expense splits');
+    }
+  }
+
+  /// Get all splits where the current user owes money
+  Future<List<ExpenseSplitModel>> getUserOwedSplits() async {
+    if (_currentUserId == null) {
+      throw ExpensesRepositoryException('User not authenticated');
+    }
+
+    try {
+      final response = await _supabase
+          .from('expense_splits')
+          .select('''
+            *,
+            profiles:user_id (
+              full_name,
+              avatar_url,
+              email
+            )
+          ''')
+          .eq('user_id', _currentUserId!)
+          .eq('is_settled', false)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => ExpenseSplitModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching user owed splits: $e');
+      throw ExpensesRepositoryException('Failed to fetch splits');
+    }
+  }
+
+  /// Create expense splits for multiple users
+  Future<List<ExpenseSplitModel>> createExpenseSplits({
+    required String expenseId,
+    required List<Map<String, dynamic>> splits,
+  }) async {
+    try {
+      final splitsWithExpenseId = splits.map((split) => {
+            ...split,
+            'expense_id': expenseId,
+          }).toList();
+
+      final response = await _supabase
+          .from('expense_splits')
+          .insert(splitsWithExpenseId)
+          .select('''
+            *,
+            profiles:user_id (
+              full_name,
+              avatar_url,
+              email
+            )
+          ''');
+
+      return (response as List)
+          .map((json) => ExpenseSplitModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error creating expense splits: $e');
+      throw ExpensesRepositoryException('Failed to create expense splits');
+    }
+  }
+
+  /// Create a single expense split
+  Future<ExpenseSplitModel> createExpenseSplit({
+    required String expenseId,
+    required String userId,
+    required double amount,
+  }) async {
+    try {
+      final response = await _supabase.from('expense_splits').insert({
+        'expense_id': expenseId,
+        'user_id': userId,
+        'amount': amount,
+        'is_settled': false,
+      }).select('''
+            *,
+            profiles:user_id (
+              full_name,
+              avatar_url,
+              email
+            )
+          ''').single();
+
+      return ExpenseSplitModel.fromJson(response);
+    } catch (e) {
+      debugPrint('Error creating expense split: $e');
+      throw ExpensesRepositoryException('Failed to create expense split');
+    }
+  }
+
+  /// Mark a split as settled
+  Future<ExpenseSplitModel> markSplitAsSettled(String splitId) async {
+    try {
+      final response = await _supabase
+          .from('expense_splits')
+          .update({
+            'is_settled': true,
+            'settled_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', splitId)
+          .select('''
+            *,
+            profiles:user_id (
+              full_name,
+              avatar_url,
+              email
+            )
+          ''')
+          .single();
+
+      return ExpenseSplitModel.fromJson(response);
+    } catch (e) {
+      debugPrint('Error marking split as settled: $e');
+      throw ExpensesRepositoryException('Failed to settle split');
+    }
+  }
+
+  /// Mark a split as unsettled
+  Future<ExpenseSplitModel> markSplitAsUnsettled(String splitId) async {
+    try {
+      final response = await _supabase
+          .from('expense_splits')
+          .update({
+            'is_settled': false,
+            'settled_at': null,
+          })
+          .eq('id', splitId)
+          .select('''
+            *,
+            profiles:user_id (
+              full_name,
+              avatar_url,
+              email
+            )
+          ''')
+          .single();
+
+      return ExpenseSplitModel.fromJson(response);
+    } catch (e) {
+      debugPrint('Error unsettling split: $e');
+      throw ExpensesRepositoryException('Failed to unsettle split');
+    }
+  }
+
+  /// Delete all splits for an expense
+  Future<void> deleteExpenseSplits(String expenseId) async {
+    try {
+      await _supabase
+          .from('expense_splits')
+          .delete()
+          .eq('expense_id', expenseId);
+    } catch (e) {
+      debugPrint('Error deleting expense splits: $e');
+      throw ExpensesRepositoryException('Failed to delete expense splits');
+    }
+  }
+
+  /// Get trip balances using the database function
+  Future<List<MemberBalanceModel>> getTripBalances(String tripId) async {
+    try {
+      final response = await _supabase.rpc(
+        'get_trip_balances',
+        params: {'p_trip_id': tripId},
+      );
+
+      return (response as List)
+          .map((json) => MemberBalanceModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching trip balances: $e');
+      throw ExpensesRepositoryException('Failed to fetch trip balances');
+    }
+  }
+
+  /// Get all unsettled splits for a trip
+  Future<List<ExpenseSplitModel>> getTripUnsettledSplits(String tripId) async {
+    try {
+      final response = await _supabase
+          .from('expense_splits')
+          .select('''
+            *,
+            profiles:user_id (
+              full_name,
+              avatar_url,
+              email
+            ),
+            expenses!inner (
+              trip_id,
+              paid_by,
+              description,
+              amount,
+              currency,
+              payer:profiles!expenses_paid_by_fkey (
+                full_name,
+                avatar_url,
+                email
+              )
+            )
+          ''')
+          .eq('expenses.trip_id', tripId)
+          .eq('is_settled', false)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => ExpenseSplitModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching trip unsettled splits: $e');
+      throw ExpensesRepositoryException('Failed to fetch unsettled splits');
+    }
+  }
+
+  // ============================================
+  // MONEY TRANSFERS / SETTLEMENTS
+  // ============================================
+
+  /// Record a money transfer to settle debts
+  /// Also marks relevant expense splits as settled
+  Future<void> recordSettlement({
+    required String tripId,
+    required String toUserId,
+    required double amount,
+    String currency = 'USD',
+    String? notes,
+  }) async {
+    final currentUser = _currentUserId;
+    if (currentUser == null) {
+      throw ExpensesRepositoryException('User not authenticated');
+    }
+
+    try {
+      // 1. Record the money transfer
+      await _supabase.from('money_transfers').insert({
+        'trip_id': tripId,
+        'from_user_id': currentUser,
+        'to_user_id': toUserId,
+        'amount': amount,
+        'currency': currency,
+        'notes': notes,
+        'transfer_date': DateTime.now().toIso8601String().split('T').first,
+        'created_by': currentUser,
+      });
+
+      // 2. Mark all unsettled splits where current user owes money to toUserId as settled
+      // First, get the expense IDs for this trip where toUserId paid
+      final expensesResponse = await _supabase
+          .from('expenses')
+          .select('id')
+          .eq('trip_id', tripId)
+          .eq('paid_by', toUserId);
+
+      final expenseIds = (expensesResponse as List)
+          .map((e) => e['id'] as String)
+          .toList();
+
+      if (expenseIds.isNotEmpty) {
+        // Mark splits as settled where:
+        // - user_id is current user (they owe)
+        // - expense_id is in the list of expenses paid by toUserId
+        // - is_settled is false
+        await _supabase
+            .from('expense_splits')
+            .update({
+              'is_settled': true,
+              'settled_at': DateTime.now().toIso8601String(),
+            })
+            .eq('user_id', currentUser)
+            .inFilter('expense_id', expenseIds)
+            .eq('is_settled', false);
+      }
+    } catch (e) {
+      debugPrint('Error recording settlement: $e');
+      throw ExpensesRepositoryException('Failed to record settlement');
+    }
+  }
+
+  /// Create expense with splits in a transaction
+  Future<ExpenseModel> createExpenseWithSplits({
+    required String tripId,
+    required double amount,
+    required String currency,
+    required String category,
+    required String description,
+    required List<String> splitWithUserIds,
+    DateTime? expenseDate,
+    String? receiptUrl,
+    String? notes,
+    bool equalSplit = true,
+    Map<String, double>? customAmounts,
+  }) async {
+    if (_currentUserId == null) {
+      throw ExpensesRepositoryException('User not authenticated');
+    }
+
+    try {
+      // Create the expense first
+      final expense = await createExpense(
+        tripId: tripId,
+        amount: amount,
+        currency: currency,
+        category: category,
+        description: description,
+        expenseDate: expenseDate,
+        receiptUrl: receiptUrl,
+        isSplit: splitWithUserIds.isNotEmpty,
+        notes: notes,
+      );
+
+      // If there are users to split with, create the splits
+      if (splitWithUserIds.isNotEmpty) {
+        final splits = <Map<String, dynamic>>[];
+
+        if (equalSplit) {
+          // Equal split among all users (excluding the payer)
+          final splitAmount = amount / (splitWithUserIds.length + 1);
+          for (final userId in splitWithUserIds) {
+            splits.add({
+              'user_id': userId,
+              'amount': splitAmount,
+            });
+          }
+        } else if (customAmounts != null) {
+          // Custom amounts per user
+          for (final userId in splitWithUserIds) {
+            if (customAmounts.containsKey(userId)) {
+              splits.add({
+                'user_id': userId,
+                'amount': customAmounts[userId]!,
+              });
+            }
+          }
+        }
+
+        if (splits.isNotEmpty) {
+          await createExpenseSplits(
+            expenseId: expense.id,
+            splits: splits,
+          );
+        }
+      }
+
+      return expense;
+    } catch (e) {
+      debugPrint('Error creating expense with splits: $e');
+      throw ExpensesRepositoryException('Failed to create expense with splits');
     }
   }
 }

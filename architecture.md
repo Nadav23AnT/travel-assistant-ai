@@ -2272,10 +2272,10 @@ CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
 - [x] Rich Expenses Dashboard with charts
 - [x] Add/edit expense flow
 - [x] Expense confirmation via chat
-- [ ] Expense splitting logic
-- [ ] Balance calculations per trip member
-- [ ] Settlement tracking (mark as paid)
-- [ ] Settlement summary screen
+- [x] Expense splitting logic
+- [x] Balance calculations per trip member
+- [x] Settlement tracking (mark as paid)
+- [x] Settlement summary screen
 
 **User Support System**
 - [x] Support ticket database schema (support_tickets, support_messages tables)

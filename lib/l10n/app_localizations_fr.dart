@@ -752,6 +752,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Pas de compagnons de voyage. Creez d\'abord un voyage!';
 
   @override
+  String get balances => 'Balances';
+
+  @override
+  String get settlements => 'Settlements';
+
+  @override
   String get notesOptional => 'Notes (optionnel)';
 
   @override
