@@ -471,16 +471,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               },
             ),
             const SizedBox(height: 12),
-            _GlassQuickActionButton(
-              icon: Icons.explore,
-              label: l10n.planActivity,
-              description: l10n.planActivityDescription,
-              gradient: LiquidGlassColors.mintGradient,
-              isDark: isDark,
-              onTap: () {
-                _messageController.text = l10n.planActivityPrompt;
-                _sendMessage();
-              },
+            ComingSoonOverlay(
+              child: _GlassQuickActionButton(
+                icon: Icons.explore,
+                label: l10n.planActivity,
+                description: l10n.planActivityDescription,
+                gradient: LiquidGlassColors.mintGradient,
+                isDark: isDark,
+                onTap: () {
+                  // Navigate to Activity Discovery screen
+                  context.push('/discover');
+                },
+              ),
             ),
             const SizedBox(height: 12),
             _GlassQuickActionButton(
