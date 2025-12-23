@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import '../config/env.dart';
+import '../data/models/chat_models.dart';
 import '../data/models/day_tip_model.dart';
 import '../data/models/journal_model.dart';
 import '../data/models/travel_context.dart';
@@ -876,6 +877,59 @@ Respond with ONLY the title, nothing else.
         return '$tripDestination Chat';
       }
       return 'Travel Chat';
+    }
+  }
+
+  /// Detect the subject/type of a chat from the first user message
+  /// Returns a ChatSubject enum value based on AI analysis
+  /// Uses AI_CHAT feature configuration
+  Future<ChatSubject> detectChatSubject({
+    required String firstMessage,
+    TravelContext? context,
+  }) async {
+    // Check token limit before making request
+    await _checkTokenLimit();
+
+    try {
+      final provider = _router.getProviderForFeature(AIFeature.aiChat);
+
+      final prompt = '''
+Analyze the following user message and determine the chat subject type.
+
+User message: "$firstMessage"
+
+Respond with ONLY ONE of these exact values:
+- "day" - If the user wants to tell about their day, share experiences, describe what happened, talk about their travel day
+- "expense" - If the user mentions spending money, costs, prices, payments, or wants to log/track an expense
+- "activity" - If the user asks for recommendations, wants to plan activities, find places to visit, things to do
+- "journal" - If the user wants to create or generate a journal entry, write about memories, document their trip
+- "general" - For any other general conversation, greetings, or unclear intent
+
+Respond with just the single word (lowercase), nothing else.
+''';
+
+      final messages = <Map<String, dynamic>>[
+        ChatMessage.user(prompt).toJson(),
+      ];
+
+      final response = await provider.complete(
+        messages: messages,
+        temperature: 0.3, // Low temperature for consistency
+        maxTokens: 10, // Very short response expected
+      );
+
+      // Record token usage after successful response
+      await _recordTokenUsage(response.tokensUsed);
+
+      // Parse response - clean and convert to enum
+      final subjectStr = response.content.trim().toLowerCase();
+      return ChatSubject.fromString(subjectStr);
+    } on AIProviderException catch (e) {
+      debugPrint('AI Service Error detecting subject: ${e.message}');
+      return ChatSubject.general; // Default on error
+    } catch (e) {
+      debugPrint('Error detecting subject: $e');
+      return ChatSubject.general;
     }
   }
 

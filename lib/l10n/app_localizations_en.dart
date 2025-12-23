@@ -618,6 +618,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start a conversation with your AI travel buddy to plan trips, get recommendations, and more!';
 
   @override
+  String get chatSubjectDay => 'Tell About Day';
+
+  @override
+  String get chatSubjectExpense => 'Expense Tracking';
+
+  @override
+  String get chatSubjectActivity => 'Activity Planning';
+
+  @override
+  String get chatSubjectJournal => 'Journal Entry';
+
+  @override
+  String get chatSubjectGeneral => 'General Chat';
+
+  @override
   String get retry => 'Retry';
 
   @override

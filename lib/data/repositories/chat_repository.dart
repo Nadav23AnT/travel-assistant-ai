@@ -142,6 +142,22 @@ class ChatRepository {
     }
   }
 
+  /// Update a chat session's subject
+  Future<void> updateSessionSubject(String sessionId, ChatSubject subject) async {
+    try {
+      await _supabase
+          .from('chat_sessions')
+          .update({
+            'subject': subject.name,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', sessionId);
+    } catch (e) {
+      debugPrint('Error updating session subject: $e');
+      throw ChatRepositoryException('Failed to update session subject');
+    }
+  }
+
   /// Soft delete a chat session (set is_active to false)
   Future<void> deleteSession(String sessionId) async {
     try {

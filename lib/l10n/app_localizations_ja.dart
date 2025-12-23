@@ -609,6 +609,21 @@ class AppLocalizationsJa extends AppLocalizations {
       'AI旅行バディと会話を始めて、旅行を計画したり、おすすめを得たりしましょう！';
 
   @override
+  String get chatSubjectDay => 'Tell About Day';
+
+  @override
+  String get chatSubjectExpense => 'Expense Tracking';
+
+  @override
+  String get chatSubjectActivity => 'Activity Planning';
+
+  @override
+  String get chatSubjectJournal => 'Journal Entry';
+
+  @override
+  String get chatSubjectGeneral => 'General Chat';
+
+  @override
   String get retry => '再試行';
 
   @override

@@ -610,6 +610,21 @@ class AppLocalizationsKo extends AppLocalizations {
       'AI 여행 버디와 대화를 시작하여 여행을 계획하고 추천을 받으세요!';
 
   @override
+  String get chatSubjectDay => 'Tell About Day';
+
+  @override
+  String get chatSubjectExpense => 'Expense Tracking';
+
+  @override
+  String get chatSubjectActivity => 'Activity Planning';
+
+  @override
+  String get chatSubjectJournal => 'Journal Entry';
+
+  @override
+  String get chatSubjectGeneral => 'General Chat';
+
+  @override
   String get retry => '재시도';
 
   @override

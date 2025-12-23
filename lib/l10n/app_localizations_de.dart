@@ -618,6 +618,21 @@ class AppLocalizationsDe extends AppLocalizations {
       'Starten Sie ein Gesprach mit Ihrem KI-Reisebegleiter, um Reisen zu planen, Empfehlungen zu erhalten und mehr!';
 
   @override
+  String get chatSubjectDay => 'Tell About Day';
+
+  @override
+  String get chatSubjectExpense => 'Expense Tracking';
+
+  @override
+  String get chatSubjectActivity => 'Activity Planning';
+
+  @override
+  String get chatSubjectJournal => 'Journal Entry';
+
+  @override
+  String get chatSubjectGeneral => 'General Chat';
+
+  @override
   String get retry => 'Erneut Versuchen';
 
   @override

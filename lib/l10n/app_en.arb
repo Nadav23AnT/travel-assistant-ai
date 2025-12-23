@@ -850,6 +850,26 @@
   "@aiTravelAssistantDescription": {
     "description": "AI assistant description"
   },
+  "chatSubjectDay": "Tell About Day",
+  "@chatSubjectDay": {
+    "description": "Chat subject: Tell about the day"
+  },
+  "chatSubjectExpense": "Expense Tracking",
+  "@chatSubjectExpense": {
+    "description": "Chat subject: Expense tracking"
+  },
+  "chatSubjectActivity": "Activity Planning",
+  "@chatSubjectActivity": {
+    "description": "Chat subject: Activity planning"
+  },
+  "chatSubjectJournal": "Journal Entry",
+  "@chatSubjectJournal": {
+    "description": "Chat subject: Journal entry"
+  },
+  "chatSubjectGeneral": "General Chat",
+  "@chatSubjectGeneral": {
+    "description": "Chat subject: General chat"
+  },
   "retry": "Retry",
   "@retry": {
     "description": "Retry button"

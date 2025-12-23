@@ -621,6 +621,21 @@ class AppLocalizationsEs extends AppLocalizations {
       'Inicia una conversacion con tu companero de viaje IA para planificar viajes, obtener recomendaciones y mas!';
 
   @override
+  String get chatSubjectDay => 'Tell About Day';
+
+  @override
+  String get chatSubjectExpense => 'Expense Tracking';
+
+  @override
+  String get chatSubjectActivity => 'Activity Planning';
+
+  @override
+  String get chatSubjectJournal => 'Journal Entry';
+
+  @override
+  String get chatSubjectGeneral => 'General Chat';
+
+  @override
   String get retry => 'Reintentar';
 
   @override

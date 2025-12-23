@@ -612,6 +612,21 @@ class AppLocalizationsHe extends AppLocalizations {
       'התחל שיחה עם חבר הטיולים ה-AI שלך כדי לתכנן טיולים, לקבל המלצות ועוד!';
 
   @override
+  String get chatSubjectDay => 'Tell About Day';
+
+  @override
+  String get chatSubjectExpense => 'Expense Tracking';
+
+  @override
+  String get chatSubjectActivity => 'Activity Planning';
+
+  @override
+  String get chatSubjectJournal => 'Journal Entry';
+
+  @override
+  String get chatSubjectGeneral => 'General Chat';
+
+  @override
   String get retry => 'נסה שוב';
 
   @override

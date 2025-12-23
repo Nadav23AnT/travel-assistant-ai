@@ -1288,6 +1288,36 @@ abstract class AppLocalizations {
   /// **'Start a conversation with your AI travel buddy to plan trips, get recommendations, and more!'**
   String get aiTravelAssistantDescription;
 
+  /// Chat subject: Tell about the day
+  ///
+  /// In en, this message translates to:
+  /// **'Tell About Day'**
+  String get chatSubjectDay;
+
+  /// Chat subject: Expense tracking
+  ///
+  /// In en, this message translates to:
+  /// **'Expense Tracking'**
+  String get chatSubjectExpense;
+
+  /// Chat subject: Activity planning
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Planning'**
+  String get chatSubjectActivity;
+
+  /// Chat subject: Journal entry
+  ///
+  /// In en, this message translates to:
+  /// **'Journal Entry'**
+  String get chatSubjectJournal;
+
+  /// Chat subject: General chat
+  ///
+  /// In en, this message translates to:
+  /// **'General Chat'**
+  String get chatSubjectGeneral;
+
   /// Retry button
   ///
   /// In en, this message translates to:
