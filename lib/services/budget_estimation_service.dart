@@ -6,98 +6,100 @@ class BudgetEstimationService {
   BudgetEstimationService._();
 
   /// Average daily budget estimates by country (in USD).
-  /// These are rough estimates for mid-range travelers.
+  /// These are realistic estimates for mid-range travelers (2024-2025 prices).
+  /// Includes: accommodation, food, local transport, activities, misc.
+  /// Excludes: international flights, insurance, shopping.
   static const Map<String, double> _dailyBudgetByCountry = {
-    // Western Europe
-    'France': 150,
-    'Germany': 130,
-    'Italy': 120,
-    'Spain': 100,
-    'United Kingdom': 160,
-    'Netherlands': 140,
-    'Belgium': 130,
-    'Switzerland': 200,
-    'Austria': 130,
-    'Portugal': 90,
-    'Greece': 85,
-    'Ireland': 140,
+    // Western Europe (higher costs due to inflation)
+    'France': 185,
+    'Germany': 165,
+    'Italy': 155,
+    'Spain': 130,
+    'United Kingdom': 195,
+    'Netherlands': 175,
+    'Belgium': 165,
+    'Switzerland': 280,
+    'Austria': 165,
+    'Portugal': 115,
+    'Greece': 110,
+    'Ireland': 175,
 
     // Eastern Europe
-    'Poland': 60,
-    'Czech Republic': 70,
-    'Hungary': 65,
-    'Croatia': 80,
-    'Romania': 50,
-    'Bulgaria': 45,
-    'Slovenia': 85,
-    'Slovakia': 65,
+    'Poland': 80,
+    'Czech Republic': 95,
+    'Hungary': 85,
+    'Croatia': 105,
+    'Romania': 65,
+    'Bulgaria': 60,
+    'Slovenia': 110,
+    'Slovakia': 85,
 
-    // Scandinavia
-    'Sweden': 160,
-    'Norway': 180,
-    'Denmark': 170,
-    'Finland': 150,
-    'Iceland': 200,
+    // Scandinavia (expensive region)
+    'Sweden': 195,
+    'Norway': 230,
+    'Denmark': 210,
+    'Finland': 185,
+    'Iceland': 260,
 
     // North America
-    'United States': 150,
-    'Canada': 130,
-    'Mexico': 60,
+    'United States': 190,
+    'Canada': 165,
+    'Mexico': 80,
 
     // Central & South America
-    'Brazil': 70,
-    'Argentina': 60,
-    'Chile': 80,
-    'Peru': 50,
-    'Colombia': 50,
-    'Costa Rica': 80,
-    'Ecuador': 45,
-    'Bolivia': 35,
+    'Brazil': 90,
+    'Argentina': 75,
+    'Chile': 100,
+    'Peru': 65,
+    'Colombia': 65,
+    'Costa Rica': 105,
+    'Ecuador': 60,
+    'Bolivia': 45,
 
     // Asia
-    'Japan': 120,
-    'South Korea': 100,
-    'China': 70,
-    'Thailand': 50,
-    'Vietnam': 40,
-    'Indonesia': 50,
-    'Malaysia': 55,
-    'Singapore': 140,
-    'Philippines': 45,
-    'India': 35,
-    'Nepal': 30,
-    'Sri Lanka': 45,
-    'Cambodia': 40,
-    'Laos': 35,
-    'Myanmar': 40,
-    'Taiwan': 80,
+    'Japan': 155,
+    'South Korea': 125,
+    'China': 90,
+    'Thailand': 70,
+    'Vietnam': 55,
+    'Indonesia': 65,
+    'Malaysia': 70,
+    'Singapore': 175,
+    'Philippines': 60,
+    'India': 45,
+    'Nepal': 40,
+    'Sri Lanka': 60,
+    'Cambodia': 55,
+    'Laos': 45,
+    'Myanmar': 55,
+    'Taiwan': 105,
 
     // Middle East
-    'United Arab Emirates': 150,
-    'Israel': 130,
-    'Turkey': 60,
-    'Jordan': 80,
-    'Egypt': 50,
-    'Morocco': 55,
-    'Saudi Arabia': 120,
-    'Qatar': 140,
+    'United Arab Emirates': 190,
+    'Israel': 170,
+    'Turkey': 80,
+    'Jordan': 105,
+    'Egypt': 65,
+    'Morocco': 75,
+    'Saudi Arabia': 155,
+    'Qatar': 180,
 
     // Africa
-    'South Africa': 70,
-    'Kenya': 80,
-    'Tanzania': 90,
-    'Ethiopia': 50,
-    'Ghana': 60,
-    'Nigeria': 70,
+    'South Africa': 90,
+    'Kenya': 105,
+    'Tanzania': 120,
+    'Ethiopia': 65,
+    'Ghana': 80,
+    'Nigeria': 90,
 
     // Oceania
-    'Australia': 140,
-    'New Zealand': 130,
-    'Fiji': 100,
+    'Australia': 175,
+    'New Zealand': 165,
+    'Fiji': 130,
   };
 
   /// Default daily budget if country not found (in USD)
-  static const double _defaultDailyBudget = 100;
+  static const double _defaultDailyBudget = 120;
 
   /// Get estimated daily budget for a destination
   static SmartBudgetEstimate? getEstimate({

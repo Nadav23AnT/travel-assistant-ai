@@ -72,6 +72,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
     return _endDate!.difference(_startDate!).inDays + 1;
   }
 
+  /// Apply the smart budget suggestion to the budget field
   void _applySmartBudget() {
     final estimate = BudgetEstimationService.getEstimate(
       destination: _destinationController.text.trim(),

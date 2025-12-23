@@ -214,10 +214,67 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   ),
                 ),
               ),
-              // Trip selector badge
+              // Trip selector badge with popup menu
               if (trip != null)
-                GestureDetector(
-                  onTap: () => _showTripSelector(context, isDark, l10n),
+                PopupMenuButton<String>(
+                  onSelected: (tripId) {
+                    ref.read(selectedExpensesTripIdProvider.notifier).state = tripId;
+                  },
+                  offset: const Offset(0, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  color: isDark
+                      ? const Color(0xFF1E293B)
+                      : Colors.white,
+                  itemBuilder: (context) {
+                    final tripsAsync = ref.read(userTripsProvider);
+                    final currentTripId = ref.read(effectiveTripIdProvider);
+                    final trips = tripsAsync.valueOrNull ?? [];
+
+                    return trips.map((t) => PopupMenuItem<String>(
+                      value: t.id,
+                      child: Row(
+                        children: [
+                          Text(
+                            t.flagEmoji,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  t.displayDestination,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.white : Colors.black87,
+                                  ),
+                                ),
+                                if (t.isShared)
+                                  Text(
+                                    'Shared',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: LiquidGlassColors.oceanTeal,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (t.id == currentTripId)
+                            Icon(
+                              Icons.check_circle,
+                              color: LiquidGlassColors.auroraIndigo,
+                              size: 20,
+                            ),
+                        ],
+                      ),
+                    )).toList();
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
@@ -669,200 +726,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     return convertedAmounts.isNotEmpty ? convertedAmounts : null;
   }
 
-  void _showTripSelector(BuildContext context, bool isDark, AppLocalizations l10n) {
-    final tripsAsync = ref.read(userTripsProvider);
-    final currentTripId = ref.read(effectiveTripIdProvider);
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.6,
-            ),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.black.withAlpha(200)
-                  : Colors.white.withAlpha(230),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withAlpha(26)
-                    : Colors.black.withAlpha(13),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Handle bar
-                Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white30 : Colors.black26,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    l10n.selectTrip,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ),
-                Flexible(
-                  child: tripsAsync.when(
-                    data: (trips) => ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: trips.length,
-                      itemBuilder: (context, index) {
-                        final trip = trips[index];
-                        final isSelected = trip.id == currentTripId;
-                        return _buildTripOption(
-                          context,
-                          trip,
-                          isSelected,
-                          isDark,
-                        );
-                      },
-                    ),
-                    loading: () => const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                    error: (_, __) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Text(
-                          l10n.failedToLoadTrips,
-                          style: TextStyle(
-                            color: isDark ? Colors.white60 : Colors.black54,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTripOption(
-    BuildContext context,
-    TripModel trip,
-    bool isSelected,
-    bool isDark,
-  ) {
-    return InkWell(
-      onTap: () {
-        ref.read(selectedExpensesTripIdProvider.notifier).state = trip.id;
-        Navigator.of(context).pop();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? LiquidGlassColors.auroraIndigo.withAlpha(26)
-              : Colors.transparent,
-          border: Border(
-            bottom: BorderSide(
-              color: isDark ? Colors.white10 : Colors.black.withAlpha(8),
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            // Flag
-            Text(
-              trip.flagEmoji,
-              style: const TextStyle(fontSize: 24),
-            ),
-            const SizedBox(width: 12),
-            // Trip details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          trip.displayDestination,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                      if (trip.isShared)
-                        Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: LiquidGlassColors.oceanTeal.withAlpha(26),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'Shared',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: LiquidGlassColors.oceanTeal,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _getTripStatusText(trip),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Selection indicator
-            if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: LiquidGlassColors.auroraIndigo,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _getTripStatusText(TripModel trip) {
-    if (trip.isActive) return 'Ongoing';
-    if (trip.isUpcoming) return 'Upcoming';
-    if (trip.isCompleted) return 'Completed';
-    return trip.status;
-  }
 }
 
 /// Glass-styled currency selector
