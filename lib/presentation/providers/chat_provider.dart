@@ -51,6 +51,7 @@ class ChatState {
   final ParsedExpense? pendingExpense;
   final bool isCreatingExpense;
   final List<PlaceRecommendation> pendingPlaces;
+  final String? pendingSearchUrl; // Google Maps search URL for "see more"
 
   const ChatState({
     this.session,
@@ -61,6 +62,7 @@ class ChatState {
     this.pendingExpense,
     this.isCreatingExpense = false,
     this.pendingPlaces = const [],
+    this.pendingSearchUrl,
   });
 
   ChatState copyWith({
@@ -75,6 +77,7 @@ class ChatState {
     bool? isCreatingExpense,
     List<PlaceRecommendation>? pendingPlaces,
     bool clearPendingPlaces = false,
+    String? pendingSearchUrl,
   }) {
     return ChatState(
       session: session ?? this.session,
@@ -85,6 +88,7 @@ class ChatState {
       pendingExpense: clearPendingExpense ? null : (pendingExpense ?? this.pendingExpense),
       isCreatingExpense: isCreatingExpense ?? this.isCreatingExpense,
       pendingPlaces: clearPendingPlaces ? const [] : (pendingPlaces ?? this.pendingPlaces),
+      pendingSearchUrl: clearPendingPlaces ? null : (pendingSearchUrl ?? this.pendingSearchUrl),
     );
   }
 }
@@ -246,6 +250,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         isSending: false,
         pendingExpense: aiResponse.expense,
         pendingPlaces: aiResponse.places,
+        pendingSearchUrl: aiResponse.searchUrl,
       );
 
       // Generate AI title after first message exchange (user + assistant)
