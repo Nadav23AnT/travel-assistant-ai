@@ -1,9 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenshot_blocker/flutter_screenshot_blocker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -51,6 +52,12 @@ Future<void> main() async {
   // Initialize notification service (mobile only)
   if (!kIsWeb) {
     await NotificationService().initialize();
+  }
+
+  // Enable screenshot blocking for security (mobile only)
+  // This prevents screenshots and screen recording to protect user data
+  if (!kIsWeb) {
+    await FlutterScreenshotBlocker().enableScreenshotBlocker();
   }
 
   runApp(

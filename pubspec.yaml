@@ -91,6 +91,9 @@ dependencies:
   printing: ^5.13.3
   http: ^1.2.2
 
+  # Security - Screenshot Prevention
+  flutter_screenshot_blocker: ^1.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
