@@ -67,7 +67,9 @@ Future<void> main() async {
   if (!kIsWeb) {
     app = SecureApp(
       enableScreenshotBlocking: true,
-      showSecurityWarning: false,
+      showSecurityWarning: true,
+      securityWarningMessage:
+          'Your privacy matters! Screenshots and screen recording are disabled to keep your travel plans and expenses safe. 🔒',
       child: app,
     );
   }
