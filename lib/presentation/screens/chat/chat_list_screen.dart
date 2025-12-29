@@ -682,9 +682,10 @@ class _ChatCardState extends State<_ChatCard> {
               ),
               child: Row(
                 children: [
-                  // Avatar - Flag or Icon
+                  // Avatar - Flag with subject badge, or subject icon
                   _ChatAvatar(
                     flagEmoji: hasFlag ? widget.session.tripFlagEmoji : null,
+                    subject: widget.session.subject,
                     isDark: widget.isDark,
                   ),
                   const SizedBox(width: 14),
@@ -802,75 +803,122 @@ class _ChatCardState extends State<_ChatCard> {
   }
 }
 
-/// Chat avatar showing country flag or default icon
+/// Chat avatar showing country flag with subject badge, or subject icon
 class _ChatAvatar extends StatelessWidget {
   final String? flagEmoji;
+  final ChatSubject subject;
   final bool isDark;
 
   const _ChatAvatar({
     this.flagEmoji,
+    required this.subject,
     required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    // If there's a flag, show flag with small subject badge
     if (flagEmoji != null && flagEmoji!.isNotEmpty) {
-      return Container(
+      return SizedBox(
         width: 52,
         height: 52,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          color: isDark
-              ? Colors.white.withAlpha(15)
-              : Colors.white.withAlpha(200),
-          border: Border.all(
-            width: 1.5,
-            color: isDark
-                ? Colors.white.withAlpha(20)
-                : Colors.black.withAlpha(10),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? const Color(0x30000000)
-                  : const Color(0x10000000),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+        child: Stack(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: isDark
+                    ? Colors.white.withAlpha(15)
+                    : Colors.white.withAlpha(200),
+                border: Border.all(
+                  width: 1.5,
+                  color: isDark
+                      ? Colors.white.withAlpha(20)
+                      : Colors.black.withAlpha(10),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? const Color(0x30000000)
+                        : const Color(0x10000000),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  flagEmoji!,
+                  style: const TextStyle(fontSize: 28),
+                ),
+              ),
+            ),
+            // Subject badge in bottom-right corner
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: subject.color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF1A1F2E) : Colors.white,
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: subject.color.withAlpha(100),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  subject.icon,
+                  size: 10,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ],
-        ),
-        child: Center(
-          child: Text(
-            flagEmoji!,
-            style: const TextStyle(fontSize: 28),
-          ),
         ),
       );
     }
 
-    // Default modern placeholder icon
+    // No flag - show subject icon as main avatar with gradient
     return Container(
       width: 52,
       height: 52,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        gradient: LiquidGlassColors.mintGradient,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            subject.color,
+            subject.color.withAlpha(180),
+          ],
+        ),
         boxShadow: isDark
             ? LiquidGlassColors.neonGlow(
-                LiquidGlassColors.mintEmerald,
+                subject.color,
                 intensity: 0.25,
                 blur: 12,
               )
             : [
                 BoxShadow(
-                  color: LiquidGlassColors.mintEmerald.withAlpha(51),
+                  color: subject.color.withAlpha(51),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
               ],
       ),
-      child: const Icon(
-        Icons.auto_awesome_rounded,
+      child: Icon(
+        subject.icon,
         color: Colors.white,
         size: 24,
       ),

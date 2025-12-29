@@ -1,4 +1,76 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
+
+import '../../core/design/tokens/liquid_glass_colors.dart';
+
+/// Chat subject types for categorizing conversations
+enum ChatSubject {
+  day,
+  expense,
+  activity,
+  journal,
+  general;
+
+  /// Display name for the subject
+  String get displayName {
+    switch (this) {
+      case ChatSubject.day:
+        return 'Tell About Day';
+      case ChatSubject.expense:
+        return 'Expense Tracking';
+      case ChatSubject.activity:
+        return 'Activity Planning';
+      case ChatSubject.journal:
+        return 'Journal Entry';
+      case ChatSubject.general:
+        return 'General Chat';
+    }
+  }
+
+  /// Icon for the subject
+  IconData get icon {
+    switch (this) {
+      case ChatSubject.day:
+        return Icons.wb_sunny_rounded;
+      case ChatSubject.expense:
+        return Icons.receipt_long_rounded;
+      case ChatSubject.activity:
+        return Icons.explore_rounded;
+      case ChatSubject.journal:
+        return Icons.auto_stories_rounded;
+      case ChatSubject.general:
+        return Icons.smart_toy_rounded;
+    }
+  }
+
+  /// Color for the subject
+  Color get color {
+    switch (this) {
+      case ChatSubject.day:
+        return LiquidGlassColors.sunsetOrange;
+      case ChatSubject.expense:
+        return LiquidGlassColors.mintEmerald;
+      case ChatSubject.activity:
+        return LiquidGlassColors.oceanSky;
+      case ChatSubject.journal:
+        return LiquidGlassColors.auroraViolet;
+      case ChatSubject.general:
+        return LiquidGlassColors.oceanTeal;
+    }
+  }
+
+  /// Parse subject from string value
+  static ChatSubject fromString(String? value) {
+    if (value == null) return ChatSubject.general;
+    try {
+      return ChatSubject.values.firstWhere(
+        (e) => e.name == value.toLowerCase(),
+      );
+    } catch (_) {
+      return ChatSubject.general;
+    }
+  }
+}
 
 /// Represents a chat session
 class ChatSession extends Equatable {
@@ -14,6 +86,7 @@ class ChatSession extends Equatable {
   final DateTime updatedAt;
   final String? tripFlagEmoji; // Optional: fetched from trip relation
   final String? tripDestination; // Optional: fetched from trip relation
+  final ChatSubject subject; // Chat subject/type
 
   const ChatSession({
     required this.id,
@@ -28,6 +101,7 @@ class ChatSession extends Equatable {
     required this.updatedAt,
     this.tripFlagEmoji,
     this.tripDestination,
+    this.subject = ChatSubject.general,
   });
 
   factory ChatSession.fromJson(Map<String, dynamic> json) {
@@ -53,6 +127,7 @@ class ChatSession extends Equatable {
       updatedAt: DateTime.parse(json['updated_at'] as String),
       tripFlagEmoji: flagEmoji,
       tripDestination: destination,
+      subject: ChatSubject.fromString(json['subject'] as String?),
     );
   }
 
@@ -68,6 +143,7 @@ class ChatSession extends Equatable {
       'is_active': isActive,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'subject': subject.name,
     };
   }
 
@@ -84,6 +160,7 @@ class ChatSession extends Equatable {
     DateTime? updatedAt,
     String? tripFlagEmoji,
     String? tripDestination,
+    ChatSubject? subject,
   }) {
     return ChatSession(
       id: id ?? this.id,
@@ -98,11 +175,12 @@ class ChatSession extends Equatable {
       updatedAt: updatedAt ?? this.updatedAt,
       tripFlagEmoji: tripFlagEmoji ?? this.tripFlagEmoji,
       tripDestination: tripDestination ?? this.tripDestination,
+      subject: subject ?? this.subject,
     );
   }
 
   @override
-  List<Object?> get props => [id, userId, tripId, title, isActive];
+  List<Object?> get props => [id, userId, tripId, title, isActive, subject];
 }
 
 /// Represents a chat message

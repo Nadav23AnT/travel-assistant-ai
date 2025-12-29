@@ -613,6 +613,21 @@ class AppLocalizationsAr extends AppLocalizations {
       'ابدأ محادثة مع رفيق السفر AI الخاص بك لتخطيط الرحلات، والحصول على التوصيات، والمزيد!';
 
   @override
+  String get chatSubjectDay => 'Tell About Day';
+
+  @override
+  String get chatSubjectExpense => 'Expense Tracking';
+
+  @override
+  String get chatSubjectActivity => 'Activity Planning';
+
+  @override
+  String get chatSubjectJournal => 'Journal Entry';
+
+  @override
+  String get chatSubjectGeneral => 'General Chat';
+
+  @override
   String get retry => 'إعادة المحاولة';
 
   @override

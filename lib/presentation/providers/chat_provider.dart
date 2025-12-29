@@ -253,9 +253,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
         pendingSearchUrl: aiResponse.searchUrl,
       );
 
-      // Generate AI title after first message exchange (user + assistant)
+      // Generate AI title and detect subject after first message exchange (user + assistant)
       if (state.messages.length == 2) {
         _generateAndUpdateTitle(sessionId, content, aiResponse.message);
+        _detectAndUpdateSubject(sessionId, content);
       }
     } catch (e) {
       state = state.copyWith(isSending: false, error: e.toString());
@@ -296,6 +297,35 @@ class ChatNotifier extends StateNotifier<ChatState> {
     } catch (e) {
       // Silently fail - title generation is not critical
       // debugPrint('Failed to generate chat title: $e');
+    }
+  }
+
+  /// Detect and update chat subject using AI (runs in background)
+  Future<void> _detectAndUpdateSubject(
+    String sessionId,
+    String firstMessage,
+  ) async {
+    try {
+      // Get travel context for additional context
+      final travelContext = _ref.read(currentTravelContextProvider);
+
+      final subject = await _aiService.detectChatSubject(
+        firstMessage: firstMessage,
+        context: travelContext,
+      );
+
+      await _repository.updateSessionSubject(sessionId, subject);
+
+      if (state.session?.id == sessionId) {
+        state = state.copyWith(
+          session: state.session!.copyWith(subject: subject),
+        );
+      }
+
+      _ref.invalidate(chatSessionsProvider);
+    } catch (e) {
+      // Silently fail - subject detection is not critical
+      // debugPrint('Failed to detect chat subject: $e');
     }
   }
 

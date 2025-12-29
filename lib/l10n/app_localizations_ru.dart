@@ -619,6 +619,21 @@ class AppLocalizationsRu extends AppLocalizations {
       'Начните разговор с вашим AI спутником, чтобы планировать поездки, получать рекомендации и многое другое!';
 
   @override
+  String get chatSubjectDay => 'Tell About Day';
+
+  @override
+  String get chatSubjectExpense => 'Expense Tracking';
+
+  @override
+  String get chatSubjectActivity => 'Activity Planning';
+
+  @override
+  String get chatSubjectJournal => 'Journal Entry';
+
+  @override
+  String get chatSubjectGeneral => 'General Chat';
+
+  @override
   String get retry => 'Повторить';
 
   @override
