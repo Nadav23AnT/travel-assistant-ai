@@ -9,6 +9,7 @@ import '../../providers/support_provider.dart';
 enum AdminNavItem {
   dashboard('Dashboard', Icons.dashboard_outlined, Icons.dashboard, '/admin'),
   users('Users', Icons.people_outline, Icons.people, '/admin/users'),
+  broadcasts('Broadcasts', Icons.campaign_outlined, Icons.campaign, '/admin/broadcasts'),
   support('Support', Icons.support_agent_outlined, Icons.support_agent, '/admin/support');
 
   final String label;
