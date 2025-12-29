@@ -2313,6 +2313,12 @@ CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
 - [x] Push notifications for support replies ✅
 - [x] Email notifications for ticket updates ✅
 
+**App Security Features**
+- [x] Screenshot blocking (prevents screenshots and screen recording) ✅
+  - Uses `flutter_screenshot_blocker` package
+  - Enabled on app startup for Android and iOS
+  - Protects sensitive user data (trips, expenses, personal info)
+
 **Cyber Security Enhancements (AI-Powered)**
 - [ ] Integrate dedicated security AI agent for threat analysis
 - [ ] Automated vulnerability scanning of codebase

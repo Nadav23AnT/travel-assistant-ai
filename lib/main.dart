@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenshot_blocker/flutter_screenshot_blocker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -53,12 +54,25 @@ Future<void> main() async {
     await NotificationService().initialize();
   }
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
-      ],
-      child: const TripBuddyApp(),
-    ),
+  // Build the app widget
+  Widget app = ProviderScope(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+    ],
+    child: const TripBuddyApp(),
   );
+
+  // Wrap with SecureApp for screenshot blocking (mobile only)
+  // This prevents screenshots and screen recording to protect user data
+  if (!kIsWeb) {
+    app = SecureApp(
+      enableScreenshotBlocking: true,
+      showSecurityWarning: true,
+      securityWarningMessage:
+          'Your privacy matters! Screenshots and screen recording are disabled to keep your travel plans and expenses safe. 🔒',
+      child: app,
+    );
+  }
+
+  runApp(app);
 }
