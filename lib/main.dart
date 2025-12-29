@@ -57,7 +57,7 @@ Future<void> main() async {
   // Enable screenshot blocking for security (mobile only)
   // This prevents screenshots and screen recording to protect user data
   if (!kIsWeb) {
-    await FlutterScreenshotBlocker().enableScreenshotBlocker();
+    await FlutterScreenshotBlocker.enableScreenshotBlocking();
   }
 
   runApp(
