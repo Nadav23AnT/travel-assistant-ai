@@ -1,5 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -54,18 +54,23 @@ Future<void> main() async {
     await NotificationService().initialize();
   }
 
-  // Enable screenshot blocking for security (mobile only)
+  // Build the app widget
+  Widget app = ProviderScope(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+    ],
+    child: const TripBuddyApp(),
+  );
+
+  // Wrap with SecureApp for screenshot blocking (mobile only)
   // This prevents screenshots and screen recording to protect user data
   if (!kIsWeb) {
-    await FlutterScreenshotBlocker.enableScreenshotBlocking();
+    app = SecureApp(
+      enableScreenshotBlocking: true,
+      showSecurityWarning: false,
+      child: app,
+    );
   }
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
-      ],
-      child: const TripBuddyApp(),
-    ),
-  );
+  runApp(app);
 }
