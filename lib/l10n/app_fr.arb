@@ -219,5 +219,9 @@
   "failedToSignOut": "Echec de la deconnexion",
   "notSignedIn": "Non connecte",
   "traveler": "Voyageur",
-  "memberSince": "Membre depuis {date}"
+  "memberSince": "Membre depuis {date}",
+  "searchChats": "Rechercher des chats...",
+  "noChatsFound": "Aucun chat trouvé",
+  "noChatsMatchingSearch": "Aucun chat correspondant à \"{query}\"",
+  "clearSearch": "Effacer la recherche"
 }

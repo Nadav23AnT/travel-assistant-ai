@@ -219,5 +219,9 @@
   "failedToSignOut": "Abmeldung fehlgeschlagen",
   "notSignedIn": "Nicht angemeldet",
   "traveler": "Reisender",
-  "memberSince": "Mitglied seit {date}"
+  "memberSince": "Mitglied seit {date}",
+  "searchChats": "Chats durchsuchen...",
+  "noChatsFound": "Keine Chats gefunden",
+  "noChatsMatchingSearch": "Keine Chats gefunden für \"{query}\"",
+  "clearSearch": "Suche löschen"
 }

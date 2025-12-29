@@ -17,8 +17,51 @@ class ChatListScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatListScreen> createState() => _ChatListScreenState();
 }
 
-class _ChatListScreenState extends ConsumerState<ChatListScreen> {
+class _ChatListScreenState extends ConsumerState<ChatListScreen>
+    with SingleTickerProviderStateMixin {
   final Set<String> _pinnedChats = {};
+
+  // Search state
+  bool _isSearchExpanded = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  // Animation controller for smooth expand/collapse
+  late AnimationController _searchAnimationController;
+  late Animation<double> _searchWidthAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _searchWidthAnimation = CurvedAnimation(
+      parent: _searchAnimationController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchAnimationController.dispose();
+    super.dispose();
+  }
+
+  /// Filter sessions by search query (title and destination)
+  List<ChatSession> _getFilteredSessions(List<ChatSession> sessions) {
+    if (_searchQuery.isEmpty) {
+      return sessions;
+    }
+    return sessions.where((session) {
+      final title = session.title.toLowerCase();
+      final destination = session.tripDestination?.toLowerCase() ?? '';
+      final query = _searchQuery.toLowerCase();
+      return title.contains(query) || destination.contains(query);
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,15 +92,31 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 ),
               ),
               actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GlowingIconButton(
-                    icon: Icons.search_rounded,
-                    onPressed: () {
-                      // TODO: Implement search
-                    },
-                    size: 40,
-                  ),
+                _ExpandableSearchBar(
+                  isExpanded: _isSearchExpanded,
+                  animation: _searchWidthAnimation,
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() => _searchQuery = value);
+                  },
+                  onToggle: () {
+                    setState(() {
+                      _isSearchExpanded = !_isSearchExpanded;
+                      if (_isSearchExpanded) {
+                        _searchAnimationController.forward();
+                      } else {
+                        _searchAnimationController.reverse();
+                        _searchController.clear();
+                        _searchQuery = '';
+                      }
+                    });
+                    HapticFeedback.lightImpact();
+                  },
+                  onClear: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                  isDark: isDark,
                 ),
               ],
             ),
@@ -79,7 +138,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               if (sessions.isEmpty) {
                 return _buildEmptyState(context, isDark);
               }
-              return _buildSessionsList(context, ref, sessions, isDark);
+              // Apply search filter
+              final filteredSessions = _getFilteredSessions(sessions);
+              if (filteredSessions.isEmpty && _searchQuery.isNotEmpty) {
+                return _buildNoSearchResultsState(context, isDark);
+              }
+              return _buildSessionsList(context, ref, filteredSessions, isDark);
             },
           ),
           // Floating New Chat Button - positioned above the nav bar
@@ -385,6 +449,180 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildNoSearchResultsState(BuildContext context, bool isDark) {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: GlassCard(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: LiquidGlassColors.categoryOther.withAlpha(26),
+                ),
+                child: const Icon(
+                  Icons.search_off_rounded,
+                  size: 40,
+                  color: LiquidGlassColors.categoryOther,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l10n.noChatsFound,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.noChatsMatchingSearch(_searchQuery),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              GhostButton(
+                label: l10n.clearSearch,
+                icon: Icons.clear_rounded,
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    _searchQuery = '';
+                    _isSearchExpanded = false;
+                  });
+                  _searchAnimationController.reverse();
+                },
+                width: 160,
+                height: 44,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Expandable search bar for the AppBar
+class _ExpandableSearchBar extends StatelessWidget {
+  final bool isExpanded;
+  final Animation<double> animation;
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onToggle;
+  final VoidCallback onClear;
+  final bool isDark;
+
+  const _ExpandableSearchBar({
+    required this.isExpanded,
+    required this.animation,
+    required this.controller,
+    required this.onChanged,
+    required this.onToggle,
+    required this.onClear,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final width = 40.0 + (animation.value * 200.0); // 40 -> 240
+
+        return Container(
+          width: width,
+          height: 40,
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: isDark
+                ? Colors.white.withAlpha(20)
+                : Colors.white.withAlpha(179),
+            border: Border.all(
+              color: animation.value > 0
+                  ? LiquidGlassColors.auroraIndigo.withAlpha(128)
+                  : (isDark
+                      ? Colors.white.withAlpha(31)
+                      : Colors.black.withAlpha(10)),
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              // Search/Close icon button
+              GestureDetector(
+                onTap: onToggle,
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(
+                    isExpanded ? Icons.close_rounded : Icons.search_rounded,
+                    size: 18,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+              // Text field (expands with animation)
+              if (animation.value > 0.3)
+                Expanded(
+                  child: Opacity(
+                    opacity: ((animation.value - 0.3) / 0.7).clamp(0.0, 1.0),
+                    child: TextField(
+                      controller: controller,
+                      onChanged: onChanged,
+                      autofocus: isExpanded,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: l10n.searchChats,
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.white54 : Colors.black45,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ),
+              // Clear button (when there's text)
+              if (animation.value > 0.8 && controller.text.isNotEmpty)
+                GestureDetector(
+                  onTap: onClear,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    margin: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      Icons.clear_rounded,
+                      size: 16,
+                      color: isDark ? Colors.white54 : Colors.black45,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

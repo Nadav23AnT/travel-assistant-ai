@@ -1197,4 +1197,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get maybeLater => 'Maybe later';
+
+  @override
+  String get searchChats => 'البحث في المحادثات...';
+
+  @override
+  String get noChatsFound => 'لم يتم العثور على محادثات';
+
+  @override
+  String noChatsMatchingSearch(String query) {
+    return 'لا توجد محادثات مطابقة لـ \"$query\"';
+  }
+
+  @override
+  String get clearSearch => 'مسح البحث';
 }

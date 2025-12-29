@@ -1202,4 +1202,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maybeLater => 'Maybe later';
+
+  @override
+  String get searchChats => 'Search chats...';
+
+  @override
+  String get noChatsFound => 'No chats found';
+
+  @override
+  String noChatsMatchingSearch(String query) {
+    return 'No chats matching \"$query\"';
+  }
+
+  @override
+  String get clearSearch => 'Clear search';
 }

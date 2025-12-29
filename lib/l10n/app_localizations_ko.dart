@@ -1190,4 +1190,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get maybeLater => 'Maybe later';
+
+  @override
+  String get searchChats => '채팅 검색...';
+
+  @override
+  String get noChatsFound => '채팅을 찾을 수 없습니다';
+
+  @override
+  String noChatsMatchingSearch(String query) {
+    return '\"$query\"와 일치하는 채팅이 없습니다';
+  }
+
+  @override
+  String get clearSearch => '검색 지우기';
 }

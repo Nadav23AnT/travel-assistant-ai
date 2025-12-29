@@ -219,5 +219,9 @@
   "failedToSignOut": "Disconnessione fallita",
   "notSignedIn": "Non connesso",
   "traveler": "Viaggiatore",
-  "memberSince": "Membro dal {date}"
+  "memberSince": "Membro dal {date}",
+  "searchChats": "Cerca chat...",
+  "noChatsFound": "Nessuna chat trovata",
+  "noChatsMatchingSearch": "Nessuna chat corrispondente a \"{query}\"",
+  "clearSearch": "Cancella ricerca"
 }

@@ -2361,6 +2361,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Maybe later'**
   String get maybeLater;
+
+  /// Search chats placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats...'**
+  String get searchChats;
+
+  /// Message when search has no results
+  ///
+  /// In en, this message translates to:
+  /// **'No chats found'**
+  String get noChatsFound;
+
+  /// Message when search has no results with query
+  ///
+  /// In en, this message translates to:
+  /// **'No chats matching \"{query}\"'**
+  String noChatsMatchingSearch(String query);
+
+  /// Clear search button label
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
 }
 
 class _AppLocalizationsDelegate

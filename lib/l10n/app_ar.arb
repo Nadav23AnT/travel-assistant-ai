@@ -219,5 +219,9 @@
   "failedToSignOut": "فشل تسجيل الخروج",
   "notSignedIn": "غير مسجل الدخول",
   "traveler": "مسافر",
-  "memberSince": "عضو منذ {date}"
+  "memberSince": "عضو منذ {date}",
+  "searchChats": "البحث في المحادثات...",
+  "noChatsFound": "لم يتم العثور على محادثات",
+  "noChatsMatchingSearch": "لا توجد محادثات مطابقة لـ \"{query}\"",
+  "clearSearch": "مسح البحث"
 }

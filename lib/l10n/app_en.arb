@@ -1610,5 +1610,27 @@
   "maybeLater": "Maybe later",
   "@maybeLater": {
     "description": "Secondary dismiss link on welcome banner"
+  },
+
+  "searchChats": "Search chats...",
+  "@searchChats": {
+    "description": "Search chats placeholder"
+  },
+  "noChatsFound": "No chats found",
+  "@noChatsFound": {
+    "description": "Message when search has no results"
+  },
+  "noChatsMatchingSearch": "No chats matching \"{query}\"",
+  "@noChatsMatchingSearch": {
+    "description": "Message when search has no results with query",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "clearSearch": "Clear search",
+  "@clearSearch": {
+    "description": "Clear search button label"
   }
 }
