@@ -1207,4 +1207,18 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get maybeLater => 'אולי אחר כך';
+
+  @override
+  String get searchChats => 'חיפוש צ\'אטים...';
+
+  @override
+  String get noChatsFound => 'לא נמצאו צ\'אטים';
+
+  @override
+  String noChatsMatchingSearch(String query) {
+    return 'לא נמצאו צ\'אטים התואמים \"$query\"';
+  }
+
+  @override
+  String get clearSearch => 'נקה חיפוש';
 }

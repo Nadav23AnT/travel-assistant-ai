@@ -219,5 +219,9 @@
   "failedToSignOut": "로그아웃 실패",
   "notSignedIn": "로그인되지 않음",
   "traveler": "여행자",
-  "memberSince": "{date}부터 회원"
+  "memberSince": "{date}부터 회원",
+  "searchChats": "채팅 검색...",
+  "noChatsFound": "채팅을 찾을 수 없습니다",
+  "noChatsMatchingSearch": "\"{query}\"와 일치하는 채팅이 없습니다",
+  "clearSearch": "검색 지우기"
 }

@@ -219,5 +219,9 @@
   "failedToSignOut": "退出登录失败",
   "notSignedIn": "未登录",
   "traveler": "旅行者",
-  "memberSince": "会员自 {date}"
+  "memberSince": "会员自 {date}",
+  "searchChats": "搜索聊天...",
+  "noChatsFound": "未找到聊天",
+  "noChatsMatchingSearch": "未找到与\"{query}\"匹配的聊天",
+  "clearSearch": "清除搜索"
 }

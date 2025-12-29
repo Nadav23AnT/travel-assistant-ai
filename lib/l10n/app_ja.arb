@@ -219,5 +219,9 @@
   "failedToSignOut": "サインアウトに失敗しました",
   "notSignedIn": "サインインしていません",
   "traveler": "旅行者",
-  "memberSince": "{date}から会員"
+  "memberSince": "{date}から会員",
+  "searchChats": "チャットを検索...",
+  "noChatsFound": "チャットが見つかりません",
+  "noChatsMatchingSearch": "「{query}」に一致するチャットはありません",
+  "clearSearch": "検索をクリア"
 }

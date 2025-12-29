@@ -301,5 +301,9 @@
   "welcomeBackExplorer": "!ברוך שובך, חוקר",
   "journeyStartsHere": "המסע שלך מתחיל כאן",
   "startExploring": "התחל לחקור",
-  "maybeLater": "אולי אחר כך"
+  "maybeLater": "אולי אחר כך",
+  "searchChats": "חיפוש צ'אטים...",
+  "noChatsFound": "לא נמצאו צ'אטים",
+  "noChatsMatchingSearch": "לא נמצאו צ'אטים התואמים \"{query}\"",
+  "clearSearch": "נקה חיפוש"
 }

@@ -219,5 +219,9 @@
   "failedToSignOut": "Error al cerrar sesion",
   "notSignedIn": "No has iniciado sesion",
   "traveler": "Viajero",
-  "memberSince": "Miembro desde {date}"
+  "memberSince": "Miembro desde {date}",
+  "searchChats": "Buscar chats...",
+  "noChatsFound": "No se encontraron chats",
+  "noChatsMatchingSearch": "No se encontraron chats para \"{query}\"",
+  "clearSearch": "Borrar búsqueda"
 }

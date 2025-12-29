@@ -1202,4 +1202,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get maybeLater => 'Maybe later';
+
+  @override
+  String get searchChats => '搜索聊天...';
+
+  @override
+  String get noChatsFound => '未找到聊天';
+
+  @override
+  String noChatsMatchingSearch(String query) {
+    return '未找到与\"$query\"匹配的聊天';
+  }
+
+  @override
+  String get clearSearch => '清除搜索';
 }

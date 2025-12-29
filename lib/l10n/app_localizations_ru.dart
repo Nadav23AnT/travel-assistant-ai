@@ -1219,4 +1219,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get maybeLater => 'Maybe later';
+
+  @override
+  String get searchChats => 'Поиск чатов...';
+
+  @override
+  String get noChatsFound => 'Чаты не найдены';
+
+  @override
+  String noChatsMatchingSearch(String query) {
+    return 'Не найдено чатов для \"$query\"';
+  }
+
+  @override
+  String get clearSearch => 'Очистить поиск';
 }

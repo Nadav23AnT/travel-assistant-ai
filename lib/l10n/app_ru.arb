@@ -221,5 +221,9 @@
   "failedToSignOut": "Не удалось выйти",
   "notSignedIn": "Не авторизован",
   "traveler": "Путешественник",
-  "memberSince": "Участник с {date}"
+  "memberSince": "Участник с {date}",
+  "searchChats": "Поиск чатов...",
+  "noChatsFound": "Чаты не найдены",
+  "noChatsMatchingSearch": "Не найдено чатов для \"{query}\"",
+  "clearSearch": "Очистить поиск"
 }

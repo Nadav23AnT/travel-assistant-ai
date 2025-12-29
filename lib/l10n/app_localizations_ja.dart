@@ -1204,4 +1204,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get maybeLater => 'Maybe later';
+
+  @override
+  String get searchChats => 'チャットを検索...';
+
+  @override
+  String get noChatsFound => 'チャットが見つかりません';
+
+  @override
+  String noChatsMatchingSearch(String query) {
+    return '「$query」に一致するチャットはありません';
+  }
+
+  @override
+  String get clearSearch => '検索をクリア';
 }
