@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/design/tokens/colors.dart';
+import '../../core/design/tokens/liquid_glass_colors.dart';
 
 /// Chat subject types for categorizing conversations
 enum ChatSubject {
