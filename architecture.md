@@ -1,7 +1,7 @@
 # Waylo - Architecture & Specification
 
-**Version:** 1.13.0
-**Last Updated:** December 3, 2025
+**Version:** 1.14.0
+**Last Updated:** December 29, 2025
 **Related:** See `claude.md` for development workflow and coding standards.
 
 ---
@@ -2174,7 +2174,7 @@ REVENUECAT_API_KEY=...
 - [ ] Premium subscription flow (RevenueCat)
 - [x] Error handling improvements ✅
 - [x] Performance optimization ✅
-- [ ] Expense splitting and settlements
+- [x] Expense splitting and settlements ✅
 - [ ] App store submission (iOS & Android)
 
 ### Sprint 7: Admin Dashboard - COMPLETED
@@ -2198,6 +2198,32 @@ REVENUECAT_API_KEY=...
   - Status updates (open, in_progress, resolved, closed)
 - [x] SECURITY DEFINER PostgreSQL functions (bypass RLS for admin)
 - [x] fl_chart integration for dashboard visualizations
+
+### Sprint 8: Expense Splitting & Notifications - COMPLETED
+- [x] **Expense Splitting (Group Trips):**
+  - Full expense splitting implementation for shared trips
+  - Balance calculations per trip member
+  - Settlement tracking (mark as paid)
+  - Settlement summary screen with user names
+  - Improved settlement UX and user name display
+- [x] **Push Notifications Infrastructure:**
+  - Firebase configuration for Android (`com.waylo.app`) and iOS
+  - Notification settings UI with all toggles and time pickers
+  - FCM token management and local notifications
+  - `send-push-notification` Edge Function
+  - pg_cron scheduled notifications (trip reminders, daily summaries)
+  - Support ticket push/email notifications
+- [x] **AI Chat Improvements:**
+  - 5 place recommendations with "See more on Google Maps" link
+  - Improved place recommendation triggers and examples
+  - Optimized AI system prompts for better UX
+  - Realistic budget recommendations (2024-2025 values)
+- [x] **UI/UX Enhancements:**
+  - Settings redesign with glassmorphism UI
+  - Welcome banner redesign with premium animations
+  - Expenses page redesign with compact budget-focused layout
+  - ComingSoonOverlay widget for MVP feature blocking
+  - Unimplemented notification settings marked as "Coming Soon"
 
 ---
 
@@ -2284,8 +2310,8 @@ CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
 - [x] Ticket status tracking (open, in_progress, resolved, closed)
 - [x] Admin support dashboard (manage all tickets)
 - [x] Add support access from Profile screen menu
-- [ ] Push notifications for support replies
-- [ ] Email notifications for ticket updates
+- [x] Push notifications for support replies ✅
+- [x] Email notifications for ticket updates ✅
 
 **Cyber Security Enhancements (AI-Powered)**
 - [ ] Integrate dedicated security AI agent for threat analysis
@@ -2451,12 +2477,15 @@ CREATE POLICY "Trip owners can manage invitations" ON trip_invitations
 - Edge Function (`send-push-notification` deployed)
 - `FCM_SERVICE_ACCOUNT` secret configured
 - Provider and Repository for settings persistence
+- Firebase configuration for Android (`com.waylo.app`) and iOS
+- Scheduled notifications (pg_cron jobs) - Trip reminders, daily summaries
+- Support system push notifications (ticket replies)
+- Support system email notifications
+- ComingSoonOverlay widget for unimplemented notification types
 
 **REMAINING:**
-- Scheduled notifications (pg_cron jobs)
-- Event-driven notifications (database triggers)
 - Weather warnings (external API integration)
-- Email notifications (transactional email service)
+- Some notification triggers marked as "Coming Soon" in UI
 
 ### Phase 7: Scheduled Notifications (pg_cron)
 
