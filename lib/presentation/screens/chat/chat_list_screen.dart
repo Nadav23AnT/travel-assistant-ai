@@ -543,83 +543,105 @@ class _ExpandableSearchBar extends StatelessWidget {
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
-        final width = 40.0 + (animation.value * 200.0); // 40 -> 240
+        final width = 40.0 + (animation.value * 160.0); // 40 -> 200
 
-        return Container(
-          width: width,
-          height: 40,
-          margin: const EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: isDark
-                ? Colors.white.withAlpha(20)
-                : Colors.white.withAlpha(179),
-            border: Border.all(
-              color: animation.value > 0
-                  ? LiquidGlassColors.auroraIndigo.withAlpha(128)
-                  : (isDark
-                      ? Colors.white.withAlpha(31)
-                      : Colors.black.withAlpha(10)),
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            children: [
-              // Search/Close icon button
-              GestureDetector(
-                onTap: onToggle,
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Icon(
-                    isExpanded ? Icons.close_rounded : Icons.search_rounded,
-                    size: 18,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            width: width,
+            height: 40,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: isDark
+                  ? Colors.white.withAlpha(20)
+                  : Colors.white.withAlpha(179),
+              border: Border.all(
+                color: animation.value > 0
+                    ? LiquidGlassColors.auroraIndigo.withAlpha(128)
+                    : (isDark
+                        ? Colors.white.withAlpha(31)
+                        : Colors.black.withAlpha(10)),
+                width: 1.5,
               ),
-              // Text field (expands with animation)
-              if (animation.value > 0.3)
-                Expanded(
-                  child: Opacity(
-                    opacity: ((animation.value - 0.3) / 0.7).clamp(0.0, 1.0),
-                    child: TextField(
-                      controller: controller,
-                      onChanged: onChanged,
-                      autofocus: isExpanded,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: l10n.searchChats,
-                        hintStyle: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.white54 : Colors.black45,
+            ),
+            child: Stack(
+              children: [
+                // Search/Close icon button - always visible
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: onToggle,
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Center(
+                        child: Icon(
+                          isExpanded ? Icons.close_rounded : Icons.search_rounded,
+                          size: 18,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
                       ),
                     ),
                   ),
                 ),
-              // Clear button (when there's text)
-              if (animation.value > 0.8 && controller.text.isNotEmpty)
-                GestureDetector(
-                  onTap: onClear,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    margin: const EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.clear_rounded,
-                      size: 16,
-                      color: isDark ? Colors.white54 : Colors.black45,
+                // Text field - positioned after icon
+                if (animation.value > 0.3)
+                  Positioned(
+                    left: 40,
+                    top: 0,
+                    bottom: 0,
+                    right: controller.text.isNotEmpty ? 32 : 8,
+                    child: Opacity(
+                      opacity: ((animation.value - 0.3) / 0.7).clamp(0.0, 1.0),
+                      child: Center(
+                        child: TextField(
+                          controller: controller,
+                          onChanged: onChanged,
+                          autofocus: isExpanded,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: l10n.searchChats,
+                            hintStyle: TextStyle(
+                              fontSize: 14,
+                              color: isDark ? Colors.white54 : Colors.black45,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            isDense: true,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-            ],
+                // Clear button (when there's text)
+                if (animation.value > 0.8 && controller.text.isNotEmpty)
+                  Positioned(
+                    right: 4,
+                    top: 0,
+                    bottom: 0,
+                    child: GestureDetector(
+                      onTap: onClear,
+                      child: SizedBox(
+                        width: 28,
+                        height: 40,
+                        child: Center(
+                          child: Icon(
+                            Icons.clear_rounded,
+                            size: 16,
+                            color: isDark ? Colors.white54 : Colors.black45,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
       },
