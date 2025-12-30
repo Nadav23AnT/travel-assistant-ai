@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/trip_model.dart';
 
@@ -192,9 +193,9 @@ class _PremiumTripCardState extends State<PremiumTripCard>
               ),
             ),
           ),
-          // Flag emoji as decorative element - using PositionedDirectional for RTL support
-          PositionedDirectional(
-            end: 20,
+          // Flag emoji as decorative element - always on visual right
+          Positioned(
+            right: 20,
             top: 20,
             child: Container(
               padding: const EdgeInsets.all(8),
@@ -455,6 +456,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
 
   Widget _buildViewButton() {
     final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
@@ -472,7 +474,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'View',
+            l10n.tripCardView,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -492,6 +494,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
   }
 
   Widget _buildInfoSection(bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     final spent = widget.totalSpent ?? 0;
     final budget = widget.trip.budget ?? 0;
     final days = widget.trip.durationDays ?? 0;
@@ -505,7 +508,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
           _buildInfoItem(
             icon: Icons.schedule_rounded,
             value: days > 0 ? '$days' : '--',
-            label: 'Days',
+            label: l10n.days,
             color: const Color(0xFF3B82F6),
             isDark: isDark,
           ),
@@ -516,7 +519,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
           _buildInfoItem(
             icon: Icons.account_balance_wallet_rounded,
             value: '${widget.trip.currencySymbol}${spent.toStringAsFixed(0)}',
-            label: budget > 0 ? 'of ${widget.trip.currencySymbol}${budget.toStringAsFixed(0)}' : 'Spent',
+            label: budget > 0 ? '${l10n.of_} ${widget.trip.currencySymbol}${budget.toStringAsFixed(0)}' : l10n.tripCardSpent,
             color: const Color(0xFF10B981),
             isDark: isDark,
           ),
@@ -527,7 +530,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
           _buildInfoItem(
             icon: Icons.trending_up_rounded,
             value: '${widget.trip.currencySymbol}${dailyAvg.toStringAsFixed(0)}',
-            label: 'Daily',
+            label: l10n.tripCardDaily,
             color: const Color(0xFFF59E0B),
             isDark: isDark,
           ),
@@ -538,7 +541,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
           _buildInfoItem(
             icon: Icons.flight_takeoff_rounded,
             value: _getDaysValue(),
-            label: _getDaysLabel(),
+            label: _getDaysLabel(context),
             color: const Color(0xFFEC4899),
             isDark: isDark,
           ),
@@ -706,23 +709,25 @@ class _PremiumTripCardState extends State<PremiumTripCard>
     return '--';
   }
 
-  String _getDaysLabel() {
+  String _getDaysLabel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final daysUntil = widget.trip.daysUntilStart;
-    if (daysUntil != null && daysUntil > 0) return 'Left';
-    if (widget.trip.isActive) return 'Active';
-    if (widget.trip.isCompleted) return 'Done';
-    return 'Plan';
+    if (daysUntil != null && daysUntil > 0) return l10n.tripCardLeft;
+    if (widget.trip.isActive) return l10n.tripCardActive;
+    if (widget.trip.isCompleted) return l10n.tripCardDone;
+    return l10n.tripCardPlan;
   }
 
   ({String label, Color color}) _getStatusInfo() {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.trip.isActive) {
-      return (label: 'ACTIVE', color: const Color(0xFF10B981));
+      return (label: l10n.statusActive, color: const Color(0xFF10B981));
     } else if (widget.trip.isUpcoming) {
-      return (label: 'UPCOMING', color: const Color(0xFF3B82F6));
+      return (label: l10n.statusUpcoming, color: const Color(0xFF3B82F6));
     } else if (widget.trip.isCompleted) {
-      return (label: 'COMPLETED', color: const Color(0xFF64748B));
+      return (label: l10n.statusCompleted, color: const Color(0xFF64748B));
     }
-    return (label: 'PLANNING', color: const Color(0xFFF59E0B));
+    return (label: l10n.statusPlanning, color: const Color(0xFFF59E0B));
   }
 }
 

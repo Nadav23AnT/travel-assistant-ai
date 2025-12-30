@@ -1652,5 +1652,54 @@
   "clearSearch": "Clear search",
   "@clearSearch": {
     "description": "Clear search button label"
+  },
+
+  "tripCardView": "View",
+  "@tripCardView": {
+    "description": "View button text on trip card"
+  },
+  "tripCardSpent": "Spent",
+  "@tripCardSpent": {
+    "description": "Spent label on trip card"
+  },
+  "tripCardDaily": "Daily",
+  "@tripCardDaily": {
+    "description": "Daily average label on trip card"
+  },
+  "tripCardLeft": "Left",
+  "@tripCardLeft": {
+    "description": "Days left label on trip card"
+  },
+  "tripCardActive": "Active",
+  "@tripCardActive": {
+    "description": "Active status label on trip card"
+  },
+  "tripCardDone": "Done",
+  "@tripCardDone": {
+    "description": "Done status label on trip card"
+  },
+  "tripCardPlan": "Plan",
+  "@tripCardPlan": {
+    "description": "Plan status label on trip card"
+  },
+  "statusActive": "ACTIVE",
+  "@statusActive": {
+    "description": "Active status pill text"
+  },
+  "statusUpcoming": "UPCOMING",
+  "@statusUpcoming": {
+    "description": "Upcoming status pill text"
+  },
+  "statusCompleted": "COMPLETED",
+  "@statusCompleted": {
+    "description": "Completed status pill text"
+  },
+  "statusPlanning": "PLANNING",
+  "@statusPlanning": {
+    "description": "Planning status pill text"
+  },
+  "of_": "of",
+  "@of_": {
+    "description": "Preposition 'of' for budget display"
   }
 }

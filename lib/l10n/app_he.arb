@@ -305,5 +305,17 @@
   "searchChats": "חיפוש צ'אטים...",
   "noChatsFound": "לא נמצאו צ'אטים",
   "noChatsMatchingSearch": "לא נמצאו צ'אטים התואמים \"{query}\"",
-  "clearSearch": "נקה חיפוש"
+  "clearSearch": "נקה חיפוש",
+  "tripCardView": "צפה",
+  "tripCardSpent": "הוצאות",
+  "tripCardDaily": "יומי",
+  "tripCardLeft": "נותרו",
+  "tripCardActive": "פעיל",
+  "tripCardDone": "הסתיים",
+  "tripCardPlan": "תכנון",
+  "statusActive": "פעיל",
+  "statusUpcoming": "קרוב",
+  "statusCompleted": "הושלם",
+  "statusPlanning": "בתכנון",
+  "of_": "מתוך"
 }

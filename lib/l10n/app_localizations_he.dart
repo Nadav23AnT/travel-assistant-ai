@@ -1221,4 +1221,40 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get clearSearch => 'נקה חיפוש';
+
+  @override
+  String get tripCardView => 'צפה';
+
+  @override
+  String get tripCardSpent => 'הוצאות';
+
+  @override
+  String get tripCardDaily => 'יומי';
+
+  @override
+  String get tripCardLeft => 'נותרו';
+
+  @override
+  String get tripCardActive => 'פעיל';
+
+  @override
+  String get tripCardDone => 'הסתיים';
+
+  @override
+  String get tripCardPlan => 'תכנון';
+
+  @override
+  String get statusActive => 'פעיל';
+
+  @override
+  String get statusUpcoming => 'קרוב';
+
+  @override
+  String get statusCompleted => 'הושלם';
+
+  @override
+  String get statusPlanning => 'בתכנון';
+
+  @override
+  String get of_ => 'מתוך';
 }
