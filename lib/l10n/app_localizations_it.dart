@@ -1238,6 +1238,42 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clearSearch => 'Cancella ricerca';
 
   @override
+  String get tripCardView => 'View';
+
+  @override
+  String get tripCardSpent => 'Spent';
+
+  @override
+  String get tripCardDaily => 'Daily';
+
+  @override
+  String get tripCardLeft => 'Left';
+
+  @override
+  String get tripCardActive => 'Active';
+
+  @override
+  String get tripCardDone => 'Done';
+
+  @override
+  String get tripCardPlan => 'Plan';
+
+  @override
+  String get statusActive => 'ACTIVE';
+
+  @override
+  String get statusUpcoming => 'UPCOMING';
+
+  @override
+  String get statusCompleted => 'COMPLETED';
+
+  @override
+  String get statusPlanning => 'PLANNING';
+
+  @override
+  String get of_ => 'of';
+
+  @override
   String get moreSettings => 'Altre impostazioni';
 
   @override
@@ -1247,17 +1283,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get splitExpenseLabel => 'Spesa condivisa';
 
   @override
-  String owesYou(String name) {
-    return '$name ti deve';
-  }
-
-  @override
   String get owesYouSuffix => ' ti deve ';
-
-  @override
-  String youOwe(String name) {
-    return 'Devi a $name';
-  }
 
   @override
   String get youOwePrefix => 'Devi ';

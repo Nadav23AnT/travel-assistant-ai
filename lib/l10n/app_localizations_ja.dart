@@ -1220,6 +1220,42 @@ class AppLocalizationsJa extends AppLocalizations {
   String get clearSearch => '検索をクリア';
 
   @override
+  String get tripCardView => 'View';
+
+  @override
+  String get tripCardSpent => 'Spent';
+
+  @override
+  String get tripCardDaily => 'Daily';
+
+  @override
+  String get tripCardLeft => 'Left';
+
+  @override
+  String get tripCardActive => 'Active';
+
+  @override
+  String get tripCardDone => 'Done';
+
+  @override
+  String get tripCardPlan => 'Plan';
+
+  @override
+  String get statusActive => 'ACTIVE';
+
+  @override
+  String get statusUpcoming => 'UPCOMING';
+
+  @override
+  String get statusCompleted => 'COMPLETED';
+
+  @override
+  String get statusPlanning => 'PLANNING';
+
+  @override
+  String get of_ => 'of';
+
+  @override
   String get moreSettings => '詳細設定';
 
   @override
@@ -1229,17 +1265,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get splitExpenseLabel => '割り勘';
 
   @override
-  String owesYou(String name) {
-    return '$nameがあなたに借りています';
-  }
-
-  @override
   String get owesYouSuffix => 'があなたに借りています ';
-
-  @override
-  String youOwe(String name) {
-    return 'あなたは$nameに借りています';
-  }
 
   @override
   String get youOwePrefix => 'あなたは借りています ';

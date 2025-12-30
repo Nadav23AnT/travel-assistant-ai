@@ -2416,6 +2416,78 @@ abstract class AppLocalizations {
   /// **'Clear search'**
   String get clearSearch;
 
+  /// View button text on trip card
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get tripCardView;
+
+  /// Spent label on trip card
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get tripCardSpent;
+
+  /// Daily average label on trip card
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get tripCardDaily;
+
+  /// Days left label on trip card
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get tripCardLeft;
+
+  /// Active status label on trip card
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get tripCardActive;
+
+  /// Done status label on trip card
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get tripCardDone;
+
+  /// Plan status label on trip card
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get tripCardPlan;
+
+  /// Active status pill text
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE'**
+  String get statusActive;
+
+  /// Upcoming status pill text
+  ///
+  /// In en, this message translates to:
+  /// **'UPCOMING'**
+  String get statusUpcoming;
+
+  /// Completed status pill text
+  ///
+  /// In en, this message translates to:
+  /// **'COMPLETED'**
+  String get statusCompleted;
+
+  /// Planning status pill text
+  ///
+  /// In en, this message translates to:
+  /// **'PLANNING'**
+  String get statusPlanning;
+
+  /// Preposition 'of' for budget display
+  ///
+  /// In en, this message translates to:
+  /// **'of'**
+  String get of_;
+
   /// Label for expandable settings section
   ///
   /// In en, this message translates to:
@@ -2434,23 +2506,11 @@ abstract class AppLocalizations {
   /// **'Split expense'**
   String get splitExpenseLabel;
 
-  /// Message showing someone owes you money
-  ///
-  /// In en, this message translates to:
-  /// **'{name} owes you'**
-  String owesYou(String name);
-
   /// Suffix for RichText: [Name] owes you [Amount]
   ///
   /// In en, this message translates to:
   /// **' owes you '**
   String get owesYouSuffix;
-
-  /// Message showing you owe someone money
-  ///
-  /// In en, this message translates to:
-  /// **'You owe {name}'**
-  String youOwe(String name);
 
   /// Prefix for RichText: You owe [Amount]
   ///

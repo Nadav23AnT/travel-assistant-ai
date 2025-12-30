@@ -1653,6 +1653,55 @@
   "@clearSearch": {
     "description": "Clear search button label"
   },
+
+  "tripCardView": "View",
+  "@tripCardView": {
+    "description": "View button text on trip card"
+  },
+  "tripCardSpent": "Spent",
+  "@tripCardSpent": {
+    "description": "Spent label on trip card"
+  },
+  "tripCardDaily": "Daily",
+  "@tripCardDaily": {
+    "description": "Daily average label on trip card"
+  },
+  "tripCardLeft": "Left",
+  "@tripCardLeft": {
+    "description": "Days left label on trip card"
+  },
+  "tripCardActive": "Active",
+  "@tripCardActive": {
+    "description": "Active status label on trip card"
+  },
+  "tripCardDone": "Done",
+  "@tripCardDone": {
+    "description": "Done status label on trip card"
+  },
+  "tripCardPlan": "Plan",
+  "@tripCardPlan": {
+    "description": "Plan status label on trip card"
+  },
+  "statusActive": "ACTIVE",
+  "@statusActive": {
+    "description": "Active status pill text"
+  },
+  "statusUpcoming": "UPCOMING",
+  "@statusUpcoming": {
+    "description": "Upcoming status pill text"
+  },
+  "statusCompleted": "COMPLETED",
+  "@statusCompleted": {
+    "description": "Completed status pill text"
+  },
+  "statusPlanning": "PLANNING",
+  "@statusPlanning": {
+    "description": "Planning status pill text"
+  },
+  "of_": "of",
+  "@of_": {
+    "description": "Preposition 'of' for budget display"
+  },
   "moreSettings": "More settings",
   "@moreSettings": {
     "description": "Label for expandable settings section"
@@ -1665,29 +1714,9 @@
   "@splitExpenseLabel": {
     "description": "Label for split expense indicator"
   },
-  "owesYou": "{name} owes you",
-  "@owesYou": {
-    "description": "Message showing someone owes you money",
-    "placeholders": {
-      "name": {
-        "type": "String",
-        "example": "John"
-      }
-    }
-  },
   "owesYouSuffix": " owes you ",
   "@owesYouSuffix": {
     "description": "Suffix for RichText: [Name] owes you [Amount]"
-  },
-  "youOwe": "You owe {name}",
-  "@youOwe": {
-    "description": "Message showing you owe someone money",
-    "placeholders": {
-      "name": {
-        "type": "String",
-        "example": "John"
-      }
-    }
   },
   "youOwePrefix": "You owe ",
   "@youOwePrefix": {
@@ -1697,10 +1726,7 @@
   "@plusMoreCount": {
     "description": "Shows additional count",
     "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "3"
-      }
+      "count": {"type": "int"}
     }
   },
   "spent": "Spent",
@@ -1715,20 +1741,14 @@
   "@percentOverBudget": {
     "description": "Message showing over budget percentage",
     "placeholders": {
-      "percent": {
-        "type": "int",
-        "example": "10"
-      }
+      "percent": {"type": "int"}
     }
   },
   "percentRemaining": "{percent}% remaining",
   "@percentRemaining": {
     "description": "Message showing remaining budget percentage",
     "placeholders": {
-      "percent": {
-        "type": "int",
-        "example": "50"
-      }
+      "percent": {"type": "int"}
     }
   },
   "noCategoriesYet": "No categories yet",
@@ -1743,30 +1763,21 @@
   "@expenseCountPlural": {
     "description": "Multiple expenses count",
     "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "5"
-      }
+      "count": {"type": "int"}
     }
   },
   "percentOfTotal": "{percent}% of total",
   "@percentOfTotal": {
     "description": "Percentage of total expenses",
     "placeholders": {
-      "percent": {
-        "type": "String",
-        "example": "25"
-      }
+      "percent": {"type": "String", "example": "25"}
     }
   },
   "noCategoryExpenses": "No {category} expenses",
   "@noCategoryExpenses": {
     "description": "Message when no expenses in category",
     "placeholders": {
-      "category": {
-        "type": "String",
-        "example": "food"
-      }
+      "category": {"type": "String"}
     }
   }
 }

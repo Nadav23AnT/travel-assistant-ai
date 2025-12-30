@@ -1221,6 +1221,42 @@ class AppLocalizationsKo extends AppLocalizations {
   String get clearSearch => '검색 지우기';
 
   @override
+  String get tripCardView => 'View';
+
+  @override
+  String get tripCardSpent => 'Spent';
+
+  @override
+  String get tripCardDaily => 'Daily';
+
+  @override
+  String get tripCardLeft => 'Left';
+
+  @override
+  String get tripCardActive => 'Active';
+
+  @override
+  String get tripCardDone => 'Done';
+
+  @override
+  String get tripCardPlan => 'Plan';
+
+  @override
+  String get statusActive => 'ACTIVE';
+
+  @override
+  String get statusUpcoming => 'UPCOMING';
+
+  @override
+  String get statusCompleted => 'COMPLETED';
+
+  @override
+  String get statusPlanning => 'PLANNING';
+
+  @override
+  String get of_ => 'of';
+
+  @override
   String get moreSettings => '더 많은 설정';
 
   @override
@@ -1230,17 +1266,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get splitExpenseLabel => '공동 비용';
 
   @override
-  String owesYou(String name) {
-    return '$name이(가) 당신에게 빚졌습니다';
-  }
-
-  @override
   String get owesYouSuffix => '이(가) 당신에게 빚졌습니다 ';
-
-  @override
-  String youOwe(String name) {
-    return '당신이 $name에게 빚졌습니다';
-  }
 
   @override
   String get youOwePrefix => '당신이 빚졌습니다 ';

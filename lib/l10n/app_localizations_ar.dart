@@ -1228,6 +1228,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get clearSearch => 'مسح البحث';
 
   @override
+  String get tripCardView => 'View';
+
+  @override
+  String get tripCardSpent => 'Spent';
+
+  @override
+  String get tripCardDaily => 'Daily';
+
+  @override
+  String get tripCardLeft => 'Left';
+
+  @override
+  String get tripCardActive => 'Active';
+
+  @override
+  String get tripCardDone => 'Done';
+
+  @override
+  String get tripCardPlan => 'Plan';
+
+  @override
+  String get statusActive => 'ACTIVE';
+
+  @override
+  String get statusUpcoming => 'UPCOMING';
+
+  @override
+  String get statusCompleted => 'COMPLETED';
+
+  @override
+  String get statusPlanning => 'PLANNING';
+
+  @override
+  String get of_ => 'of';
+
+  @override
   String get moreSettings => 'إعدادات إضافية';
 
   @override
@@ -1237,17 +1273,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get splitExpenseLabel => 'مصروف مشترك';
 
   @override
-  String owesYou(String name) {
-    return '$name يدين لك';
-  }
-
-  @override
   String get owesYouSuffix => ' يدين لك ';
-
-  @override
-  String youOwe(String name) {
-    return 'أنت مدين لـ $name';
-  }
 
   @override
   String get youOwePrefix => 'أنت مدين بـ ';

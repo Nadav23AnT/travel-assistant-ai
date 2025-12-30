@@ -1223,6 +1223,42 @@ class AppLocalizationsHe extends AppLocalizations {
   String get clearSearch => 'נקה חיפוש';
 
   @override
+  String get tripCardView => 'צפה';
+
+  @override
+  String get tripCardSpent => 'הוצאות';
+
+  @override
+  String get tripCardDaily => 'יומי';
+
+  @override
+  String get tripCardLeft => 'נותרו';
+
+  @override
+  String get tripCardActive => 'פעיל';
+
+  @override
+  String get tripCardDone => 'הסתיים';
+
+  @override
+  String get tripCardPlan => 'תכנון';
+
+  @override
+  String get statusActive => 'פעיל';
+
+  @override
+  String get statusUpcoming => 'קרוב';
+
+  @override
+  String get statusCompleted => 'הושלם';
+
+  @override
+  String get statusPlanning => 'בתכנון';
+
+  @override
+  String get of_ => 'מתוך';
+
+  @override
   String get moreSettings => 'הגדרות נוספות';
 
   @override
@@ -1232,17 +1268,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get splitExpenseLabel => 'הוצאה משותפת';
 
   @override
-  String owesYou(String name) {
-    return '$name חייב/ת לך';
-  }
-
-  @override
   String get owesYouSuffix => ' חייב/ת לך ';
-
-  @override
-  String youOwe(String name) {
-    return 'את/ה חייב/ת ל$name';
-  }
 
   @override
   String get youOwePrefix => 'את/ה חייב/ת ';

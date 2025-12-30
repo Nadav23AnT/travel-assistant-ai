@@ -1235,6 +1235,42 @@ class AppLocalizationsRu extends AppLocalizations {
   String get clearSearch => 'Очистить поиск';
 
   @override
+  String get tripCardView => 'View';
+
+  @override
+  String get tripCardSpent => 'Spent';
+
+  @override
+  String get tripCardDaily => 'Daily';
+
+  @override
+  String get tripCardLeft => 'Left';
+
+  @override
+  String get tripCardActive => 'Active';
+
+  @override
+  String get tripCardDone => 'Done';
+
+  @override
+  String get tripCardPlan => 'Plan';
+
+  @override
+  String get statusActive => 'ACTIVE';
+
+  @override
+  String get statusUpcoming => 'UPCOMING';
+
+  @override
+  String get statusCompleted => 'COMPLETED';
+
+  @override
+  String get statusPlanning => 'PLANNING';
+
+  @override
+  String get of_ => 'of';
+
+  @override
   String get moreSettings => 'Дополнительные настройки';
 
   @override
@@ -1244,17 +1280,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitExpenseLabel => 'Общий расход';
 
   @override
-  String owesYou(String name) {
-    return '$name должен вам';
-  }
-
-  @override
   String get owesYouSuffix => ' должен вам ';
-
-  @override
-  String youOwe(String name) {
-    return 'Вы должны $name';
-  }
 
   @override
   String get youOwePrefix => 'Вы должны ';

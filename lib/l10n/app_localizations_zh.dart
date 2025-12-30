@@ -1218,6 +1218,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get clearSearch => '清除搜索';
 
   @override
+  String get tripCardView => 'View';
+
+  @override
+  String get tripCardSpent => 'Spent';
+
+  @override
+  String get tripCardDaily => 'Daily';
+
+  @override
+  String get tripCardLeft => 'Left';
+
+  @override
+  String get tripCardActive => 'Active';
+
+  @override
+  String get tripCardDone => 'Done';
+
+  @override
+  String get tripCardPlan => 'Plan';
+
+  @override
+  String get statusActive => 'ACTIVE';
+
+  @override
+  String get statusUpcoming => 'UPCOMING';
+
+  @override
+  String get statusCompleted => 'COMPLETED';
+
+  @override
+  String get statusPlanning => 'PLANNING';
+
+  @override
+  String get of_ => 'of';
+
+  @override
   String get moreSettings => '更多设置';
 
   @override
@@ -1227,17 +1263,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get splitExpenseLabel => '分摊费用';
 
   @override
-  String owesYou(String name) {
-    return '$name欠你';
-  }
-
-  @override
   String get owesYouSuffix => '欠你 ';
-
-  @override
-  String youOwe(String name) {
-    return '你欠$name';
-  }
 
   @override
   String get youOwePrefix => '你欠 ';

@@ -1235,6 +1235,42 @@ class AppLocalizationsDe extends AppLocalizations {
   String get clearSearch => 'Suche löschen';
 
   @override
+  String get tripCardView => 'View';
+
+  @override
+  String get tripCardSpent => 'Spent';
+
+  @override
+  String get tripCardDaily => 'Daily';
+
+  @override
+  String get tripCardLeft => 'Left';
+
+  @override
+  String get tripCardActive => 'Active';
+
+  @override
+  String get tripCardDone => 'Done';
+
+  @override
+  String get tripCardPlan => 'Plan';
+
+  @override
+  String get statusActive => 'ACTIVE';
+
+  @override
+  String get statusUpcoming => 'UPCOMING';
+
+  @override
+  String get statusCompleted => 'COMPLETED';
+
+  @override
+  String get statusPlanning => 'PLANNING';
+
+  @override
+  String get of_ => 'of';
+
+  @override
   String get moreSettings => 'Weitere Einstellungen';
 
   @override
@@ -1244,17 +1280,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get splitExpenseLabel => 'Geteilte Ausgabe';
 
   @override
-  String owesYou(String name) {
-    return '$name schuldet dir';
-  }
-
-  @override
   String get owesYouSuffix => ' schuldet dir ';
-
-  @override
-  String youOwe(String name) {
-    return 'Du schuldest $name';
-  }
 
   @override
   String get youOwePrefix => 'Du schuldest ';
