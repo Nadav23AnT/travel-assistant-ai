@@ -23,6 +23,8 @@ import '../../providers/welcome_banner_provider.dart';
 import '../../widgets/home/daily_welcome_dialog.dart';
 import '../../widgets/home/day_tip_card.dart';
 import '../../widgets/home/journal_ready_card.dart';
+import '../../widgets/notifications/notification_bell_icon.dart';
+import '../../widgets/notifications/inline_notification_section.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -64,25 +66,25 @@ class HomeScreen extends ConsumerWidget {
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    LiquidGlassColors.canvasBaseDark,
-                    const Color(0xFF0D1321),
-                    LiquidGlassColors.canvasSubtleDark,
-                  ]
-                : [
-                    LiquidGlassColors.canvasBaseLight,
-                    const Color(0xFFF0F4FF),
-                    const Color(0xFFFAF5FF),
-                  ],
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      LiquidGlassColors.canvasBaseDark,
+                      const Color(0xFF0D1321),
+                      LiquidGlassColors.canvasSubtleDark,
+                    ]
+                  : [
+                      LiquidGlassColors.canvasBaseLight,
+                      const Color(0xFFF0F4FF),
+                      const Color(0xFFFAF5FF),
+                    ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: CustomScrollView(
+          child: SafeArea(
+            child: CustomScrollView(
             slivers: [
               // Header
               SliverToBoxAdapter(
@@ -90,6 +92,11 @@ class HomeScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: _buildWelcomeHeader(context, ref, isDark),
                 ),
+              ),
+
+              // Inline notification section (below header, above trip card)
+              const SliverToBoxAdapter(
+                child: InlineNotificationSection(),
               ),
 
               // Journal Ready notification
@@ -223,6 +230,9 @@ class HomeScreen extends ConsumerWidget {
         ),
         Row(
           children: [
+            // Notification bell icon
+            const AnimatedNotificationBellIcon(iconSize: 26),
+            const SizedBox(width: 4),
             // Reset button (admin only - for testing)
             if (isAdmin) ...[
               GlowingIconButton(

@@ -33,6 +33,8 @@ import '../presentation/screens/settings/dnd_schedule_screen.dart';
 import '../presentation/screens/onboarding/currency_selection_screen.dart';
 import '../presentation/screens/onboarding/destination_selection_screen.dart';
 import '../presentation/screens/onboarding/travel_dates_screen.dart';
+import '../presentation/screens/notifications/notification_center_screen.dart';
+import '../presentation/screens/admin/admin_broadcast_screen.dart';
 import '../presentation/widgets/common/main_scaffold.dart';
 
 class AppRoutes {
@@ -85,6 +87,10 @@ class AppRoutes {
   // User support routes
   static const String support = '/support';
   static const String supportChat = '/support/:id';
+
+  // Notification routes
+  static const String notifications = '/notifications';
+  static const String adminBroadcasts = '/admin/broadcasts';
 
   // Singleton router instance
   static GoRouter? _router;
@@ -327,6 +333,16 @@ class AppRoutes {
             final sessionId = state.pathParameters['id']!;
             return SupportChatScreen(sessionId: sessionId);
           },
+        ),
+
+        // Notification routes
+        GoRoute(
+          path: notifications,
+          builder: (context, state) => const NotificationCenterScreen(),
+        ),
+        GoRoute(
+          path: adminBroadcasts,
+          builder: (context, state) => const AdminBroadcastScreen(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
