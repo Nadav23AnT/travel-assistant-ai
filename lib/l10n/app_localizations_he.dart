@@ -1221,4 +1221,71 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get clearSearch => 'נקה חיפוש';
+
+  @override
+  String get moreSettings => 'הגדרות נוספות';
+
+  @override
+  String get estimatedTotal => 'סה\"כ משוער';
+
+  @override
+  String get splitExpenseLabel => 'הוצאה משותפת';
+
+  @override
+  String owesYou(String name) {
+    return '$name חייב/ת לך';
+  }
+
+  @override
+  String get owesYouSuffix => ' חייב/ת לך ';
+
+  @override
+  String youOwe(String name) {
+    return 'את/ה חייב/ת ל$name';
+  }
+
+  @override
+  String get youOwePrefix => 'את/ה חייב/ת ';
+
+  @override
+  String plusMoreCount(int count) {
+    return '+$count נוספים';
+  }
+
+  @override
+  String get spent => 'הוצאות';
+
+  @override
+  String get noBudgetSetTrip => 'לא הוגדר תקציב לטיול זה';
+
+  @override
+  String percentOverBudget(int percent) {
+    return '$percent% מעל התקציב';
+  }
+
+  @override
+  String percentRemaining(int percent) {
+    return '$percent% נותר';
+  }
+
+  @override
+  String get noCategoriesYet => 'אין קטגוריות עדיין';
+
+  @override
+  String get expenseCountSingular => 'הוצאה אחת';
+
+  @override
+  String expenseCountPlural(int count) {
+    return '$count הוצאות';
+  }
+
+  @override
+  String percentOfTotal(String percent) {
+    return '$percent% מהסה\"כ';
+  }
+
+  @override
+  String noCategoryExpenses(String category) {
+    return 'אין הוצאות $category';
+  }
 }

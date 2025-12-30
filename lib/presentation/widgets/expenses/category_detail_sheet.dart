@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../config/theme.dart';
 import '../../../data/models/expense_model.dart';
 import '../../../data/models/expense_stats.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/expenses_provider.dart';
 import 'expense_list_tile.dart';
@@ -26,6 +27,8 @@ class CategoryDetailSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final showInHome = ref.watch(showInHomeCurrencyProvider);
     final ratesNotifier = ref.watch(exchangeRatesProvider.notifier);
+    final l10n = AppLocalizations.of(context);
+    final localizedCategoryName = _getLocalizedCategory(category, l10n);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
@@ -74,7 +77,7 @@ class CategoryDetailSheet extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            categoryTotal.displayName,
+                            localizedCategoryName,
                             style: Theme.of(context)
                                 .textTheme
                                 .headlineSmall
@@ -83,7 +86,9 @@ class CategoryDetailSheet extends ConsumerWidget {
                                 ),
                           ),
                           Text(
-                            '${expenses.length} expense${expenses.length == 1 ? '' : 's'}',
+                            expenses.length == 1
+                                ? l10n.expenseCountSingular
+                                : l10n.expenseCountPlural(expenses.length),
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: AppTheme.textSecondary,
@@ -104,7 +109,8 @@ class CategoryDetailSheet extends ConsumerWidget {
                                   ),
                         ),
                         Text(
-                          '${categoryTotal.percentage.toStringAsFixed(1)}% of total',
+                          l10n.percentOfTotal(
+                              categoryTotal.percentage.toStringAsFixed(1)),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: AppTheme.textHint,
@@ -132,7 +138,7 @@ class CategoryDetailSheet extends ConsumerWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No ${categoryTotal.displayName.toLowerCase()} expenses',
+                              l10n.noCategoryExpenses(localizedCategoryName),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -176,6 +182,25 @@ class CategoryDetailSheet extends ConsumerWidget {
         );
       },
     );
+  }
+
+  String _getLocalizedCategory(String category, AppLocalizations l10n) {
+    switch (category) {
+      case 'transport':
+        return l10n.categoryTransport;
+      case 'accommodation':
+        return l10n.categoryAccommodation;
+      case 'food':
+        return l10n.categoryFood;
+      case 'activities':
+        return l10n.categoryActivities;
+      case 'shopping':
+        return l10n.categoryShopping;
+      case 'other':
+        return l10n.categoryOther;
+      default:
+        return category;
+    }
   }
 }
 

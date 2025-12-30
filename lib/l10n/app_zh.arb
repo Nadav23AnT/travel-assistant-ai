@@ -223,5 +223,22 @@
   "searchChats": "搜索聊天...",
   "noChatsFound": "未找到聊天",
   "noChatsMatchingSearch": "未找到与\"{query}\"匹配的聊天",
-  "clearSearch": "清除搜索"
+  "clearSearch": "清除搜索",
+  "moreSettings": "更多设置",
+  "estimatedTotal": "预计总计",
+  "splitExpenseLabel": "分摊费用",
+  "owesYou": "{name}欠你",
+  "owesYouSuffix": "欠你 ",
+  "youOwe": "你欠{name}",
+  "youOwePrefix": "你欠 ",
+  "plusMoreCount": "+{count}更多",
+  "spent": "已花费",
+  "noBudgetSetTrip": "未设置此行程预算",
+  "percentOverBudget": "超出预算{percent}%",
+  "percentRemaining": "剩余{percent}%",
+  "noCategoriesYet": "暂无分类",
+  "expenseCountSingular": "1笔支出",
+  "expenseCountPlural": "{count}笔支出",
+  "percentOfTotal": "占总额{percent}%",
+  "noCategoryExpenses": "暂无{category}支出"
 }

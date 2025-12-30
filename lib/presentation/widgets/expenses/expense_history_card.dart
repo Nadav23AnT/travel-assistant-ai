@@ -84,7 +84,7 @@ class ExpenseHistoryCard extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          expense.categoryDisplayName,
+                          _getLocalizedCategory(expense.category, l10n),
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: categoryColor,
                                 fontWeight: FontWeight.w500,
@@ -143,7 +143,7 @@ class ExpenseHistoryCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  _formatDateFull(expense.expenseDate),
+                  _formatDateFull(expense.expenseDate, l10n),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textSecondary,
                       ),
@@ -181,7 +181,7 @@ class ExpenseHistoryCard extends ConsumerWidget {
             // Split info (if expense is split)
             if (expense.isSplit) ...[
               const SizedBox(height: 12),
-              _buildSplitSection(context, ref, currentUserId),
+              _buildSplitSection(context, ref, currentUserId, l10n),
             ],
 
             const SizedBox(height: 12),
@@ -239,7 +239,7 @@ class ExpenseHistoryCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildSplitSection(BuildContext context, WidgetRef ref, String? currentUserId) {
+  Widget _buildSplitSection(BuildContext context, WidgetRef ref, String? currentUserId, AppLocalizations l10n) {
     final splitsAsync = ref.watch(expenseSplitsProvider(expense.id));
 
     return splitsAsync.when(
@@ -284,7 +284,7 @@ class ExpenseHistoryCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Split expense',
+                    l10n.splitExpenseLabel,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppTheme.textSecondary,
                           fontWeight: FontWeight.w500,
@@ -316,7 +316,7 @@ class ExpenseHistoryCard extends ConsumerWidget {
                                   text: split.displayName,
                                   style: const TextStyle(fontWeight: FontWeight.w500),
                                 ),
-                                const TextSpan(text: ' owes you '),
+                                TextSpan(text: l10n.owesYouSuffix),
                                 TextSpan(
                                   text: formattedAmount,
                                   style: TextStyle(
@@ -345,7 +345,7 @@ class ExpenseHistoryCard extends ConsumerWidget {
                                     fontSize: 12,
                                   ),
                               children: [
-                                const TextSpan(text: 'You owe '),
+                                TextSpan(text: l10n.youOwePrefix),
                                 TextSpan(
                                   text: formattedAmount,
                                   style: TextStyle(
@@ -368,7 +368,7 @@ class ExpenseHistoryCard extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4, left: 20),
                   child: Text(
-                    '+$remainingCount more',
+                    l10n.plusMoreCount(remainingCount),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 11,
                           color: AppTheme.textHint,
@@ -429,8 +429,8 @@ class ExpenseHistoryCard extends ConsumerWidget {
     }
   }
 
-  String _formatDateFull(DateTime? date) {
-    if (date == null) return 'No date';
+  String _formatDateFull(DateTime? date, AppLocalizations l10n) {
+    if (date == null) return l10n.noDate;
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -439,9 +439,9 @@ class ExpenseHistoryCard extends ConsumerWidget {
 
     String dateStr;
     if (dateOnly == today) {
-      dateStr = 'Today';
+      dateStr = l10n.today;
     } else if (dateOnly == yesterday) {
-      dateStr = 'Yesterday';
+      dateStr = l10n.yesterday;
     } else if (now.difference(date).inDays < 7) {
       dateStr = DateFormat('EEEE').format(date);
     } else {
@@ -461,5 +461,24 @@ class ExpenseHistoryCard extends ConsumerWidget {
     };
     final symbol = symbols[currency] ?? '$currency ';
     return '$symbol${amount.toStringAsFixed(2)}';
+  }
+
+  String _getLocalizedCategory(String category, AppLocalizations l10n) {
+    switch (category) {
+      case 'transport':
+        return l10n.categoryTransport;
+      case 'accommodation':
+        return l10n.categoryAccommodation;
+      case 'food':
+        return l10n.categoryFood;
+      case 'activities':
+        return l10n.categoryActivities;
+      case 'shopping':
+        return l10n.categoryShopping;
+      case 'other':
+        return l10n.categoryOther;
+      default:
+        return category;
+    }
   }
 }

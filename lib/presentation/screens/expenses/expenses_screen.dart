@@ -255,7 +255,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                 ),
                                 if (t.isShared)
                                   Text(
-                                    'Shared',
+                                    l10n.sharedTrip,
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: LiquidGlassColors.oceanTeal,
@@ -330,6 +330,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 spentFormatted: spentFormatted,
                 budgetFormatted: budgetFormatted,
                 isDark: isDark,
+                l10n: l10n,
               ),
             ),
           ),
@@ -342,7 +343,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 child: CompactStatTile(
                   icon: Icons.calendar_today,
                   value: data.stats.formattedDailyAverage,
-                  label: 'Daily Avg',
+                  label: l10n.dailyAverage,
                   color: LiquidGlassColors.oceanTeal,
                   isDark: isDark,
                 ),
@@ -352,7 +353,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 child: CompactStatTile(
                   icon: Icons.trending_up,
                   value: data.stats.formattedEstimatedTotal,
-                  label: 'Est. Total',
+                  label: l10n.estimatedTotal,
                   color: LiquidGlassColors.auroraPurple,
                   isDark: isDark,
                 ),
@@ -362,7 +363,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 child: CompactStatTile(
                   icon: Icons.receipt_long,
                   value: data.stats.totalExpenseCount.toString(),
-                  label: 'Expenses',
+                  label: l10n.expenses,
                   color: LiquidGlassColors.sunsetOrange,
                   isDark: isDark,
                 ),
@@ -413,6 +414,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       onCategoryTap: (category) => _showCategoryDetail(data, category),
                       isDark: isDark,
                       maxCategories: 6,
+                      l10n: l10n,
                     ),
                   ),
                 ],
@@ -781,7 +783,7 @@ class _GlassCurrencySelector extends StatelessWidget {
                 onTap: () => onModeChanged(CurrencyDisplayMode.usd),
               ),
               _CurrencyOption(
-                label: localCurrency ?? 'Local',
+                label: localCurrency ?? l10n.localCurrency,
                 isSelected: displayMode == CurrencyDisplayMode.local,
                 isDark: isDark,
                 onTap: () => onModeChanged(CurrencyDisplayMode.local),

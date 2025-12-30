@@ -223,5 +223,22 @@
   "searchChats": "Pesquisar chats...",
   "noChatsFound": "Nenhum chat encontrado",
   "noChatsMatchingSearch": "Nenhum chat correspondente a \"{query}\"",
-  "clearSearch": "Limpar pesquisa"
+  "clearSearch": "Limpar pesquisa",
+  "moreSettings": "Mais configurações",
+  "estimatedTotal": "Total estimado",
+  "splitExpenseLabel": "Despesa dividida",
+  "owesYou": "{name} te deve",
+  "owesYouSuffix": " te deve ",
+  "youOwe": "Você deve a {name}",
+  "youOwePrefix": "Você deve ",
+  "plusMoreCount": "+{count} mais",
+  "spent": "Gasto",
+  "noBudgetSetTrip": "Sem orçamento para esta viagem",
+  "percentOverBudget": "{percent}% acima do orçamento",
+  "percentRemaining": "{percent}% restante",
+  "noCategoriesYet": "Sem categorias ainda",
+  "expenseCountSingular": "1 despesa",
+  "expenseCountPlural": "{count} despesas",
+  "percentOfTotal": "{percent}% do total",
+  "noCategoryExpenses": "Sem despesas de {category}"
 }

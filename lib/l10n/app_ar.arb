@@ -223,5 +223,22 @@
   "searchChats": "البحث في المحادثات...",
   "noChatsFound": "لم يتم العثور على محادثات",
   "noChatsMatchingSearch": "لا توجد محادثات مطابقة لـ \"{query}\"",
-  "clearSearch": "مسح البحث"
+  "clearSearch": "مسح البحث",
+  "moreSettings": "إعدادات إضافية",
+  "estimatedTotal": "الإجمالي المقدر",
+  "splitExpenseLabel": "مصروف مشترك",
+  "owesYou": "{name} يدين لك",
+  "owesYouSuffix": " يدين لك ",
+  "youOwe": "أنت مدين لـ {name}",
+  "youOwePrefix": "أنت مدين بـ ",
+  "plusMoreCount": "+{count} آخرون",
+  "spent": "المصروف",
+  "noBudgetSetTrip": "لم يتم تحديد ميزانية لهذه الرحلة",
+  "percentOverBudget": "{percent}% فوق الميزانية",
+  "percentRemaining": "{percent}% متبقي",
+  "noCategoriesYet": "لا توجد فئات بعد",
+  "expenseCountSingular": "مصروف واحد",
+  "expenseCountPlural": "{count} مصروفات",
+  "percentOfTotal": "{percent}% من الإجمالي",
+  "noCategoryExpenses": "لا توجد مصروفات {category}"
 }

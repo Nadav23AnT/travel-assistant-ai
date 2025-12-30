@@ -223,5 +223,22 @@
   "searchChats": "채팅 검색...",
   "noChatsFound": "채팅을 찾을 수 없습니다",
   "noChatsMatchingSearch": "\"{query}\"와 일치하는 채팅이 없습니다",
-  "clearSearch": "검색 지우기"
+  "clearSearch": "검색 지우기",
+  "moreSettings": "더 많은 설정",
+  "estimatedTotal": "예상 합계",
+  "splitExpenseLabel": "공동 비용",
+  "owesYou": "{name}이(가) 당신에게 빚졌습니다",
+  "owesYouSuffix": "이(가) 당신에게 빚졌습니다 ",
+  "youOwe": "당신이 {name}에게 빚졌습니다",
+  "youOwePrefix": "당신이 빚졌습니다 ",
+  "plusMoreCount": "+{count}개 더",
+  "spent": "지출",
+  "noBudgetSetTrip": "이 여행에 예산이 설정되지 않았습니다",
+  "percentOverBudget": "예산 {percent}% 초과",
+  "percentRemaining": "{percent}% 남음",
+  "noCategoriesYet": "아직 카테고리가 없습니다",
+  "expenseCountSingular": "1개 지출",
+  "expenseCountPlural": "{count}개 지출",
+  "percentOfTotal": "전체의 {percent}%",
+  "noCategoryExpenses": "{category} 지출 없음"
 }

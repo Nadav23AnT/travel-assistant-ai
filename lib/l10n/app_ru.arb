@@ -225,5 +225,22 @@
   "searchChats": "Поиск чатов...",
   "noChatsFound": "Чаты не найдены",
   "noChatsMatchingSearch": "Не найдено чатов для \"{query}\"",
-  "clearSearch": "Очистить поиск"
+  "clearSearch": "Очистить поиск",
+  "moreSettings": "Дополнительные настройки",
+  "estimatedTotal": "Ожидаемый итог",
+  "splitExpenseLabel": "Общий расход",
+  "owesYou": "{name} должен вам",
+  "owesYouSuffix": " должен вам ",
+  "youOwe": "Вы должны {name}",
+  "youOwePrefix": "Вы должны ",
+  "plusMoreCount": "+{count} ещё",
+  "spent": "Потрачено",
+  "noBudgetSetTrip": "Бюджет для этой поездки не установлен",
+  "percentOverBudget": "Превышение на {percent}%",
+  "percentRemaining": "Осталось {percent}%",
+  "noCategoriesYet": "Категорий пока нет",
+  "expenseCountSingular": "1 расход",
+  "expenseCountPlural": "{count} расходов",
+  "percentOfTotal": "{percent}% от общей суммы",
+  "noCategoryExpenses": "Нет расходов {category}"
 }

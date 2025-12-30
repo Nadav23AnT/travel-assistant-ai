@@ -1237,4 +1237,71 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get clearSearch => 'Borrar búsqueda';
+
+  @override
+  String get moreSettings => 'Más ajustes';
+
+  @override
+  String get estimatedTotal => 'Total estimado';
+
+  @override
+  String get splitExpenseLabel => 'Gasto compartido';
+
+  @override
+  String owesYou(String name) {
+    return '$name te debe';
+  }
+
+  @override
+  String get owesYouSuffix => ' te debe ';
+
+  @override
+  String youOwe(String name) {
+    return 'Debes a $name';
+  }
+
+  @override
+  String get youOwePrefix => 'Debes ';
+
+  @override
+  String plusMoreCount(int count) {
+    return '+$count más';
+  }
+
+  @override
+  String get spent => 'Gastado';
+
+  @override
+  String get noBudgetSetTrip => 'Sin presupuesto para este viaje';
+
+  @override
+  String percentOverBudget(int percent) {
+    return '$percent% sobre presupuesto';
+  }
+
+  @override
+  String percentRemaining(int percent) {
+    return '$percent% restante';
+  }
+
+  @override
+  String get noCategoriesYet => 'Sin categorías aún';
+
+  @override
+  String get expenseCountSingular => '1 gasto';
+
+  @override
+  String expenseCountPlural(int count) {
+    return '$count gastos';
+  }
+
+  @override
+  String percentOfTotal(String percent) {
+    return '$percent% del total';
+  }
+
+  @override
+  String noCategoryExpenses(String category) {
+    return 'Sin gastos de $category';
+  }
 }

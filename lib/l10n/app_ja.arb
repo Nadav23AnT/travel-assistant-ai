@@ -223,5 +223,22 @@
   "searchChats": "チャットを検索...",
   "noChatsFound": "チャットが見つかりません",
   "noChatsMatchingSearch": "「{query}」に一致するチャットはありません",
-  "clearSearch": "検索をクリア"
+  "clearSearch": "検索をクリア",
+  "moreSettings": "詳細設定",
+  "estimatedTotal": "推定合計",
+  "splitExpenseLabel": "割り勘",
+  "owesYou": "{name}があなたに借りています",
+  "owesYouSuffix": "があなたに借りています ",
+  "youOwe": "あなたは{name}に借りています",
+  "youOwePrefix": "あなたは借りています ",
+  "plusMoreCount": "+{count}件",
+  "spent": "支出",
+  "noBudgetSetTrip": "この旅行の予算は設定されていません",
+  "percentOverBudget": "予算を{percent}%超過",
+  "percentRemaining": "{percent}%残り",
+  "noCategoriesYet": "カテゴリーはまだありません",
+  "expenseCountSingular": "1件の支出",
+  "expenseCountPlural": "{count}件の支出",
+  "percentOfTotal": "合計の{percent}%",
+  "noCategoryExpenses": "{category}の支出はありません"
 }

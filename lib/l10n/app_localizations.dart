@@ -2415,6 +2415,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear search'**
   String get clearSearch;
+
+  /// Label for expandable settings section
+  ///
+  /// In en, this message translates to:
+  /// **'More settings'**
+  String get moreSettings;
+
+  /// Estimated total label
+  ///
+  /// In en, this message translates to:
+  /// **'Est. Total'**
+  String get estimatedTotal;
+
+  /// Label for split expense indicator
+  ///
+  /// In en, this message translates to:
+  /// **'Split expense'**
+  String get splitExpenseLabel;
+
+  /// Message showing someone owes you money
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes you'**
+  String owesYou(String name);
+
+  /// Suffix for RichText: [Name] owes you [Amount]
+  ///
+  /// In en, this message translates to:
+  /// **' owes you '**
+  String get owesYouSuffix;
+
+  /// Message showing you owe someone money
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {name}'**
+  String youOwe(String name);
+
+  /// Prefix for RichText: You owe [Amount]
+  ///
+  /// In en, this message translates to:
+  /// **'You owe '**
+  String get youOwePrefix;
+
+  /// Shows additional count
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String plusMoreCount(int count);
+
+  /// Spent label for budget
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get spent;
+
+  /// Message when no budget is set
+  ///
+  /// In en, this message translates to:
+  /// **'No budget set for this trip'**
+  String get noBudgetSetTrip;
+
+  /// Message showing over budget percentage
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% over budget'**
+  String percentOverBudget(int percent);
+
+  /// Message showing remaining budget percentage
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% remaining'**
+  String percentRemaining(int percent);
+
+  /// Message when no expense categories exist
+  ///
+  /// In en, this message translates to:
+  /// **'No categories yet'**
+  String get noCategoriesYet;
+
+  /// Single expense count
+  ///
+  /// In en, this message translates to:
+  /// **'1 expense'**
+  String get expenseCountSingular;
+
+  /// Multiple expenses count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} expenses'**
+  String expenseCountPlural(int count);
+
+  /// Percentage of total expenses
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of total'**
+  String percentOfTotal(String percent);
+
+  /// Message when no expenses in category
+  ///
+  /// In en, this message translates to:
+  /// **'No {category} expenses'**
+  String noCategoryExpenses(String category);
 }
 
 class _AppLocalizationsDelegate

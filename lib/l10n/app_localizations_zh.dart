@@ -1216,4 +1216,71 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get clearSearch => '清除搜索';
+
+  @override
+  String get moreSettings => '更多设置';
+
+  @override
+  String get estimatedTotal => '预计总计';
+
+  @override
+  String get splitExpenseLabel => '分摊费用';
+
+  @override
+  String owesYou(String name) {
+    return '$name欠你';
+  }
+
+  @override
+  String get owesYouSuffix => '欠你 ';
+
+  @override
+  String youOwe(String name) {
+    return '你欠$name';
+  }
+
+  @override
+  String get youOwePrefix => '你欠 ';
+
+  @override
+  String plusMoreCount(int count) {
+    return '+$count更多';
+  }
+
+  @override
+  String get spent => '已花费';
+
+  @override
+  String get noBudgetSetTrip => '未设置此行程预算';
+
+  @override
+  String percentOverBudget(int percent) {
+    return '超出预算$percent%';
+  }
+
+  @override
+  String percentRemaining(int percent) {
+    return '剩余$percent%';
+  }
+
+  @override
+  String get noCategoriesYet => '暂无分类';
+
+  @override
+  String get expenseCountSingular => '1笔支出';
+
+  @override
+  String expenseCountPlural(int count) {
+    return '$count笔支出';
+  }
+
+  @override
+  String percentOfTotal(String percent) {
+    return '占总额$percent%';
+  }
+
+  @override
+  String noCategoryExpenses(String category) {
+    return '暂无$category支出';
+  }
 }

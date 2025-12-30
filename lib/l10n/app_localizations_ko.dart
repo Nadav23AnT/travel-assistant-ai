@@ -1219,4 +1219,71 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get clearSearch => '검색 지우기';
+
+  @override
+  String get moreSettings => '더 많은 설정';
+
+  @override
+  String get estimatedTotal => '예상 합계';
+
+  @override
+  String get splitExpenseLabel => '공동 비용';
+
+  @override
+  String owesYou(String name) {
+    return '$name이(가) 당신에게 빚졌습니다';
+  }
+
+  @override
+  String get owesYouSuffix => '이(가) 당신에게 빚졌습니다 ';
+
+  @override
+  String youOwe(String name) {
+    return '당신이 $name에게 빚졌습니다';
+  }
+
+  @override
+  String get youOwePrefix => '당신이 빚졌습니다 ';
+
+  @override
+  String plusMoreCount(int count) {
+    return '+$count개 더';
+  }
+
+  @override
+  String get spent => '지출';
+
+  @override
+  String get noBudgetSetTrip => '이 여행에 예산이 설정되지 않았습니다';
+
+  @override
+  String percentOverBudget(int percent) {
+    return '예산 $percent% 초과';
+  }
+
+  @override
+  String percentRemaining(int percent) {
+    return '$percent% 남음';
+  }
+
+  @override
+  String get noCategoriesYet => '아직 카테고리가 없습니다';
+
+  @override
+  String get expenseCountSingular => '1개 지출';
+
+  @override
+  String expenseCountPlural(int count) {
+    return '$count개 지출';
+  }
+
+  @override
+  String percentOfTotal(String percent) {
+    return '전체의 $percent%';
+  }
+
+  @override
+  String noCategoryExpenses(String category) {
+    return '$category 지출 없음';
+  }
 }
