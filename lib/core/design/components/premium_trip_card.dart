@@ -453,7 +453,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
   }
 
   Widget _buildViewButton() {
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
@@ -673,7 +673,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
     setState(() {
       // In RTL, invert the drag direction
       final delta = isRtl ? -details.delta.dx : details.delta.dx;
@@ -683,7 +683,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
   }
 
   void _handleDragEnd(DragEndDetails details) {
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
     // In RTL, invert the velocity direction
     final velocity = isRtl
         ? -details.velocity.pixelsPerSecond.dx
@@ -868,7 +868,7 @@ class _CompactTripCardState extends State<CompactTripCard> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: 12),
               child: Icon(
-                Directionality.of(context) == TextDirection.rtl
+                Directionality.of(context) == ui.TextDirection.rtl
                     ? Icons.chevron_left_rounded
                     : Icons.chevron_right_rounded,
                 color: isDark
