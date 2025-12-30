@@ -24,7 +24,7 @@ import '../../widgets/home/daily_welcome_dialog.dart';
 import '../../widgets/home/day_tip_card.dart';
 import '../../widgets/home/journal_ready_card.dart';
 import '../../widgets/notifications/notification_bell_icon.dart';
-import '../../widgets/notifications/notification_banner_overlay.dart';
+import '../../widgets/notifications/inline_notification_section.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -62,11 +62,10 @@ class HomeScreen extends ConsumerWidget {
       });
     });
 
-    return NotificationBannerOverlay(
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        backgroundColor: Colors.transparent,
-        body: Container(
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -93,6 +92,11 @@ class HomeScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: _buildWelcomeHeader(context, ref, isDark),
                 ),
+              ),
+
+              // Inline notification section (below header, above trip card)
+              const SliverToBoxAdapter(
+                child: InlineNotificationSection(),
               ),
 
               // Journal Ready notification
@@ -171,7 +175,6 @@ class HomeScreen extends ConsumerWidget {
               ),
             ],
           ),
-        ),
         ),
       ),
     );

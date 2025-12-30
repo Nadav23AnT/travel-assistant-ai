@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/design/tokens/liquid_glass_colors.dart';
+import '../../../core/utils/notification_text_utils.dart';
 import '../../../data/models/broadcast_notification_model.dart';
 import '../../providers/broadcast_notification_provider.dart';
-import '../../widgets/notifications/notification_banner.dart';
+import '../../widgets/notifications/notification_banner.dart'
+    show showNotificationDetail, isExternalLink, launchExternalUrl;
 
 /// Filter options for notification list
 enum NotificationFilter { all, unread, read }
@@ -200,7 +202,17 @@ class NotificationCenterScreen extends ConsumerWidget {
       notification,
       onDeepLinkTap: () {
         if (notification.deepLink != null) {
-          context.push(notification.deepLink!);
+          if (isExternalLink(notification.deepLink)) {
+            // External link - open in browser
+            launchExternalUrl(notification.deepLink!);
+          } else {
+            // Internal link - use GoRouter with delay to avoid navigator conflicts
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (context.mounted) {
+                context.go(notification.deepLink!);
+              }
+            });
+          }
         }
       },
     );
@@ -333,82 +345,91 @@ class _NotificationListItem extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Priority Icon
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: notification.isRead
-                          ? (isDark ? Colors.grey[700] : Colors.grey[200])
-                          : priorityColor.withOpacity(0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      notification.priority.icon,
-                      color: notification.isRead
-                          ? (isDark ? Colors.grey[500] : Colors.grey[500])
-                          : priorityColor,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Content
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title
-                        Text(
-                          notification.title,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: notification.isRead
-                                ? FontWeight.w500
-                                : FontWeight.w700,
-                            color: isDark ? Colors.white : Colors.grey[900],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        // Message preview
-                        Text(
-                          notification.message,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark ? Colors.white60 : Colors.grey[600],
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        // Timestamp
-                        Text(
-                          notification.relativeTime,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.white38 : Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Unread indicator
-                  if (!notification.isRead)
+            child: Directionality(
+              textDirection: notification.isRTL
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Priority Icon
                     Container(
-                      width: 10,
-                      height: 10,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: priorityColor,
+                        color: notification.isRead
+                            ? (isDark ? Colors.grey[700] : Colors.grey[200])
+                            : priorityColor.withOpacity(0.15),
                         shape: BoxShape.circle,
                       ),
+                      child: Icon(
+                        notification.priority.icon,
+                        color: notification.isRead
+                            ? (isDark ? Colors.grey[500] : Colors.grey[500])
+                            : priorityColor,
+                        size: 24,
+                      ),
                     ),
-                ],
+                    const SizedBox(width: 12),
+                    // Content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: notification.isRTL
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        children: [
+                          // Title with RTL/bold support
+                          NotificationText(
+                            text: notification.title,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: notification.isRead
+                                  ? FontWeight.w500
+                                  : FontWeight.w700,
+                              color: isDark ? Colors.white : Colors.grey[900],
+                            ),
+                            isRTL: notification.isRTL,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          // Message preview with RTL/bold support
+                          NotificationText(
+                            text: notification.message,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark ? Colors.white60 : Colors.grey[600],
+                            ),
+                            isRTL: notification.isRTL,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          // Timestamp
+                          Text(
+                            notification.relativeTime,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white38 : Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Unread indicator
+                    if (!notification.isRead)
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: priorityColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

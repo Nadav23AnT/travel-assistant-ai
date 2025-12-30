@@ -187,12 +187,18 @@ class AdminBroadcastsNotifier
     required String message,
     NotificationPriority priority = NotificationPriority.normal,
     String? deepLink,
+    String? actionButtonText,
+    int autoDismissHours = 48,
+    bool isRTL = false,
   }) async {
     final result = await _repository.sendBroadcast(
       title: title,
       message: message,
       priority: priority,
       deepLink: deepLink,
+      actionButtonText: actionButtonText,
+      autoDismissHours: autoDismissHours,
+      isRTL: isRTL,
     );
 
     if (result != null) {
@@ -201,6 +207,26 @@ class AdminBroadcastsNotifier
     }
 
     return result;
+  }
+
+  /// Delete a notification (removes for ALL users)
+  Future<bool> deleteNotification(String notificationId) async {
+    final currentBroadcasts = state.valueOrNull ?? [];
+
+    // Optimistically remove from list
+    final updatedBroadcasts =
+        currentBroadcasts.where((b) => b.id != notificationId).toList();
+
+    state = AsyncValue.data(updatedBroadcasts);
+
+    final success = await _repository.deleteNotification(notificationId);
+
+    if (!success) {
+      // Revert on failure
+      state = AsyncValue.data(currentBroadcasts);
+    }
+
+    return success;
   }
 }
 
@@ -227,6 +253,62 @@ final averageReadRateProvider = Provider<double>((ref) {
   final totalReadPercentage =
       broadcasts.fold<double>(0, (sum, b) => sum + b.readPercentage);
   return totalReadPercentage / broadcasts.length;
+});
+
+// ========================================
+// Comprehensive Stats Providers
+// ========================================
+
+/// Provider for total users reached (sum of all sentCount)
+final totalUsersReachedProvider = Provider<int>((ref) {
+  final broadcastsAsync = ref.watch(adminBroadcastsProvider);
+  final broadcasts = broadcastsAsync.valueOrNull ?? [];
+  return broadcasts.fold<int>(0, (sum, b) => sum + b.sentCount);
+});
+
+/// Provider for total reads across all broadcasts
+final totalReadsProvider = Provider<int>((ref) {
+  final broadcastsAsync = ref.watch(adminBroadcastsProvider);
+  final broadcasts = broadcastsAsync.valueOrNull ?? [];
+  return broadcasts.fold<int>(0, (sum, b) => sum + b.readCount);
+});
+
+/// Provider for total clicks across all broadcasts
+final totalClicksProvider = Provider<int>((ref) {
+  final broadcastsAsync = ref.watch(adminBroadcastsProvider);
+  final broadcasts = broadcastsAsync.valueOrNull ?? [];
+  return broadcasts.fold<int>(0, (sum, b) => sum + b.clickCount);
+});
+
+/// Provider for overall read rate (totalReads / totalUsersReached)
+final overallReadRateProvider = Provider<double>((ref) {
+  final reached = ref.watch(totalUsersReachedProvider);
+  final reads = ref.watch(totalReadsProvider);
+  if (reached == 0) return 0;
+  return (reads / reached) * 100;
+});
+
+/// Provider for click-through rate (totalClicks / totalReads)
+final overallClickThroughRateProvider = Provider<double>((ref) {
+  final reads = ref.watch(totalReadsProvider);
+  final clicks = ref.watch(totalClicksProvider);
+  if (reads == 0) return 0;
+  return (clicks / reads) * 100;
+});
+
+/// Provider for notifications count by priority
+final notificationsByPriorityProvider =
+    Provider<Map<NotificationPriority, int>>((ref) {
+  final broadcastsAsync = ref.watch(adminBroadcastsProvider);
+  final broadcasts = broadcastsAsync.valueOrNull ?? [];
+  return {
+    NotificationPriority.normal:
+        broadcasts.where((b) => b.priority == NotificationPriority.normal).length,
+    NotificationPriority.important:
+        broadcasts.where((b) => b.priority == NotificationPriority.important).length,
+    NotificationPriority.urgent:
+        broadcasts.where((b) => b.priority == NotificationPriority.urgent).length,
+  };
 });
 
 // ========================================
@@ -270,6 +352,9 @@ class SendBroadcastNotifier extends StateNotifier<SendBroadcastState> {
     required String message,
     NotificationPriority priority = NotificationPriority.normal,
     String? deepLink,
+    String? actionButtonText,
+    int autoDismissHours = 48,
+    bool isRTL = false,
   }) async {
     state = state.copyWith(isLoading: true, error: null, result: null);
 
@@ -280,6 +365,9 @@ class SendBroadcastNotifier extends StateNotifier<SendBroadcastState> {
                 message: message,
                 priority: priority,
                 deepLink: deepLink,
+                actionButtonText: actionButtonText,
+                autoDismissHours: autoDismissHours,
+                isRTL: isRTL,
               );
 
       if (result != null) {

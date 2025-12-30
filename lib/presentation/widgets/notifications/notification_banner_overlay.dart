@@ -94,78 +94,9 @@ class _NotificationBannerOverlayState
 
   @override
   Widget build(BuildContext context) {
-    final showBanner = ref.watch(showNotificationBannerProvider);
-    final unreadNotifications = ref.watch(unreadNotificationsProvider);
-    final currentIndex = ref.watch(currentBannerIndexProvider);
-
-    // Start auto-advance timer when notifications change
-    if (unreadNotifications.isNotEmpty && showBanner) {
-      _startAutoAdvanceTimer(unreadNotifications);
-    } else {
-      _autoAdvanceTimer?.cancel();
-    }
-
-    // Ensure index is within bounds
-    final safeIndex = currentIndex.clamp(0,
-        unreadNotifications.isEmpty ? 0 : unreadNotifications.length - 1);
-
-    return Stack(
-      children: [
-        // Main content
-        widget.child,
-
-        // Notification banner
-        if (showBanner && unreadNotifications.isNotEmpty)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            left: 0,
-            right: 0,
-            child: GestureDetector(
-              onPanStart: (_) => _isUserInteracting = true,
-              onPanEnd: (_) => _isUserInteracting = false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Page view for notifications
-                  SizedBox(
-                    height: 130,
-                    child: PageView.builder(
-                      itemCount: unreadNotifications.length,
-                      controller: PageController(
-                        initialPage: safeIndex,
-                        viewportFraction: 1.0,
-                      ),
-                      onPageChanged: (index) {
-                        ref.read(currentBannerIndexProvider.notifier).state =
-                            index;
-                      },
-                      itemBuilder: (context, index) {
-                        final notification = unreadNotifications[index];
-                        return NotificationBanner(
-                          notification: notification,
-                          onTap: () => _handleBannerTap(notification),
-                          onDismiss: () => _handleDismiss(notification),
-                          onDeepLinkTap: () => _navigateToDeepLink(notification),
-                        );
-                      },
-                    ),
-                  ),
-
-                  // Page indicator (if multiple notifications)
-                  if (unreadNotifications.length > 1)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: _PageIndicator(
-                        count: unreadNotifications.length,
-                        currentIndex: safeIndex,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
+    // Overlay disabled - now using InlineNotificationSection in home screen
+    // Just pass through the child widget
+    return widget.child;
   }
 }
 

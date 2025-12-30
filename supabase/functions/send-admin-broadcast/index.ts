@@ -10,6 +10,9 @@ interface BroadcastPayload {
   message: string;
   priority?: "normal" | "important" | "urgent";
   deep_link?: string;
+  action_button_text?: string;
+  auto_dismiss_hours?: number;
+  is_rtl?: boolean;
 }
 
 const corsHeaders = {
@@ -84,7 +87,15 @@ serve(async (req) => {
 
     // Parse request payload
     const payload: BroadcastPayload = await req.json();
-    const { title, message, priority = "normal", deep_link } = payload;
+    const {
+      title,
+      message,
+      priority = "normal",
+      deep_link,
+      action_button_text = "View Details",
+      auto_dismiss_hours = 48,
+      is_rtl = false
+    } = payload;
 
     // Validate required fields
     if (!title || !message) {
@@ -131,6 +142,19 @@ serve(async (req) => {
       );
     }
 
+    // Validate auto_dismiss_hours
+    if (auto_dismiss_hours < 1 || auto_dismiss_hours > 720) {
+      return new Response(
+        JSON.stringify({
+          error: "Auto dismiss hours must be between 1 and 720",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Create the notification in the database using admin client
     const { data: notification, error: notificationError } = await supabaseAdmin
       .from("admin_notifications")
@@ -139,7 +163,10 @@ serve(async (req) => {
         message,
         priority,
         deep_link: deep_link || null,
+        action_button_text: action_button_text || "View Details",
         sent_by: user.id,
+        auto_dismiss_hours,
+        is_rtl,
       })
       .select()
       .single();

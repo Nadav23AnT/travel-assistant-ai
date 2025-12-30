@@ -62,15 +62,29 @@ class AdminScaffold extends ConsumerWidget {
         ],
       ),
       drawer: isWideScreen ? null : _buildDrawer(context, ref, openTickets),
-      body: Row(
-        children: [
-          if (isWideScreen)
-            _AdminSidebar(
-              currentItem: currentItem,
-              openTicketsCount: openTickets.valueOrNull ?? 0,
-            ),
-          Expanded(child: child),
-        ],
+      // Use LayoutBuilder to provide explicit height constraints to children
+      // This fixes overflow issues when child is a Column
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Row(
+            children: [
+              if (isWideScreen)
+                SizedBox(
+                  height: constraints.maxHeight,
+                  child: _AdminSidebar(
+                    currentItem: currentItem,
+                    openTicketsCount: openTickets.valueOrNull ?? 0,
+                  ),
+                ),
+              Expanded(
+                child: SizedBox(
+                  height: constraints.maxHeight,
+                  child: child,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

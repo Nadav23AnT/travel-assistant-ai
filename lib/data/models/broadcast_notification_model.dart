@@ -68,10 +68,14 @@ class BroadcastNotificationModel {
   final String message;
   final NotificationPriority priority;
   final String? deepLink;
+  final String actionButtonText;
   final DateTime sentAt;
+  final DateTime expiresAt;
+  final int autoDismissHours;
   final bool isRead;
   final DateTime? readAt;
   final DateTime? dismissedAt;
+  final bool isRTL;
 
   const BroadcastNotificationModel({
     required this.id,
@@ -80,14 +84,24 @@ class BroadcastNotificationModel {
     required this.message,
     required this.priority,
     this.deepLink,
+    this.actionButtonText = 'View Details',
     required this.sentAt,
+    required this.expiresAt,
+    this.autoDismissHours = 48,
     this.isRead = false,
     this.readAt,
     this.dismissedAt,
+    this.isRTL = false,
   });
 
   /// Create from JSON (Supabase response)
   factory BroadcastNotificationModel.fromJson(Map<String, dynamic> json) {
+    final sentAt = DateTime.parse(json['sent_at'] as String);
+    // Default expires_at to 48 hours from sent_at if not provided
+    final expiresAt = json['expires_at'] != null
+        ? DateTime.parse(json['expires_at'] as String)
+        : sentAt.add(const Duration(hours: 48));
+
     return BroadcastNotificationModel(
       id: json['id'] as String,
       notificationId: json['notification_id'] as String,
@@ -95,7 +109,11 @@ class BroadcastNotificationModel {
       message: json['message'] as String,
       priority: NotificationPriority.fromString(json['priority'] as String?),
       deepLink: json['deep_link'] as String?,
-      sentAt: DateTime.parse(json['sent_at'] as String),
+      actionButtonText:
+          (json['action_button_text'] as String?) ?? 'View Details',
+      sentAt: sentAt,
+      expiresAt: expiresAt,
+      autoDismissHours: (json['auto_dismiss_hours'] as num?)?.toInt() ?? 48,
       isRead: json['is_read'] as bool? ?? false,
       readAt: json['read_at'] != null
           ? DateTime.parse(json['read_at'] as String)
@@ -103,6 +121,7 @@ class BroadcastNotificationModel {
       dismissedAt: json['dismissed_at'] != null
           ? DateTime.parse(json['dismissed_at'] as String)
           : null,
+      isRTL: json['is_rtl'] as bool? ?? false,
     );
   }
 
@@ -115,10 +134,14 @@ class BroadcastNotificationModel {
       'message': message,
       'priority': priority.name,
       'deep_link': deepLink,
+      'action_button_text': actionButtonText,
       'sent_at': sentAt.toIso8601String(),
+      'expires_at': expiresAt.toIso8601String(),
+      'auto_dismiss_hours': autoDismissHours,
       'is_read': isRead,
       'read_at': readAt?.toIso8601String(),
       'dismissed_at': dismissedAt?.toIso8601String(),
+      'is_rtl': isRTL,
     };
   }
 
@@ -130,10 +153,14 @@ class BroadcastNotificationModel {
     String? message,
     NotificationPriority? priority,
     String? deepLink,
+    String? actionButtonText,
     DateTime? sentAt,
+    DateTime? expiresAt,
+    int? autoDismissHours,
     bool? isRead,
     DateTime? readAt,
     DateTime? dismissedAt,
+    bool? isRTL,
   }) {
     return BroadcastNotificationModel(
       id: id ?? this.id,
@@ -142,10 +169,14 @@ class BroadcastNotificationModel {
       message: message ?? this.message,
       priority: priority ?? this.priority,
       deepLink: deepLink ?? this.deepLink,
+      actionButtonText: actionButtonText ?? this.actionButtonText,
       sentAt: sentAt ?? this.sentAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      autoDismissHours: autoDismissHours ?? this.autoDismissHours,
       isRead: isRead ?? this.isRead,
       readAt: readAt ?? this.readAt,
       dismissedAt: dismissedAt ?? this.dismissedAt,
+      isRTL: isRTL ?? this.isRTL,
     );
   }
 
@@ -154,6 +185,26 @@ class BroadcastNotificationModel {
 
   /// Check if notification is dismissed
   bool get isDismissed => dismissedAt != null;
+
+  /// Check if notification is expired
+  bool get isExpired => DateTime.now().isAfter(expiresAt);
+
+  /// Get time remaining until expiry
+  Duration get timeRemaining => expiresAt.difference(DateTime.now());
+
+  /// Check if notification is expiring soon (within 24 hours)
+  bool get isExpiringSoon =>
+      timeRemaining.inHours < 24 && !timeRemaining.isNegative;
+
+  /// Get formatted time remaining string
+  String get timeRemainingFormatted {
+    final remaining = timeRemaining;
+    if (remaining.isNegative) return 'Expired';
+    if (remaining.inDays > 0) return '${remaining.inDays}d left';
+    if (remaining.inHours > 0) return '${remaining.inHours}h left';
+    if (remaining.inMinutes > 0) return '${remaining.inMinutes}m left';
+    return 'Expiring soon';
+  }
 
   /// Get relative time string (e.g., "2 hours ago")
   String get relativeTime {
@@ -200,14 +251,17 @@ class AdminBroadcastModel {
   final String message;
   final NotificationPriority priority;
   final String? deepLink;
+  final String actionButtonText;
   final String? sentBy;
   final String? sentByEmail;
   final DateTime sentAt;
   final DateTime expiresAt;
+  final int autoDismissHours;
   final int sentCount;
   final int readCount;
   final int dismissedCount;
   final int clickCount;
+  final bool isRTL;
 
   const AdminBroadcastModel({
     required this.id,
@@ -215,14 +269,17 @@ class AdminBroadcastModel {
     required this.message,
     required this.priority,
     this.deepLink,
+    this.actionButtonText = 'View Details',
     this.sentBy,
     this.sentByEmail,
     required this.sentAt,
     required this.expiresAt,
+    this.autoDismissHours = 48,
     required this.sentCount,
     required this.readCount,
     required this.dismissedCount,
     required this.clickCount,
+    this.isRTL = false,
   });
 
   /// Create from JSON (Supabase response)
@@ -233,14 +290,18 @@ class AdminBroadcastModel {
       message: json['message'] as String,
       priority: NotificationPriority.fromString(json['priority'] as String?),
       deepLink: json['deep_link'] as String?,
+      actionButtonText:
+          (json['action_button_text'] as String?) ?? 'View Details',
       sentBy: json['sent_by'] as String?,
       sentByEmail: json['sent_by_email'] as String?,
       sentAt: DateTime.parse(json['sent_at'] as String),
       expiresAt: DateTime.parse(json['expires_at'] as String),
+      autoDismissHours: (json['auto_dismiss_hours'] as num?)?.toInt() ?? 48,
       sentCount: (json['sent_count'] as num?)?.toInt() ?? 0,
       readCount: (json['read_count'] as num?)?.toInt() ?? 0,
       dismissedCount: (json['dismissed_count'] as num?)?.toInt() ?? 0,
       clickCount: (json['click_count'] as num?)?.toInt() ?? 0,
+      isRTL: json['is_rtl'] as bool? ?? false,
     );
   }
 
@@ -252,15 +313,25 @@ class AdminBroadcastModel {
       'message': message,
       'priority': priority.name,
       'deep_link': deepLink,
+      'action_button_text': actionButtonText,
       'sent_by': sentBy,
       'sent_by_email': sentByEmail,
       'sent_at': sentAt.toIso8601String(),
       'expires_at': expiresAt.toIso8601String(),
+      'auto_dismiss_hours': autoDismissHours,
       'sent_count': sentCount,
       'read_count': readCount,
       'dismissed_count': dismissedCount,
       'click_count': clickCount,
+      'is_rtl': isRTL,
     };
+  }
+
+  /// Get formatted lifetime string (e.g., "1h", "2d", "1w")
+  String get lifetimeFormatted {
+    if (autoDismissHours < 24) return '${autoDismissHours}h';
+    if (autoDismissHours < 168) return '${autoDismissHours ~/ 24}d';
+    return '${autoDismissHours ~/ 168}w';
   }
 
   /// Get read percentage
@@ -277,6 +348,19 @@ class AdminBroadcastModel {
 
   /// Check if notification is expired
   bool get isExpired => DateTime.now().isAfter(expiresAt);
+
+  /// Get time remaining until expiry
+  Duration get timeRemaining => expiresAt.difference(DateTime.now());
+
+  /// Get formatted time remaining string
+  String get timeRemainingFormatted {
+    final remaining = timeRemaining;
+    if (remaining.isNegative) return 'Expired';
+    if (remaining.inDays > 0) return '${remaining.inDays}d left';
+    if (remaining.inHours > 0) return '${remaining.inHours}h left';
+    if (remaining.inMinutes > 0) return '${remaining.inMinutes}m left';
+    return 'Expiring soon';
+  }
 
   /// Get relative time string
   String get relativeTime {

@@ -123,6 +123,9 @@ class BroadcastNotificationRepository {
     required String message,
     NotificationPriority priority = NotificationPriority.normal,
     String? deepLink,
+    String? actionButtonText,
+    int autoDismissHours = 48,
+    bool isRTL = false,
   }) async {
     try {
       // Call the Edge Function instead of RPC to handle FCM
@@ -133,6 +136,9 @@ class BroadcastNotificationRepository {
           'message': message,
           'priority': priority.name,
           'deep_link': deepLink,
+          'action_button_text': actionButtonText ?? 'View Details',
+          'auto_dismiss_hours': autoDismissHours,
+          'is_rtl': isRTL,
         },
       );
 
@@ -170,6 +176,21 @@ class BroadcastNotificationRepository {
     } catch (e) {
       debugPrint('Error getting broadcast history: $e');
       return [];
+    }
+  }
+
+  /// Delete a notification (admin only)
+  /// This removes the notification for ALL users via cascade delete
+  Future<bool> deleteNotification(String notificationId) async {
+    try {
+      final response = await _supabase.rpc(
+        'delete_admin_notification',
+        params: {'p_notification_id': notificationId},
+      );
+      return response == true;
+    } catch (e) {
+      debugPrint('Error deleting notification: $e');
+      return false;
     }
   }
 
