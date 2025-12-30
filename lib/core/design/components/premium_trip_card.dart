@@ -280,8 +280,9 @@ class _PremiumTripCardState extends State<PremiumTripCard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top row: Status pill + Date
+          // Top row: Status pill + Date (keep on visual left regardless of RTL)
           Row(
+            textDirection: ui.TextDirection.ltr,
             children: [
               _buildStatusPill(),
               const SizedBox(width: 10),
@@ -617,8 +618,9 @@ class _PremiumTripCardState extends State<PremiumTripCard>
   }
 
   Widget _buildActionButtons() {
-    return PositionedDirectional(
-      end: 0,
+    // Action buttons always on visual right side (regardless of RTL)
+    return Positioned(
+      right: 0,
       top: 0,
       bottom: 0,
       child: Container(
@@ -636,8 +638,9 @@ class _PremiumTripCardState extends State<PremiumTripCard>
                 child: Container(
                   decoration: const BoxDecoration(
                     color: Color(0xFF3B82F6),
-                    borderRadius: BorderRadiusDirectional.horizontal(
-                      start: Radius.circular(20),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      bottomLeft: Radius.circular(20),
                     ),
                   ),
                   child: const Center(
@@ -656,8 +659,9 @@ class _PremiumTripCardState extends State<PremiumTripCard>
                 child: Container(
                   decoration: const BoxDecoration(
                     color: Color(0xFFEF4444),
-                    borderRadius: BorderRadiusDirectional.horizontal(
-                      end: Radius.circular(20),
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
                     ),
                   ),
                   child: const Center(
@@ -673,21 +677,15 @@ class _PremiumTripCardState extends State<PremiumTripCard>
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
-    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
+    // Swipe direction is always the same (action buttons always on right)
     setState(() {
-      // In RTL, invert the drag direction
-      final delta = isRtl ? -details.delta.dx : details.delta.dx;
-      _dragOffset += delta;
+      _dragOffset += details.delta.dx;
       _dragOffset = _dragOffset.clamp(-_actionButtonWidth * 2, 0);
     });
   }
 
   void _handleDragEnd(DragEndDetails details) {
-    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
-    // In RTL, invert the velocity direction
-    final velocity = isRtl
-        ? -details.velocity.pixelsPerSecond.dx
-        : details.velocity.pixelsPerSecond.dx;
+    final velocity = details.velocity.pixelsPerSecond.dx;
     if (velocity < -200 || _dragOffset < -_actionButtonWidth) {
       setState(() => _dragOffset = -_actionButtonWidth * 2);
       HapticFeedback.lightImpact();
