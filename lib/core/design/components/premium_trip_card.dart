@@ -167,9 +167,9 @@ class _PremiumTripCardState extends State<PremiumTripCard>
       ),
       child: Stack(
         children: [
-          // Decorative circles/shapes
-          Positioned(
-            right: -30,
+          // Decorative circles/shapes - using PositionedDirectional for RTL support
+          PositionedDirectional(
+            end: -30,
             top: -30,
             child: Container(
               width: 120,
@@ -180,8 +180,8 @@ class _PremiumTripCardState extends State<PremiumTripCard>
               ),
             ),
           ),
-          Positioned(
-            left: -20,
+          PositionedDirectional(
+            start: -20,
             bottom: -40,
             child: Container(
               width: 100,
@@ -192,9 +192,9 @@ class _PremiumTripCardState extends State<PremiumTripCard>
               ),
             ),
           ),
-          // Flag emoji as decorative element
-          Positioned(
-            right: 20,
+          // Flag emoji as decorative element - using PositionedDirectional for RTL support
+          PositionedDirectional(
+            end: 20,
             top: 20,
             child: Container(
               padding: const EdgeInsets.all(8),
@@ -453,6 +453,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
   }
 
   Widget _buildViewButton() {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
@@ -480,7 +481,7 @@ class _PremiumTripCardState extends State<PremiumTripCard>
           ),
           const SizedBox(width: 4),
           Icon(
-            Icons.arrow_forward_rounded,
+            isRtl ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
             size: 16,
             color: _getDestinationGradient().first,
           ),
@@ -616,8 +617,8 @@ class _PremiumTripCardState extends State<PremiumTripCard>
   }
 
   Widget _buildActionButtons() {
-    return Positioned(
-      right: 0,
+    return PositionedDirectional(
+      end: 0,
       top: 0,
       bottom: 0,
       child: Container(
@@ -635,9 +636,8 @@ class _PremiumTripCardState extends State<PremiumTripCard>
                 child: Container(
                   decoration: const BoxDecoration(
                     color: Color(0xFF3B82F6),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      bottomLeft: Radius.circular(20),
+                    borderRadius: BorderRadiusDirectional.horizontal(
+                      start: Radius.circular(20),
                     ),
                   ),
                   child: const Center(
@@ -656,9 +656,8 @@ class _PremiumTripCardState extends State<PremiumTripCard>
                 child: Container(
                   decoration: const BoxDecoration(
                     color: Color(0xFFEF4444),
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
+                    borderRadius: BorderRadiusDirectional.horizontal(
+                      end: Radius.circular(20),
                     ),
                   ),
                   child: const Center(
@@ -674,14 +673,21 @@ class _PremiumTripCardState extends State<PremiumTripCard>
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     setState(() {
-      _dragOffset += details.delta.dx;
+      // In RTL, invert the drag direction
+      final delta = isRtl ? -details.delta.dx : details.delta.dx;
+      _dragOffset += delta;
       _dragOffset = _dragOffset.clamp(-_actionButtonWidth * 2, 0);
     });
   }
 
   void _handleDragEnd(DragEndDetails details) {
-    final velocity = details.velocity.pixelsPerSecond.dx;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    // In RTL, invert the velocity direction
+    final velocity = isRtl
+        ? -details.velocity.pixelsPerSecond.dx
+        : details.velocity.pixelsPerSecond.dx;
     if (velocity < -200 || _dragOffset < -_actionButtonWidth) {
       setState(() => _dragOffset = -_actionButtonWidth * 2);
       HapticFeedback.lightImpact();
@@ -774,7 +780,7 @@ class _CompactTripCardState extends State<CompactTripCard> {
         ),
         child: Row(
           children: [
-            // Colored side bar with flag
+            // Colored side bar with flag - using BorderRadiusDirectional for RTL support
             Container(
               width: 60,
               height: 72,
@@ -784,9 +790,8 @@ class _CompactTripCardState extends State<CompactTripCard> {
                   end: Alignment.bottomRight,
                   colors: _getGradient(),
                 ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
+                borderRadius: const BorderRadiusDirectional.horizontal(
+                  start: Radius.circular(16),
                 ),
               ),
               child: Center(
@@ -861,9 +866,11 @@ class _CompactTripCardState extends State<CompactTripCard> {
             ),
 
             Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsetsDirectional.only(end: 12),
               child: Icon(
-                Icons.chevron_right_rounded,
+                Directionality.of(context) == TextDirection.rtl
+                    ? Icons.chevron_left_rounded
+                    : Icons.chevron_right_rounded,
                 color: isDark
                     ? Colors.white.withAlpha(80)
                     : const Color(0xFFCBD5E1),
