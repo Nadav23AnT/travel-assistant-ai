@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../config/theme.dart';
 import '../../../data/models/expense_model.dart';
+import '../../../l10n/app_localizations.dart';
 
 class ExpenseListTile extends StatelessWidget {
   final ExpenseModel expense;
@@ -24,6 +25,7 @@ class ExpenseListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final categoryColor =
         AppTheme.categoryColors[expense.category] ?? AppTheme.textSecondary;
+    final l10n = AppLocalizations.of(context);
 
     return Dismissible(
       key: Key(expense.id),
@@ -42,20 +44,20 @@ class ExpenseListTile extends StatelessWidget {
         if (onDelete == null) return false;
         return await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete Expense'),
-            content: const Text('Are you sure you want to delete this expense?'),
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.deleteExpense),
+            content: Text(l10n.deleteExpenseConfirmation),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(l10n.cancel),
               ),
               TextButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(dialogContext, true),
                 style: TextButton.styleFrom(
                   foregroundColor: AppTheme.errorColor,
                 ),
-                child: const Text('Delete'),
+                child: Text(l10n.delete),
               ),
             ],
           ),
@@ -88,7 +90,7 @@ class ExpenseListTile extends StatelessWidget {
         subtitle: Row(
           children: [
             Text(
-              expense.categoryDisplayName,
+              _getLocalizedCategory(expense.category, l10n),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: categoryColor,
                   ),
@@ -96,7 +98,7 @@ class ExpenseListTile extends StatelessWidget {
             if (expense.expenseDate != null) ...[
               const Text(' \u2022 '),
               Text(
-                _formatDate(expense.expenseDate!),
+                _formatDate(expense.expenseDate!, l10n),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppTheme.textHint,
                     ),
@@ -151,20 +153,39 @@ class ExpenseListTile extends StatelessWidget {
     }
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime date, AppLocalizations l10n) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final dateOnly = DateTime(date.year, date.month, date.day);
 
     if (dateOnly == today) {
-      return 'Today';
+      return l10n.today;
     } else if (dateOnly == yesterday) {
-      return 'Yesterday';
+      return l10n.yesterday;
     } else if (now.difference(date).inDays < 7) {
       return DateFormat('EEEE').format(date);
     } else {
       return DateFormat('MMM d').format(date);
+    }
+  }
+
+  String _getLocalizedCategory(String category, AppLocalizations l10n) {
+    switch (category) {
+      case 'transport':
+        return l10n.categoryTransport;
+      case 'accommodation':
+        return l10n.categoryAccommodation;
+      case 'food':
+        return l10n.categoryFood;
+      case 'activities':
+        return l10n.categoryActivities;
+      case 'shopping':
+        return l10n.categoryShopping;
+      case 'other':
+        return l10n.categoryOther;
+      default:
+        return category;
     }
   }
 

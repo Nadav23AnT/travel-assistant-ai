@@ -38,6 +38,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   DateTime _date = DateTime.now();
   bool _isSplit = false;
   bool _isLoading = false;
+  bool _showMoreSettings = false;
   Set<String> _selectedMemberIds = {};
 
   @override
@@ -314,20 +315,36 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         });
                       }
 
-                      return _GlassTripSelector(
-                        trips: trips,
-                        selectedTripId: _selectedTripId,
-                        onChanged: (value) {
-                          setState(() => _selectedTripId = value);
-                          _updateCurrencyForTrip(value);
-                        },
-                        isDark: isDark,
-                        l10n: l10n,
+                      return Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: _CompactTripSelector(
+                          trips: trips,
+                          selectedTripId: _selectedTripId,
+                          onChanged: (value) {
+                            setState(() => _selectedTripId = value);
+                            _updateCurrencyForTrip(value);
+                          },
+                          isDark: isDark,
+                          l10n: l10n,
+                        ),
                       );
                     },
                   ),
                   const SizedBox(height: 16),
                 ],
+
+                // Category selector
+                _buildSectionTitle(l10n.category, isDark),
+                const SizedBox(height: 12),
+                _GlassCategorySelector(
+                  selectedCategory: _category,
+                  onChanged: (category) {
+                    setState(() => _category = category);
+                  },
+                  isDark: isDark,
+                  l10n: l10n,
+                ),
+                const SizedBox(height: 24),
 
                 // Description input
                 _GlassInputCard(
@@ -345,18 +362,6 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Category selector
-                _buildSectionTitle(l10n.category, isDark),
-                const SizedBox(height: 12),
-                _GlassCategorySelector(
-                  selectedCategory: _category,
-                  onChanged: (category) {
-                    setState(() => _category = category);
-                  },
-                  isDark: isDark,
-                ),
-                const SizedBox(height: 24),
-
                 // Date picker
                 _buildSectionTitle(l10n.date, isDark),
                 const SizedBox(height: 12),
@@ -367,102 +372,38 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Receipt photo button
-                _GlassReceiptButton(
-                  onTap: () {
-                    _showGlassSnackBar(l10n.receiptPhotoComingSoon,
-                        isError: false);
-                  },
+                // More settings (expandable section with split + notes)
+                _MoreSettingsSection(
+                  isExpanded: _showMoreSettings,
+                  onToggle: () => setState(() => _showMoreSettings = !_showMoreSettings),
                   isDark: isDark,
                   l10n: l10n,
-                ),
-                const SizedBox(height: 24),
-
-                // Split expense toggle with member selection
-                if (_selectedTripId != null)
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final membersAsync =
-                          ref.watch(tripMembersProvider(_selectedTripId!));
-                      final currentUserId =
-                          Supabase.instance.client.auth.currentUser?.id;
-
-                      return membersAsync.when(
-                        data: (members) {
-                          // Filter out current user from split options
-                          final otherMembers = members
-                              .where((m) => m.userId != currentUserId)
-                              .toList();
-
-                          return _GlassSplitCard(
-                            isSplit: _isSplit,
-                            onChanged: (value) {
-                              setState(() {
-                                _isSplit = value;
-                                if (!value) {
-                                  _selectedMemberIds.clear();
-                                }
-                              });
-                            },
-                            isDark: isDark,
-                            l10n: l10n,
-                            tripMembers: otherMembers,
-                            selectedMemberIds: _selectedMemberIds,
-                            onMemberToggled: (memberId) {
-                              setState(() {
-                                if (_selectedMemberIds.contains(memberId)) {
-                                  _selectedMemberIds.remove(memberId);
-                                } else {
-                                  _selectedMemberIds.add(memberId);
-                                }
-                              });
-                            },
-                            onSelectAll: () {
-                              setState(() {
-                                _selectedMemberIds = otherMembers
-                                    .map((m) => m.userId)
-                                    .toSet();
-                              });
-                            },
-                          );
-                        },
-                        loading: () => _GlassSplitCard(
-                          isSplit: _isSplit,
-                          onChanged: (value) {
-                            setState(() => _isSplit = value);
-                          },
-                          isDark: isDark,
-                          l10n: l10n,
-                          tripMembers: const [],
-                          selectedMemberIds: _selectedMemberIds,
-                          onMemberToggled: (_) {},
-                          onSelectAll: () {},
-                        ),
-                        error: (_, __) => _GlassSplitCard(
-                          isSplit: _isSplit,
-                          onChanged: (value) {
-                            setState(() => _isSplit = value);
-                          },
-                          isDark: isDark,
-                          l10n: l10n,
-                          tripMembers: const [],
-                          selectedMemberIds: _selectedMemberIds,
-                          onMemberToggled: (_) {},
-                          onSelectAll: () {},
-                        ),
-                      );
-                    },
-                  ),
-                const SizedBox(height: 16),
-
-                // Notes input
-                _GlassInputCard(
-                  controller: _notesController,
-                  label: l10n.notesOptional,
-                  hint: l10n.additionalDetails,
-                  icon: Icons.note_outlined,
-                  isDark: isDark,
-                  maxLines: 3,
+                  selectedTripId: _selectedTripId,
+                  isSplit: _isSplit,
+                  onSplitChanged: (value) {
+                    setState(() {
+                      _isSplit = value;
+                      if (!value) {
+                        _selectedMemberIds.clear();
+                      }
+                    });
+                  },
+                  selectedMemberIds: _selectedMemberIds,
+                  onMemberToggled: (memberId) {
+                    setState(() {
+                      if (_selectedMemberIds.contains(memberId)) {
+                        _selectedMemberIds.remove(memberId);
+                      } else {
+                        _selectedMemberIds.add(memberId);
+                      }
+                    });
+                  },
+                  onSelectAll: (members) {
+                    setState(() {
+                      _selectedMemberIds = members.map((m) => m.userId).toSet();
+                    });
+                  },
+                  notesController: _notesController,
                 ),
                 const SizedBox(height: 32),
 
@@ -678,14 +619,14 @@ class _GlassCurrencyDropdown extends StatelessWidget {
   }
 }
 
-class _GlassTripSelector extends StatelessWidget {
+class _CompactTripSelector extends StatelessWidget {
   final List<dynamic> trips;
   final String? selectedTripId;
   final ValueChanged<String?> onChanged;
   final bool isDark;
   final AppLocalizations l10n;
 
-  const _GlassTripSelector({
+  const _CompactTripSelector({
     required this.trips,
     required this.selectedTripId,
     required this.onChanged,
@@ -696,47 +637,49 @@ class _GlassTripSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             color: isDark
                 ? Colors.white.withAlpha(10)
-                : Colors.white.withAlpha(180),
+                : Colors.white.withAlpha(160),
             border: Border.all(
               color: isDark
                   ? Colors.white.withAlpha(15)
-                  : Colors.white.withAlpha(100),
+                  : Colors.white.withAlpha(80),
             ),
           ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                   gradient: LiquidGlassColors.oceanGradient,
                 ),
                 child: const Icon(
                   Icons.flight_takeoff,
                   color: Colors.white,
-                  size: 22,
+                  size: 16,
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
+              const SizedBox(width: 10),
+              Flexible(
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedTripId,
-                    isExpanded: true,
                     hint: Text(
-                      l10n.trip,
+                      l10n.selectTrip,
                       style: TextStyle(
-                        color: isDark ? Colors.white60 : Colors.black54,
+                        fontSize: 14,
+                        color: isDark ? Colors.white54 : Colors.black45,
                       ),
                     ),
                     dropdownColor:
@@ -744,19 +687,22 @@ class _GlassTripSelector extends StatelessWidget {
                     icon: Icon(
                       Icons.arrow_drop_down,
                       color: isDark ? Colors.white60 : Colors.black54,
+                      size: 20,
                     ),
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                     items: trips.map((trip) {
+                      // Truncate long names
+                      final displayName = (trip.displayTitle as String).length > 20
+                          ? '${(trip.displayTitle as String).substring(0, 20)}...'
+                          : trip.displayTitle as String;
+
                       return DropdownMenuItem(
                         value: trip.id as String,
-                        child: Text(
-                          '${trip.displayTitle} (${trip.displayDestination})',
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(displayName),
                       );
                     }).toList(),
                     onChanged: onChanged,
@@ -864,11 +810,13 @@ class _GlassCategorySelector extends StatelessWidget {
   final String selectedCategory;
   final ValueChanged<String> onChanged;
   final bool isDark;
+  final AppLocalizations l10n;
 
   const _GlassCategorySelector({
     required this.selectedCategory,
     required this.onChanged,
     required this.isDark,
+    required this.l10n,
   });
 
   @override
@@ -933,7 +881,7 @@ class _GlassCategorySelector extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _capitalizeFirst(category),
+                      _getCategoryLabel(category),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight:
@@ -987,8 +935,23 @@ class _GlassCategorySelector extends StatelessWidget {
     }
   }
 
-  String _capitalizeFirst(String text) {
-    return text[0].toUpperCase() + text.substring(1);
+  String _getCategoryLabel(String category) {
+    switch (category) {
+      case 'transport':
+        return l10n.categoryTransport;
+      case 'accommodation':
+        return l10n.categoryAccommodation;
+      case 'food':
+        return l10n.categoryFood;
+      case 'activities':
+        return l10n.categoryActivities;
+      case 'shopping':
+        return l10n.categoryShopping;
+      case 'other':
+        return l10n.categoryOther;
+      default:
+        return category;
+    }
   }
 }
 
@@ -1071,59 +1034,424 @@ class _GlassDatePicker extends StatelessWidget {
   }
 }
 
-class _GlassReceiptButton extends StatelessWidget {
-  final VoidCallback onTap;
+class _MoreSettingsSection extends ConsumerWidget {
+  final bool isExpanded;
+  final VoidCallback onToggle;
   final bool isDark;
   final AppLocalizations l10n;
+  final String? selectedTripId;
+  final bool isSplit;
+  final ValueChanged<bool> onSplitChanged;
+  final Set<String> selectedMemberIds;
+  final ValueChanged<String> onMemberToggled;
+  final void Function(List<TripMemberModel>) onSelectAll;
+  final TextEditingController notesController;
 
-  const _GlassReceiptButton({
-    required this.onTap,
+  const _MoreSettingsSection({
+    required this.isExpanded,
+    required this.onToggle,
     required this.isDark,
     required this.l10n,
+    required this.selectedTripId,
+    required this.isSplit,
+    required this.onSplitChanged,
+    required this.selectedMemberIds,
+    required this.onMemberToggled,
+    required this.onSelectAll,
+    required this.notesController,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: isDark
+                ? Colors.white.withAlpha(10)
+                : Colors.white.withAlpha(180),
+            border: Border.all(
+              width: isExpanded ? 1.5 : 1,
               color: isDark
-                  ? Colors.white.withAlpha(10)
-                  : Colors.white.withAlpha(180),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withAlpha(15)
-                    : Colors.white.withAlpha(100),
-                style: BorderStyle.solid,
-              ),
+                  ? Colors.white.withAlpha(isExpanded ? 25 : 15)
+                  : Colors.white.withAlpha(isExpanded ? 120 : 100),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.camera_alt_outlined,
-                  color: isDark ? Colors.white70 : Colors.black54,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  l10n.addReceiptPhoto,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white70 : Colors.black54,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header (always visible)
+              InkWell(
+                onTap: onToggle,
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: isExpanded
+                              ? LiquidGlassColors.auroraGradient
+                              : null,
+                          color: isExpanded
+                              ? null
+                              : (isDark
+                                  ? Colors.white.withAlpha(15)
+                                  : Colors.black.withAlpha(10)),
+                        ),
+                        child: Icon(
+                          Icons.tune,
+                          color: isExpanded
+                              ? Colors.white
+                              : (isDark ? Colors.white60 : Colors.black54),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          l10n.moreSettings,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: isExpanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 250),
+                        child: Icon(
+                          Icons.keyboard_arrow_down,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+              ),
+              // Expanded content
+              AnimatedCrossFade(
+                firstChild: const SizedBox.shrink(),
+                secondChild: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Divider
+                      Container(
+                        height: 1,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isDark
+                                ? [
+                                    Colors.white.withAlpha(0),
+                                    Colors.white.withAlpha(15),
+                                    Colors.white.withAlpha(0),
+                                  ]
+                                : [
+                                    Colors.black.withAlpha(0),
+                                    Colors.black.withAlpha(20),
+                                    Colors.black.withAlpha(0),
+                                  ],
+                          ),
+                        ),
+                      ),
+                      // Split expense section
+                      if (selectedTripId != null) ...[
+                        _buildSplitSection(ref),
+                        const SizedBox(height: 20),
+                      ],
+                      // Notes field
+                      _buildNotesField(),
+                    ],
+                  ),
+                ),
+                crossFadeState: isExpanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 250),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSplitSection(WidgetRef ref) {
+    if (selectedTripId == null) return const SizedBox.shrink();
+
+    final membersAsync = ref.watch(tripMembersProvider(selectedTripId!));
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+
+    return membersAsync.when(
+      data: (members) {
+        final otherMembers =
+            members.where((m) => m.userId != currentUserId).toList();
+        final hasMembers = otherMembers.isNotEmpty;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: isSplit && hasMembers
+                            ? LiquidGlassColors.mintGradient
+                            : null,
+                        color: isSplit && hasMembers
+                            ? null
+                            : (isDark
+                                ? Colors.white.withAlpha(15)
+                                : Colors.black.withAlpha(10)),
+                      ),
+                      child: Icon(
+                        Icons.people_outline,
+                        color: isSplit && hasMembers
+                            ? Colors.white
+                            : (isDark ? Colors.white60 : Colors.black54),
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.splitThisExpense,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+                Switch.adaptive(
+                  value: isSplit,
+                  onChanged: hasMembers ? onSplitChanged : null,
+                  activeTrackColor: LiquidGlassColors.mintEmerald,
+                  thumbColor: WidgetStateProperty.all(Colors.white),
                 ),
               ],
             ),
-          ),
+            if (!hasMembers) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: isDark
+                      ? Colors.white.withAlpha(8)
+                      : Colors.black.withAlpha(5),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.noTripMembersToSplit,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : Colors.black45,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (isSplit && hasMembers) ...[
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.selectTripMembersToSplit,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: selectedMemberIds.length == otherMembers.length
+                        ? null
+                        : () => onSelectAll(otherMembers),
+                    style: TextButton.styleFrom(
+                      foregroundColor: LiquidGlassColors.mintEmerald,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      'Select All',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: otherMembers.map((member) {
+                  final isSelected = selectedMemberIds.contains(member.userId);
+                  return GestureDetector(
+                    onTap: () => onMemberToggled(member.userId),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: isSelected
+                            ? LiquidGlassColors.mintGradient
+                            : null,
+                        color: isSelected
+                            ? null
+                            : (isDark
+                                ? Colors.white.withAlpha(12)
+                                : Colors.black.withAlpha(8)),
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.transparent
+                              : (isDark
+                                  ? Colors.white.withAlpha(20)
+                                  : Colors.black.withAlpha(15)),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (member.avatarUrl != null &&
+                              member.avatarUrl!.isNotEmpty)
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundImage: NetworkImage(member.avatarUrl!),
+                            )
+                          else
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundColor: isSelected
+                                  ? Colors.white.withAlpha(50)
+                                  : (isDark
+                                      ? Colors.white.withAlpha(20)
+                                      : Colors.black.withAlpha(15)),
+                              child: Text(
+                                member.initials,
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : (isDark
+                                          ? Colors.white70
+                                          : Colors.black54),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 6),
+                          Text(
+                            member.displayName,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isDark ? Colors.white : Colors.black87),
+                            ),
+                          ),
+                          if (isSelected) ...[
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.check,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildNotesField() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: isDark
+            ? Colors.white.withAlpha(8)
+            : Colors.black.withAlpha(5),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withAlpha(10)
+              : Colors.black.withAlpha(8),
         ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.note_outlined,
+            color: LiquidGlassColors.auroraIndigo,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: notesController,
+              maxLines: 2,
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              decoration: InputDecoration(
+                hintText: l10n.additionalDetails,
+                hintStyle: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

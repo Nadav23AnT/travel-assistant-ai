@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/design/design_system.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// A budget progress bar widget that shows spent vs budget with color-coded status
 class BudgetProgressBar extends StatelessWidget {
@@ -9,6 +10,7 @@ class BudgetProgressBar extends StatelessWidget {
   final String spentFormatted;
   final String budgetFormatted;
   final bool isDark;
+  final AppLocalizations l10n;
 
   const BudgetProgressBar({
     super.key,
@@ -17,6 +19,7 @@ class BudgetProgressBar extends StatelessWidget {
     required this.spentFormatted,
     required this.budgetFormatted,
     required this.isDark,
+    required this.l10n,
   });
 
   @override
@@ -45,7 +48,7 @@ class BudgetProgressBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Spent',
+                  l10n.spent,
                   style: TextStyle(
                     fontSize: 11,
                     color: isDark ? Colors.white54 : Colors.black45,
@@ -68,7 +71,7 @@ class BudgetProgressBar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Budget',
+                    l10n.budget,
                     style: TextStyle(
                       fontSize: 11,
                       color: isDark ? Colors.white54 : Colors.black45,
@@ -174,7 +177,7 @@ class BudgetProgressBar extends StatelessWidget {
           const SizedBox(height: 6),
           Center(
             child: Text(
-              'No budget set for this trip',
+              l10n.noBudgetSetTrip,
               style: TextStyle(
                 fontSize: 11,
                 color: isDark ? Colors.white38 : Colors.black38,
@@ -188,11 +191,11 @@ class BudgetProgressBar extends StatelessWidget {
 
   String _getStatusText(double progress, bool isOverBudget) {
     if (isOverBudget) {
-      final overPercent = ((progress - 1) * 100).toStringAsFixed(0);
-      return '$overPercent% over budget';
+      final overPercent = ((progress - 1) * 100).toInt();
+      return l10n.percentOverBudget(overPercent);
     } else {
-      final remainingPercent = ((1 - progress) * 100).toStringAsFixed(0);
-      return '$remainingPercent% remaining';
+      final remainingPercent = ((1 - progress) * 100).toInt();
+      return l10n.percentRemaining(remainingPercent);
     }
   }
 }

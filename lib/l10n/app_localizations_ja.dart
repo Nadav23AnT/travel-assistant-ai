@@ -1218,4 +1218,71 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get clearSearch => '検索をクリア';
+
+  @override
+  String get moreSettings => '詳細設定';
+
+  @override
+  String get estimatedTotal => '推定合計';
+
+  @override
+  String get splitExpenseLabel => '割り勘';
+
+  @override
+  String owesYou(String name) {
+    return '$nameがあなたに借りています';
+  }
+
+  @override
+  String get owesYouSuffix => 'があなたに借りています ';
+
+  @override
+  String youOwe(String name) {
+    return 'あなたは$nameに借りています';
+  }
+
+  @override
+  String get youOwePrefix => 'あなたは借りています ';
+
+  @override
+  String plusMoreCount(int count) {
+    return '+$count件';
+  }
+
+  @override
+  String get spent => '支出';
+
+  @override
+  String get noBudgetSetTrip => 'この旅行の予算は設定されていません';
+
+  @override
+  String percentOverBudget(int percent) {
+    return '予算を$percent%超過';
+  }
+
+  @override
+  String percentRemaining(int percent) {
+    return '$percent%残り';
+  }
+
+  @override
+  String get noCategoriesYet => 'カテゴリーはまだありません';
+
+  @override
+  String get expenseCountSingular => '1件の支出';
+
+  @override
+  String expenseCountPlural(int count) {
+    return '$count件の支出';
+  }
+
+  @override
+  String percentOfTotal(String percent) {
+    return '合計の$percent%';
+  }
+
+  @override
+  String noCategoryExpenses(String category) {
+    return '$categoryの支出はありません';
+  }
 }

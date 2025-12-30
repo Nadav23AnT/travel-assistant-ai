@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../data/models/expense_stats.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// A compact horizontal category progress bar showing icon, name, amount, and progress
 class CategoryProgressBar extends StatelessWidget {
@@ -8,6 +9,7 @@ class CategoryProgressBar extends StatelessWidget {
   final String displayCurrency;
   final VoidCallback? onTap;
   final bool isDark;
+  final AppLocalizations l10n;
 
   const CategoryProgressBar({
     super.key,
@@ -15,6 +17,7 @@ class CategoryProgressBar extends StatelessWidget {
     required this.displayCurrency,
     this.onTap,
     required this.isDark,
+    required this.l10n,
   });
 
   @override
@@ -40,7 +43,7 @@ class CategoryProgressBar extends StatelessWidget {
                 // Category name
                 Expanded(
                   child: Text(
-                    category.displayName,
+                    _getLocalizedCategory(category.category, l10n),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -93,6 +96,25 @@ class CategoryProgressBar extends StatelessWidget {
       ),
     );
   }
+
+  String _getLocalizedCategory(String category, AppLocalizations l10n) {
+    switch (category) {
+      case 'transport':
+        return l10n.categoryTransport;
+      case 'accommodation':
+        return l10n.categoryAccommodation;
+      case 'food':
+        return l10n.categoryFood;
+      case 'activities':
+        return l10n.categoryActivities;
+      case 'shopping':
+        return l10n.categoryShopping;
+      case 'other':
+        return l10n.categoryOther;
+      default:
+        return category;
+    }
+  }
 }
 
 /// A list of category progress bars
@@ -102,6 +124,7 @@ class CategoryProgressBarList extends StatelessWidget {
   final void Function(String category)? onCategoryTap;
   final bool isDark;
   final int maxCategories;
+  final AppLocalizations l10n;
 
   const CategoryProgressBarList({
     super.key,
@@ -110,6 +133,7 @@ class CategoryProgressBarList extends StatelessWidget {
     this.onCategoryTap,
     required this.isDark,
     this.maxCategories = 6,
+    required this.l10n,
   });
 
   @override
@@ -121,7 +145,7 @@ class CategoryProgressBarList extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
-            'No categories yet',
+            l10n.noCategoriesYet,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white38 : Colors.black38,
@@ -141,6 +165,7 @@ class CategoryProgressBarList extends StatelessWidget {
               ? () => onCategoryTap!(category.category)
               : null,
           isDark: isDark,
+          l10n: l10n,
         );
       }).toList(),
     );

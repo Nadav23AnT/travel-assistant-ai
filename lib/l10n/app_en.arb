@@ -1652,5 +1652,121 @@
   "clearSearch": "Clear search",
   "@clearSearch": {
     "description": "Clear search button label"
+  },
+  "moreSettings": "More settings",
+  "@moreSettings": {
+    "description": "Label for expandable settings section"
+  },
+  "estimatedTotal": "Est. Total",
+  "@estimatedTotal": {
+    "description": "Estimated total label"
+  },
+  "splitExpenseLabel": "Split expense",
+  "@splitExpenseLabel": {
+    "description": "Label for split expense indicator"
+  },
+  "owesYou": "{name} owes you",
+  "@owesYou": {
+    "description": "Message showing someone owes you money",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "John"
+      }
+    }
+  },
+  "owesYouSuffix": " owes you ",
+  "@owesYouSuffix": {
+    "description": "Suffix for RichText: [Name] owes you [Amount]"
+  },
+  "youOwe": "You owe {name}",
+  "@youOwe": {
+    "description": "Message showing you owe someone money",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "John"
+      }
+    }
+  },
+  "youOwePrefix": "You owe ",
+  "@youOwePrefix": {
+    "description": "Prefix for RichText: You owe [Amount]"
+  },
+  "plusMoreCount": "+{count} more",
+  "@plusMoreCount": {
+    "description": "Shows additional count",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "spent": "Spent",
+  "@spent": {
+    "description": "Spent label for budget"
+  },
+  "noBudgetSetTrip": "No budget set for this trip",
+  "@noBudgetSetTrip": {
+    "description": "Message when no budget is set"
+  },
+  "percentOverBudget": "{percent}% over budget",
+  "@percentOverBudget": {
+    "description": "Message showing over budget percentage",
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+  "percentRemaining": "{percent}% remaining",
+  "@percentRemaining": {
+    "description": "Message showing remaining budget percentage",
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "example": "50"
+      }
+    }
+  },
+  "noCategoriesYet": "No categories yet",
+  "@noCategoriesYet": {
+    "description": "Message when no expense categories exist"
+  },
+  "expenseCountSingular": "1 expense",
+  "@expenseCountSingular": {
+    "description": "Single expense count"
+  },
+  "expenseCountPlural": "{count} expenses",
+  "@expenseCountPlural": {
+    "description": "Multiple expenses count",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "percentOfTotal": "{percent}% of total",
+  "@percentOfTotal": {
+    "description": "Percentage of total expenses",
+    "placeholders": {
+      "percent": {
+        "type": "String",
+        "example": "25"
+      }
+    }
+  },
+  "noCategoryExpenses": "No {category} expenses",
+  "@noCategoryExpenses": {
+    "description": "Message when no expenses in category",
+    "placeholders": {
+      "category": {
+        "type": "String",
+        "example": "food"
+      }
+    }
   }
 }

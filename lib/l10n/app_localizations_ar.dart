@@ -1226,4 +1226,71 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clearSearch => 'مسح البحث';
+
+  @override
+  String get moreSettings => 'إعدادات إضافية';
+
+  @override
+  String get estimatedTotal => 'الإجمالي المقدر';
+
+  @override
+  String get splitExpenseLabel => 'مصروف مشترك';
+
+  @override
+  String owesYou(String name) {
+    return '$name يدين لك';
+  }
+
+  @override
+  String get owesYouSuffix => ' يدين لك ';
+
+  @override
+  String youOwe(String name) {
+    return 'أنت مدين لـ $name';
+  }
+
+  @override
+  String get youOwePrefix => 'أنت مدين بـ ';
+
+  @override
+  String plusMoreCount(int count) {
+    return '+$count آخرون';
+  }
+
+  @override
+  String get spent => 'المصروف';
+
+  @override
+  String get noBudgetSetTrip => 'لم يتم تحديد ميزانية لهذه الرحلة';
+
+  @override
+  String percentOverBudget(int percent) {
+    return '$percent% فوق الميزانية';
+  }
+
+  @override
+  String percentRemaining(int percent) {
+    return '$percent% متبقي';
+  }
+
+  @override
+  String get noCategoriesYet => 'لا توجد فئات بعد';
+
+  @override
+  String get expenseCountSingular => 'مصروف واحد';
+
+  @override
+  String expenseCountPlural(int count) {
+    return '$count مصروفات';
+  }
+
+  @override
+  String percentOfTotal(String percent) {
+    return '$percent% من الإجمالي';
+  }
+
+  @override
+  String noCategoryExpenses(String category) {
+    return 'لا توجد مصروفات $category';
+  }
 }

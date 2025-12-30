@@ -223,5 +223,22 @@
   "searchChats": "Rechercher des chats...",
   "noChatsFound": "Aucun chat trouvé",
   "noChatsMatchingSearch": "Aucun chat correspondant à \"{query}\"",
-  "clearSearch": "Effacer la recherche"
+  "clearSearch": "Effacer la recherche",
+  "moreSettings": "Plus de paramètres",
+  "estimatedTotal": "Total estimé",
+  "splitExpenseLabel": "Dépense partagée",
+  "owesYou": "{name} vous doit",
+  "owesYouSuffix": " vous doit ",
+  "youOwe": "Vous devez à {name}",
+  "youOwePrefix": "Vous devez ",
+  "plusMoreCount": "+{count} autres",
+  "spent": "Dépensé",
+  "noBudgetSetTrip": "Aucun budget défini pour ce voyage",
+  "percentOverBudget": "{percent}% au-dessus du budget",
+  "percentRemaining": "{percent}% restant",
+  "noCategoriesYet": "Pas encore de catégories",
+  "expenseCountSingular": "1 dépense",
+  "expenseCountPlural": "{count} dépenses",
+  "percentOfTotal": "{percent}% du total",
+  "noCategoryExpenses": "Aucune dépense {category}"
 }

@@ -305,5 +305,22 @@
   "searchChats": "חיפוש צ'אטים...",
   "noChatsFound": "לא נמצאו צ'אטים",
   "noChatsMatchingSearch": "לא נמצאו צ'אטים התואמים \"{query}\"",
-  "clearSearch": "נקה חיפוש"
+  "clearSearch": "נקה חיפוש",
+  "moreSettings": "הגדרות נוספות",
+  "estimatedTotal": "סה\"כ משוער",
+  "splitExpenseLabel": "הוצאה משותפת",
+  "owesYou": "{name} חייב/ת לך",
+  "owesYouSuffix": " חייב/ת לך ",
+  "youOwe": "את/ה חייב/ת ל{name}",
+  "youOwePrefix": "את/ה חייב/ת ",
+  "plusMoreCount": "+{count} נוספים",
+  "spent": "הוצאות",
+  "noBudgetSetTrip": "לא הוגדר תקציב לטיול זה",
+  "percentOverBudget": "{percent}% מעל התקציב",
+  "percentRemaining": "{percent}% נותר",
+  "noCategoriesYet": "אין קטגוריות עדיין",
+  "expenseCountSingular": "הוצאה אחת",
+  "expenseCountPlural": "{count} הוצאות",
+  "percentOfTotal": "{percent}% מהסה\"כ",
+  "noCategoryExpenses": "אין הוצאות {category}"
 }

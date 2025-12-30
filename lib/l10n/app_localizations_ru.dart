@@ -1233,4 +1233,71 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get clearSearch => 'Очистить поиск';
+
+  @override
+  String get moreSettings => 'Дополнительные настройки';
+
+  @override
+  String get estimatedTotal => 'Ожидаемый итог';
+
+  @override
+  String get splitExpenseLabel => 'Общий расход';
+
+  @override
+  String owesYou(String name) {
+    return '$name должен вам';
+  }
+
+  @override
+  String get owesYouSuffix => ' должен вам ';
+
+  @override
+  String youOwe(String name) {
+    return 'Вы должны $name';
+  }
+
+  @override
+  String get youOwePrefix => 'Вы должны ';
+
+  @override
+  String plusMoreCount(int count) {
+    return '+$count ещё';
+  }
+
+  @override
+  String get spent => 'Потрачено';
+
+  @override
+  String get noBudgetSetTrip => 'Бюджет для этой поездки не установлен';
+
+  @override
+  String percentOverBudget(int percent) {
+    return 'Превышение на $percent%';
+  }
+
+  @override
+  String percentRemaining(int percent) {
+    return 'Осталось $percent%';
+  }
+
+  @override
+  String get noCategoriesYet => 'Категорий пока нет';
+
+  @override
+  String get expenseCountSingular => '1 расход';
+
+  @override
+  String expenseCountPlural(int count) {
+    return '$count расходов';
+  }
+
+  @override
+  String percentOfTotal(String percent) {
+    return '$percent% от общей суммы';
+  }
+
+  @override
+  String noCategoryExpenses(String category) {
+    return 'Нет расходов $category';
+  }
 }
