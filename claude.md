@@ -688,6 +688,29 @@ Claude Code has access to specialized subagents for complex, domain-specific tas
 
 ---
 
+### 💰 mobile-app-monetization-strategist
+
+**Purpose:** Design, validate, and optimize revenue strategies for mobile applications, particularly in fintech and personal finance.
+
+**Use When:**
+- Planning freemium models and subscription tiers
+- Designing ad placement strategies that balance revenue with UX
+- Making pricing decisions for mobile apps
+- Creating feature matrices (premium vs free tiers)
+- Optimizing conversion funnels for subscriptions
+- Analyzing monetization approaches (ads vs subscriptions vs hybrid)
+- Preparing beta launch pricing strategies
+- Configuring admin settings for ad frequency/placement
+
+**Examples:**
+- "Should I use ads or subscriptions for my budget tracking app?"
+- "What features should be behind the paywall vs kept free?"
+- "How should I integrate ads without annoying users?"
+- "What should I charge for premium at beta launch?"
+- "Help me design a tiered subscription model"
+
+---
+
 ### 🔒 cyber-security-expert
 
 **Purpose:** Comprehensive security analysis, threat detection, and security architecture guidance.
@@ -839,6 +862,7 @@ Claude Code has access to specialized subagents for complex, domain-specific tas
 |----------|------------------|
 | `supabase-backend-architect` | Database, RLS, auth, backend |
 | `business-strategy-advisor` | Strategy, pricing, investors |
+| `mobile-app-monetization-strategist` | Freemium, subscriptions, ads, pricing |
 | `cyber-security-expert` | Security audits, vulnerabilities |
 | `ai-instructions-architect` | AI prompts, chatbots, agents |
 | `legal-compliance-drafter` | Privacy, terms, compliance |
