@@ -45,4 +45,7 @@ coverage/
 
 # Local settings (keep structure, ignore local overrides)
 .claude/settings.local.json
-supabase/*-firebase-adminsdk-*.json
+
+# Secrets & Firebase Admin SDK
+secrets/
+*-firebase-adminsdk-*.json
