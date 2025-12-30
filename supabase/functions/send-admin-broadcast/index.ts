@@ -65,9 +65,14 @@ serve(async (req) => {
       );
     }
 
-    // Check if user is admin
-    const isAdmin = user.user_metadata?.is_admin === true;
-    if (!isAdmin) {
+    // Check if user is admin by querying profiles table
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile?.is_admin) {
       return new Response(
         JSON.stringify({ error: "Admin access required" }),
         {
